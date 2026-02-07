@@ -8,25 +8,6 @@
  *   @import "@savvycal/calendar/components.css";
  */
 
-/* Light mode defaults */
-:root {
-  --cal-background: oklch(1 0 0);
-  --cal-foreground: oklch(0.145 0.015 285);
-  --cal-border: oklch(0.87 0.01 285);
-  --cal-gutter: oklch(0.97 0.005 285);
-  --cal-event: oklch(0.55 0.15 250);
-  --cal-event-foreground: oklch(1 0 0);
-  --cal-now-indicator: oklch(0.6 0.22 25);
-  --cal-available: oklch(0.85 0.1 145);
-  --cal-unavailable: oklch(0.95 0.005 285);
-  --cal-header: oklch(0.97 0.005 285);
-  --cal-header-foreground: oklch(0.145 0.015 285);
-  --cal-today: oklch(0.92 0.03 250);
-  --cal-muted: oklch(0.95 0.005 285);
-  --cal-muted-foreground: oklch(0.55 0.01 285);
-  --cal-slot-highlight: oklch(0.7 0.1 250 / 0.15);
-}
-
 /* Unavailable time overlay with cross-hatching */
 .cal-unavailable-overlay {
   background-image: repeating-linear-gradient(
@@ -36,25 +17,6 @@
     oklch(0 0 0 / 0.08) 6px,
     oklch(0 0 0 / 0.08) 12px
   );
-}
-
-/* Dark mode overrides */
-.dark {
-  --cal-background: oklch(0.145 0.015 285);
-  --cal-foreground: oklch(0.97 0.005 285);
-  --cal-border: oklch(0.3 0.015 285);
-  --cal-gutter: oklch(0.2 0.01 285);
-  --cal-event: oklch(0.6 0.15 250);
-  --cal-event-foreground: oklch(1 0 0);
-  --cal-now-indicator: oklch(0.65 0.22 25);
-  --cal-available: oklch(0.35 0.08 145);
-  --cal-unavailable: oklch(0.2 0.005 285);
-  --cal-header: oklch(0.2 0.01 285);
-  --cal-header-foreground: oklch(0.97 0.005 285);
-  --cal-today: oklch(0.25 0.04 250);
-  --cal-muted: oklch(0.25 0.005 285);
-  --cal-muted-foreground: oklch(0.6 0.01 285);
-  --cal-slot-highlight: oklch(0.6 0.12 250 / 0.2);
 }
 
 .dark .cal-unavailable-overlay {

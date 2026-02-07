@@ -19,22 +19,4 @@
  */
 @source ".";
 
-/* Theme tokens - extends host app's Tailwind theme */
-@theme {
-  /* Calendar-specific design tokens */
-  --color-cal-background: var(--cal-background);
-  --color-cal-foreground: var(--cal-foreground);
-  --color-cal-border: var(--cal-border);
-  --color-cal-gutter: var(--cal-gutter);
-  --color-cal-event: var(--cal-event);
-  --color-cal-now-indicator: var(--cal-now-indicator);
-  --color-cal-available: var(--cal-available);
-  --color-cal-header: var(--cal-header);
-  --color-cal-header-foreground: var(--cal-header-foreground);
-  --color-cal-today: var(--cal-today);
-  --color-cal-muted: var(--cal-muted);
-  --color-cal-muted-foreground: var(--cal-muted-foreground);
-  --color-cal-event-foreground: var(--cal-event-foreground);
-  --color-cal-unavailable: var(--cal-unavailable);
-  --color-cal-slot-highlight: var(--cal-slot-highlight);
-}
+@custom-variant dark (&:where(.dark, .dark *));

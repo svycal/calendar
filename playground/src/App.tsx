@@ -199,14 +199,14 @@ function App() {
   const [dark, setDark] = useState(false);
 
   return (
-    <div className={`min-h-screen bg-cal-background p-8${dark ? ' dark' : ''}`}>
+    <div className={`min-h-screen bg-white dark:bg-gray-950 p-8${dark ? ' dark' : ''}`}>
       <div className="mb-8 flex items-center gap-4">
-        <h1 className="text-cal-foreground text-2xl font-bold">
+        <h1 className="text-gray-950 dark:text-gray-50 text-2xl font-bold">
           Calendar Playground
         </h1>
         <button
           onClick={() => setDark(!dark)}
-          className="rounded border border-cal-border bg-cal-background px-3 py-1 text-sm text-cal-foreground hover:opacity-80"
+          className="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-1 text-sm text-gray-950 dark:text-gray-50 hover:opacity-80"
         >
           {dark ? '☀️ Light' : '🌙 Dark'}
         </button>
@@ -214,7 +214,7 @@ function App() {
 
       <div className="space-y-8">
         <section>
-          <h2 className="text-cal-foreground mb-4 text-xl font-semibold">
+          <h2 className="text-gray-950 dark:text-gray-50 mb-4 text-xl font-semibold">
             Resource Grid View
           </h2>
           <div className="h-[600px]">
@@ -235,7 +235,7 @@ function App() {
         </section>
 
         <section>
-          <h2 className="text-cal-foreground mb-4 text-xl font-semibold">
+          <h2 className="text-gray-950 dark:text-gray-50 mb-4 text-xl font-semibold">
             Week View
           </h2>
           <WeekView
