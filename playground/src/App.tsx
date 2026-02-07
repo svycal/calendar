@@ -228,7 +228,7 @@ function App() {
               events={events}
               availability={availability}
               unavailability={unavailability}
-              hourHeight={200}
+              hourHeight={100}
               timeAxis={{ startHour: 7, endHour: 18, intervalMinutes: 15 }}
               slotDuration={15}
               onEventClick={(event) => console.log('Clicked:', event)}
