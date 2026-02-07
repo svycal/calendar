@@ -3,7 +3,7 @@ import type { WeekViewProps } from '@/types/calendar';
 
 export function WeekView({
   date,
-  provider,
+  resource,
   events,
   className,
 }: WeekViewProps) {
@@ -12,7 +12,7 @@ export function WeekView({
       <div className="text-cal-foreground bg-cal-background border-cal-border rounded-lg border p-4">
         <h2 className="mb-4 text-lg font-semibold">Week View</h2>
         <p className="text-cal-foreground/60 text-sm">
-          {date} &middot; {provider.name} &middot; {events.length} events
+          {date} &middot; {resource.name} &middot; {events.length} events
         </p>
       </div>
     </div>

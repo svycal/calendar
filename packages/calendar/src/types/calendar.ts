@@ -1,4 +1,4 @@
-export interface CalendarProvider {
+export interface CalendarResource {
   id: string;
   name: string;
   avatarUrl?: string;
@@ -10,7 +10,7 @@ export interface CalendarEvent {
   title: string;
   startTime: string;
   endTime: string;
-  providerId: string;
+  resourceId: string;
   color?: string;
   metadata?: Record<string, unknown>;
 }
@@ -30,7 +30,7 @@ export interface TimeAxisConfig {
 export interface ResourceGridViewProps {
   date: string;
   timeZone: string;
-  providers: CalendarProvider[];
+  resources: CalendarResource[];
   events: CalendarEvent[];
   availability?: TimeSlot[];
   timeAxis?: TimeAxisConfig;
@@ -41,7 +41,7 @@ export interface ResourceGridViewProps {
 export interface WeekViewProps {
   date: string;
   timeZone: string;
-  provider: CalendarProvider;
+  resource: CalendarResource;
   events: CalendarEvent[];
   availability?: TimeSlot[];
   timeAxis?: TimeAxisConfig;

@@ -4,7 +4,7 @@ export { WeekView } from './components/WeekView';
 
 // Types
 export type {
-  CalendarProvider,
+  CalendarResource,
   CalendarEvent,
   TimeSlot,
   TimeAxisConfig,
