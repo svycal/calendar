@@ -60,7 +60,6 @@ export const EventChip = memo(function EventChip({
         height,
         left: `${leftPct}%`,
         width: `${widthPct}%`,
-        backgroundColor: color,
         pointerEvents: 'auto',
       }}
       onClick={() => onClick?.(event)}
@@ -71,6 +70,9 @@ export const EventChip = memo(function EventChip({
         }
       }}
     >
+      {color && (
+        <div className={cls('eventColorBar')} style={{ backgroundColor: color }} />
+      )}
       <div className={cls('eventTitle')}>{event.title}</div>
       {showTime && (
         <div className={cls('eventTime')}>

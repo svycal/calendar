@@ -46,6 +46,7 @@ export interface ResourceGridViewClassNames {
   bodyCell?: string;
   eventColumn?: string;
   event?: string;
+  eventColorBar?: string;
   eventTitle?: string;
   eventTime?: string;
   nowIndicator?: string;
