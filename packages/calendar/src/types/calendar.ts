@@ -95,6 +95,7 @@ export interface ResourceGridViewProps {
   classNames?: ResourceGridViewClassNames;
   hourHeight?: number;
   columnMinWidth?: number;
+  renderHeader?: (props: { resource: CalendarResource }) => ReactNode;
   renderEvent?: (
     event: CalendarEvent,
     position: PositionedEvent,

@@ -37,6 +37,7 @@ export function ResourceGridView({
   classNames,
   hourHeight = 60,
   columnMinWidth = 120,
+  renderHeader,
   renderEvent,
 }: ResourceGridViewProps) {
   const startHour = timeAxis?.startHour ?? 0;
@@ -132,6 +133,7 @@ export function ResourceGridView({
             resource={resource}
             column={i + 2}
             cls={cls}
+            renderHeader={renderHeader}
           />
         ))}
 
