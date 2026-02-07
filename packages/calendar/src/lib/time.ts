@@ -5,6 +5,7 @@ export interface TimeSlotEntry {
   minute: number;
   label: string;
   index: number;
+  isHourStart: boolean;
 }
 
 export function formatTimeLabel(hour: number, minute: number): string {
@@ -44,7 +45,13 @@ export function generateTimeSlots(config: TimeAxisConfig): TimeSlotEntry[] {
   while (totalMinutes < endMinutes) {
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
-    slots.push({ hour: h, minute: m, label: formatTimeLabel(h, m), index });
+    slots.push({
+      hour: h,
+      minute: m,
+      label: formatTimeLabel(h, m),
+      index,
+      isHourStart: m === 0,
+    });
     index++;
     totalMinutes += intervalMinutes;
   }

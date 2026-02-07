@@ -44,8 +44,10 @@ export interface ResourceGridViewClassNames {
   headerName?: string;
   headerAvatar?: string;
   gutterCell?: string;
+  gutterCellMinor?: string;
   gutterLabel?: string;
   bodyCell?: string;
+  bodyCellMinor?: string;
   eventColumn?: string;
   event?: string;
   eventColorBar?: string;

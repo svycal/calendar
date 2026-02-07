@@ -119,6 +119,7 @@ export function ResourceGridView({
             key={slot.index}
             label={slot.label}
             row={slot.index + 2}
+            isHourStart={slot.isHourStart}
             cls={cls}
           />
         ))}
@@ -128,10 +129,15 @@ export function ResourceGridView({
           resources.map((resource, colIdx) => (
             <div
               key={`${slot.index}-${resource.id}`}
-              className={cls('bodyCell')}
+              className={cls(
+                slot.isHourStart ? 'bodyCell' : 'bodyCellMinor',
+              )}
               style={{
                 gridRow: slot.index + 2,
                 gridColumn: colIdx + 2,
+                ...(!slot.isHourStart
+                  ? { borderTopStyle: 'dotted' as const }
+                  : {}),
               }}
             />
           )),
