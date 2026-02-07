@@ -67,6 +67,7 @@ export interface ResourceGridViewProps {
   resources: CalendarResource[];
   events: CalendarEvent[];
   availability?: Record<string, AvailabilityRange[]>;
+  unavailability?: Record<string, AvailabilityRange[]>;
   timeAxis?: TimeAxisConfig;
   onEventClick?: (event: CalendarEvent) => void;
   slotDuration?: number;

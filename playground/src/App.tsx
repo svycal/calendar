@@ -183,6 +183,17 @@ const availability: Record<string, AvailabilityRange[]> = {
   // Dr. Davis: not listed — fully available
 };
 
+const unavailability: Record<string, AvailabilityRange[]> = {
+  // Dr. Johnson: blocked for staff meeting 12pm-1pm (on top of availability window)
+  '2': [
+    { startTime: `${today}T12:00:00`, endTime: `${today}T13:00:00` },
+  ],
+  // Dr. Davis: out for lunch 12pm-1pm (no availability set, only unavailability)
+  '5': [
+    { startTime: `${today}T12:00:00`, endTime: `${today}T13:00:00` },
+  ],
+};
+
 function App() {
   return (
     <div className="min-h-screen bg-cal-background p-8">
@@ -202,6 +213,7 @@ function App() {
               resources={resources}
               events={events}
               availability={availability}
+              unavailability={unavailability}
               timeAxis={{ startHour: 7, endHour: 18 }}
               slotDuration={15}
               onEventClick={(event) => console.log('Clicked:', event)}

@@ -6,23 +6,18 @@ export interface UnavailableBlock {
   height: number;
 }
 
-/**
- * Given available ranges for a single resource, compute the
- * unavailable blocks (the gaps) as pixel positions within the time axis.
- */
-export function computeUnavailableBlocks(
-  availableRanges: AvailabilityRange[],
-  timeZone: string,
-  startHour: number,
-  endHour: number,
-  hourHeight: number,
-): UnavailableBlock[] {
-  const axisStartMin = startHour * 60;
-  const axisEndMin = endHour * 60;
-  const pixelsPerMinute = hourHeight / 60;
+interface Interval {
+  start: number;
+  end: number;
+}
 
-  // Convert to minutes and clamp to axis
-  const intervals = availableRanges
+function toIntervals(
+  ranges: AvailabilityRange[],
+  timeZone: string,
+  axisStartMin: number,
+  axisEndMin: number,
+): Interval[] {
+  return ranges
     .map((r) => ({
       start: Math.max(
         getMinutesFromMidnight(r.startTime, timeZone),
@@ -33,41 +28,84 @@ export function computeUnavailableBlocks(
         axisEndMin,
       ),
     }))
-    .filter((i) => i.start < i.end)
-    .sort((a, b) => a.start - b.start);
+    .filter((i) => i.start < i.end);
+}
 
-  // Merge overlapping intervals
-  const merged: { start: number; end: number }[] = [];
-  for (const interval of intervals) {
+function mergeIntervals(intervals: Interval[]): Interval[] {
+  if (intervals.length === 0) return [];
+
+  const sorted = [...intervals].sort((a, b) => a.start - b.start);
+  const merged: Interval[] = [{ ...sorted[0] }];
+
+  for (let i = 1; i < sorted.length; i++) {
     const last = merged[merged.length - 1];
-    if (last && interval.start <= last.end) {
-      last.end = Math.max(last.end, interval.end);
+    if (sorted[i].start <= last.end) {
+      last.end = Math.max(last.end, sorted[i].end);
     } else {
-      merged.push({ ...interval });
+      merged.push({ ...sorted[i] });
     }
   }
 
-  // Walk gaps between merged available ranges
-  const blocks: UnavailableBlock[] = [];
+  return merged;
+}
+
+function invertIntervals(
+  available: Interval[],
+  axisStartMin: number,
+  axisEndMin: number,
+): Interval[] {
+  const merged = mergeIntervals(available);
+  const gaps: Interval[] = [];
   let cursor = axisStartMin;
 
-  for (const available of merged) {
-    if (cursor < available.start) {
-      blocks.push({
-        top: (cursor - axisStartMin) * pixelsPerMinute,
-        height: (available.start - cursor) * pixelsPerMinute,
-      });
+  for (const interval of merged) {
+    if (cursor < interval.start) {
+      gaps.push({ start: cursor, end: interval.start });
     }
-    cursor = Math.max(cursor, available.end);
+    cursor = Math.max(cursor, interval.end);
   }
 
-  // Trailing gap after last available range
   if (cursor < axisEndMin) {
-    blocks.push({
-      top: (cursor - axisStartMin) * pixelsPerMinute,
-      height: (axisEndMin - cursor) * pixelsPerMinute,
-    });
+    gaps.push({ start: cursor, end: axisEndMin });
   }
 
-  return blocks;
+  return gaps;
+}
+
+/**
+ * Compute unavailable blocks for a single resource by merging the inverse
+ * of available ranges with explicit unavailable ranges.
+ */
+export function computeUnavailableBlocks(
+  availableRanges: AvailabilityRange[] | undefined,
+  unavailableRanges: AvailabilityRange[] | undefined,
+  timeZone: string,
+  startHour: number,
+  endHour: number,
+  hourHeight: number,
+): UnavailableBlock[] {
+  const axisStartMin = startHour * 60;
+  const axisEndMin = endHour * 60;
+  const pixelsPerMinute = hourHeight / 60;
+
+  const unavailableIntervals: Interval[] = [];
+
+  // Invert available ranges to get unavailable gaps
+  if (availableRanges && availableRanges.length > 0) {
+    const available = toIntervals(availableRanges, timeZone, axisStartMin, axisEndMin);
+    unavailableIntervals.push(...invertIntervals(available, axisStartMin, axisEndMin));
+  }
+
+  // Add explicit unavailable ranges
+  if (unavailableRanges && unavailableRanges.length > 0) {
+    unavailableIntervals.push(
+      ...toIntervals(unavailableRanges, timeZone, axisStartMin, axisEndMin),
+    );
+  }
+
+  // Merge all unavailable intervals and convert to pixel positions
+  return mergeIntervals(unavailableIntervals).map((interval) => ({
+    top: (interval.start - axisStartMin) * pixelsPerMinute,
+    height: (interval.end - interval.start) * pixelsPerMinute,
+  }));
 }

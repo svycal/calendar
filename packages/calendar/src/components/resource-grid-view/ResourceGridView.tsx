@@ -24,6 +24,7 @@ export function ResourceGridView({
   resources,
   events,
   availability,
+  unavailability,
   timeAxis,
   onEventClick,
   slotDuration,
@@ -58,12 +59,20 @@ export function ResourceGridView({
   );
 
   const unavailableByResource = useMemo(() => {
-    if (!availability) return new Map<string, UnavailableBlock[]>();
+    if (!availability && !unavailability)
+      return new Map<string, UnavailableBlock[]>();
+
+    // Collect all resource IDs referenced by either prop
+    const resourceIds = new Set([
+      ...Object.keys(availability ?? {}),
+      ...Object.keys(unavailability ?? {}),
+    ]);
 
     const map = new Map<string, UnavailableBlock[]>();
-    for (const [resourceId, ranges] of Object.entries(availability)) {
+    for (const resourceId of resourceIds) {
       const blocks = computeUnavailableBlocks(
-        ranges,
+        availability?.[resourceId],
+        unavailability?.[resourceId],
         timeZone,
         startHour,
         endHour,
@@ -74,7 +83,7 @@ export function ResourceGridView({
       }
     }
     return map;
-  }, [availability, timeZone, startHour, endHour, hourHeight]);
+  }, [availability, unavailability, timeZone, startHour, endHour, hourHeight]);
 
   const rowHeight = (hourHeight * intervalMinutes) / 60;
 
