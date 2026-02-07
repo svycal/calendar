@@ -19,6 +19,8 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   eventColumn: 'relative mr-3',
   event:
     'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer bg-zinc-100/90 ring-1 ring-inset ring-zinc-900/15 dark:bg-zinc-800/90 dark:ring-white/15',
+  eventSelected:
+    'shadow-lg dark:shadow-lg dark:shadow-white/20 ring-zinc-900/30 dark:ring-white/30',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
   eventTitle: 'text-zinc-900 dark:text-zinc-100 text-xs/4 font-medium truncate',
   eventTime: 'text-zinc-500 dark:text-zinc-400 text-xs/4 truncate',

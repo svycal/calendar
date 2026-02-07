@@ -15,6 +15,7 @@ export interface CalendarEvent {
   resourceId: string;
   color?: string;
   clientName?: string;
+  selected?: boolean;
   status?: 'confirmed' | 'canceled';
   metadata?: Record<string, unknown>;
 }
@@ -56,6 +57,7 @@ export interface ResourceGridViewClassNames {
   bodyCellMinor?: string;
   eventColumn?: string;
   event?: string;
+  eventSelected?: string;
   eventColorBar?: string;
   eventTitle?: string;
   eventTime?: string;

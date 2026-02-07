@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { cn } from '@/lib/utils';
 import type {
   CalendarEvent,
   CalendarResource,
@@ -61,7 +62,7 @@ export const EventChip = memo(function EventChip({
     <div
       role="button"
       tabIndex={0}
-      className={cls('event')}
+      className={cn(cls('event'), event.selected && cls('eventSelected'))}
       style={{
         top,
         height,

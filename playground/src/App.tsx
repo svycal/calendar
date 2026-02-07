@@ -80,6 +80,7 @@ const events: CalendarEvent[] = [
     endTime: `${today}T10:45:00`,
     resourceId: '2',
     clientName: 'Diana Prince',
+    selected: true,
   },
   {
     id: '5',
@@ -205,7 +206,7 @@ function App() {
 
   return (
     <div
-      className={`min-h-screen bg-white dark:bg-zinc-950 p-8${dark ? ' dark' : ''}`}
+      className={`antialiased min-h-screen bg-white dark:bg-zinc-950 p-8${dark ? ' dark' : ''}`}
     >
       <div className="mb-8 flex items-center gap-4">
         <h1 className="text-zinc-950 dark:text-zinc-50 text-2xl font-bold">

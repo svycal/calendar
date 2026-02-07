@@ -7,6 +7,7 @@ import {
   type UnavailableBlock,
 } from '@/lib/availability';
 import type {
+  CalendarEvent,
   ResourceGridViewClassNames,
   ResourceGridViewProps,
 } from '@/types/calendar';
@@ -93,6 +94,14 @@ export function ResourceGridView({
     }
     return map;
   }, [availability, unavailability, timeZone, startHour, endHour, effectiveHourHeight]);
+
+  const handleEventClick = useCallback(
+    (event: CalendarEvent) => {
+      onSelect?.(null);
+      onEventClick?.(event);
+    },
+    [onSelect, onEventClick],
+  );
 
   useEffect(() => {
     if (!selectedRange || !onSelect) return;
@@ -233,7 +242,7 @@ export function ResourceGridView({
             column={i + 2}
             timeZone={timeZone}
             cls={cls}
-            onEventClick={onEventClick}
+            onEventClick={handleEventClick}
             renderEvent={renderEvent}
           />
         ))}
