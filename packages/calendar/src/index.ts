@@ -1,6 +1,9 @@
 // Components
-export { ResourceGridView } from './components/ResourceGridView';
+export { ResourceGridView } from './components/resource-grid-view';
 export { WeekView } from './components/WeekView';
+
+// Defaults
+export { resourceGridViewDefaults } from './components/resource-grid-view';
 
 // Types
 export type {
@@ -9,6 +12,8 @@ export type {
   TimeSlot,
   TimeAxisConfig,
   ResourceGridViewProps,
+  ResourceGridViewClassNames,
+  PositionedEvent,
   WeekViewProps,
 } from './types/calendar';
 

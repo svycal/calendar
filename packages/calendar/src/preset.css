@@ -36,4 +36,5 @@
   --color-cal-muted-foreground: var(--cal-muted-foreground);
   --color-cal-event-foreground: var(--cal-event-foreground);
   --color-cal-unavailable: var(--cal-unavailable);
+  --color-cal-slot-highlight: var(--cal-slot-highlight);
 }

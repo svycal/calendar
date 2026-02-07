@@ -24,6 +24,7 @@
   --cal-today: oklch(0.92 0.03 250);
   --cal-muted: oklch(0.95 0.005 285);
   --cal-muted-foreground: oklch(0.55 0.01 285);
+  --cal-slot-highlight: oklch(0.7 0.1 250 / 0.15);
 }
 
 /* Dark mode overrides */
@@ -42,4 +43,5 @@
   --cal-today: oklch(0.25 0.04 250);
   --cal-muted: oklch(0.25 0.005 285);
   --cal-muted-foreground: oklch(0.6 0.01 285);
+  --cal-slot-highlight: oklch(0.6 0.12 250 / 0.2);
 }

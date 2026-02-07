@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 export interface CalendarResource {
   id: string;
   name: string;
@@ -27,6 +29,32 @@ export interface TimeAxisConfig {
   intervalMinutes?: number;
 }
 
+export interface ResourceGridViewClassNames {
+  root?: string;
+  grid?: string;
+  cornerCell?: string;
+  headerCell?: string;
+  headerName?: string;
+  headerAvatar?: string;
+  gutterCell?: string;
+  gutterLabel?: string;
+  bodyCell?: string;
+  eventColumn?: string;
+  event?: string;
+  eventTitle?: string;
+  eventTime?: string;
+  nowIndicator?: string;
+  slotHighlight?: string;
+}
+
+export interface PositionedEvent {
+  event: CalendarEvent;
+  top: number;
+  height: number;
+  subColumn: number;
+  totalSubColumns: number;
+}
+
 export interface ResourceGridViewProps {
   date: string;
   timeZone: string;
@@ -35,7 +63,19 @@ export interface ResourceGridViewProps {
   availability?: TimeSlot[];
   timeAxis?: TimeAxisConfig;
   onEventClick?: (event: CalendarEvent) => void;
+  slotDuration?: number;
+  onSlotClick?: (info: {
+    resource: CalendarResource;
+    startTime: string;
+    endTime: string;
+  }) => void;
   className?: string;
+  classNames?: ResourceGridViewClassNames;
+  hourHeight?: number;
+  renderEvent?: (
+    event: CalendarEvent,
+    position: PositionedEvent,
+  ) => ReactNode;
 }
 
 export interface WeekViewProps {
