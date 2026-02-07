@@ -51,6 +51,7 @@ const events: CalendarEvent[] = [
     startTime: `${today}T09:00:00`,
     endTime: `${today}T09:45:00`,
     resourceId: '1',
+    clientName: 'Alice Thompson',
   },
   {
     id: '2',
@@ -58,6 +59,8 @@ const events: CalendarEvent[] = [
     startTime: `${today}T09:15:00`,
     endTime: `${today}T09:45:00`,
     resourceId: '1',
+    clientName: 'Bob Barker',
+    status: 'canceled',
   },
   {
     id: '3',
@@ -65,6 +68,7 @@ const events: CalendarEvent[] = [
     startTime: `${today}T14:00:00`,
     endTime: `${today}T14:30:00`,
     resourceId: '1',
+    clientName: 'Charlie Davis',
   },
 
   // Resource 2: non-overlapping events
@@ -74,6 +78,7 @@ const events: CalendarEvent[] = [
     startTime: `${today}T10:00:00`,
     endTime: `${today}T10:45:00`,
     resourceId: '2',
+    clientName: 'Diana Prince',
   },
   {
     id: '5',
@@ -81,6 +86,7 @@ const events: CalendarEvent[] = [
     startTime: `${today}T13:00:00`,
     endTime: `${today}T13:30:00`,
     resourceId: '2',
+    clientName: 'Eve Martinez',
   },
 
   // Resource 3: 3-event overlap
@@ -114,6 +120,7 @@ const events: CalendarEvent[] = [
     startTime: `${today}T08:00:00`,
     endTime: `${today}T11:30:00`,
     resourceId: '4',
+    clientName: 'Frank Wilson',
   },
   {
     id: '10',
@@ -159,6 +166,7 @@ const events: CalendarEvent[] = [
     startTime: `${today}T09:00:00`,
     endTime: `${today}T09:15:00`,
     resourceId: '2',
+    clientName: 'Grace Lee',
   },
 ];
 

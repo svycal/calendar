@@ -19,6 +19,7 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
   eventTitle: 'text-gray-900 dark:text-gray-100 text-xs/4 font-medium truncate',
   eventTime: 'text-gray-500 dark:text-gray-400 text-xs/4 truncate',
+  eventClientName: 'text-gray-500 dark:text-gray-400 text-xs/4 truncate',
   nowIndicator:
     'absolute left-0 right-0 h-0.5 bg-orange-500 dark:bg-orange-400 pointer-events-none',
   slotHighlight:

@@ -52,6 +52,26 @@ export function generateTimeSlots(config: TimeAxisConfig): TimeSlotEntry[] {
   return slots;
 }
 
+export function formatEventStartTime(
+  startTime: string,
+  timeZone: string,
+): string {
+  const d = new Date(startTime);
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(d);
+  const h = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
+  const m = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
+  const period = h >= 12 ? 'pm' : 'am';
+  const displayHour = h % 12 || 12;
+  if (m === 0) return `${displayHour} ${period}`;
+  return `${displayHour}:${String(m).padStart(2, '0')} ${period}`;
+}
+
 export function formatEventTimeRange(
   startTime: string,
   endTime: string,

@@ -5,12 +5,13 @@ import type {
   PositionedEvent,
   ResourceGridViewClassNames,
 } from '@/types/calendar';
-import { formatEventTimeRange } from '@/lib/time';
+import { formatEventStartTime } from '@/lib/time';
 
 interface EventChipProps {
   positioned: PositionedEvent;
   resource: CalendarResource;
   timeZone: string;
+  hourHeight: number;
   cls: (key: keyof ResourceGridViewClassNames) => string;
   onClick?: (event: CalendarEvent) => void;
   renderEvent?: (
@@ -23,6 +24,7 @@ export const EventChip = memo(function EventChip({
   positioned,
   resource,
   timeZone,
+  hourHeight,
   cls,
   onClick,
   renderEvent,
@@ -31,7 +33,11 @@ export const EventChip = memo(function EventChip({
   const color = event.color ?? resource.color ?? undefined;
   const leftPct = (subColumn / totalSubColumns) * 100;
   const widthPct = (1 / totalSubColumns) * 100;
-  const showTime = height >= 36;
+
+  // A "short" event is 30 minutes or less (half an hour height)
+  const isShort = height <= hourHeight / 2;
+  const showDetails = height >= 36;
+  const isCanceled = event.status === 'canceled';
 
   if (renderEvent) {
     return (
@@ -49,6 +55,8 @@ export const EventChip = memo(function EventChip({
       </div>
     );
   }
+
+  const startTimeStr = formatEventStartTime(event.startTime, timeZone);
 
   return (
     <div
@@ -73,11 +81,22 @@ export const EventChip = memo(function EventChip({
       {color && (
         <div className={cls('eventColorBar')} style={{ backgroundColor: color }} />
       )}
-      <div className={cls('eventTitle')}>{event.title}</div>
-      {showTime && (
-        <div className={cls('eventTime')}>
-          {formatEventTimeRange(event.startTime, event.endTime, timeZone)}
-        </div>
+      <div className={cls('eventTitle')} style={isCanceled ? { textDecoration: 'line-through' } : undefined}>
+        {event.title}
+      </div>
+      {showDetails && (
+        isShort && event.clientName ? (
+          <div className={cls('eventTime')}>
+            {startTimeStr}, {event.clientName}
+          </div>
+        ) : (
+          <>
+            <div className={cls('eventTime')}>{startTimeStr}</div>
+            {event.clientName && (
+              <div className={cls('eventClientName')}>{event.clientName}</div>
+            )}
+          </>
+        )
       )}
     </div>
   );
