@@ -141,6 +141,7 @@ export function ResourceGridView({
             label={slot.label}
             row={slot.index + 2}
             isHourStart={slot.isHourStart}
+            isFirst={slot.index === 0}
             cls={cls}
           />
         ))}
