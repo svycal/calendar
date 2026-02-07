@@ -1,0 +1,39 @@
+/**
+ * Tailwind CSS v4 Preset for @savvycal/calendar
+ *
+ * Import this file in your app's CSS BEFORE @import "tailwindcss":
+ *
+ *   @import "@savvycal/calendar/preset.css";
+ *   @import "tailwindcss";
+ *   @import "@savvycal/calendar/components.css";
+ *
+ * The @source directive tells Tailwind to scan the library's dist files
+ * for utility classes, generating only what's actually used.
+ */
+
+/*
+ * Tell Tailwind to scan the library's dist files for utility classes.
+ * This path is relative to where this CSS file is located (dist/).
+ * Because the @source is in the package itself, it works regardless of
+ * how node_modules is structured (npm, yarn, pnpm, etc.).
+ */
+@source ".";
+
+/* Theme tokens - extends host app's Tailwind theme */
+@theme {
+  /* Calendar-specific design tokens */
+  --color-cal-background: var(--cal-background);
+  --color-cal-foreground: var(--cal-foreground);
+  --color-cal-border: var(--cal-border);
+  --color-cal-gutter: var(--cal-gutter);
+  --color-cal-event: var(--cal-event);
+  --color-cal-now-indicator: var(--cal-now-indicator);
+  --color-cal-available: var(--cal-available);
+  --color-cal-header: var(--cal-header);
+  --color-cal-header-foreground: var(--cal-header-foreground);
+  --color-cal-today: var(--cal-today);
+  --color-cal-muted: var(--cal-muted);
+  --color-cal-muted-foreground: var(--cal-muted-foreground);
+  --color-cal-event-foreground: var(--cal-event-foreground);
+  --color-cal-unavailable: var(--cal-unavailable);
+}

@@ -1,0 +1,15 @@
+/**
+ * Playground CSS - Simulates a real consumer app
+ *
+ * This follows the same import pattern documented in the README,
+ * using local paths instead of node_modules references.
+ *
+ * NOTE: preset.css must come BEFORE tailwindcss so that @theme tokens
+ * are registered before Tailwind generates its utilities.
+ *
+ * The @source directive in preset.css handles scanning the library's
+ * files for Tailwind classes - no additional @source needed here.
+ */
+@import "../../packages/calendar/src/preset.css";
+@import "tailwindcss";
+@import "../../packages/calendar/src/components.css";
