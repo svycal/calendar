@@ -18,6 +18,7 @@ import { SlotInteractionLayer } from './SlotInteractionLayer';
 import { SelectionOverlay } from './SelectionOverlay';
 import { UnavailabilityOverlay } from './UnavailabilityOverlay';
 import { NowIndicator } from './NowIndicator';
+import { useEffectiveHourHeight } from './useEffectiveHourHeight';
 
 export function ResourceGridView({
   date,
@@ -41,6 +42,9 @@ export function ResourceGridView({
   const endHour = timeAxis?.endHour ?? 24;
   const intervalMinutes = timeAxis?.intervalMinutes ?? 60;
 
+  const { effectiveHourHeight, rootRef, headerRef } =
+    useEffectiveHourHeight(hourHeight, endHour - startHour);
+
   const cls = useCallback(
     (key: keyof ResourceGridViewClassNames) =>
       cn(
@@ -57,8 +61,8 @@ export function ResourceGridView({
 
   const positionedByResource = useMemo(
     () =>
-      computePositionedEvents(events, timeZone, startHour, endHour, hourHeight),
-    [events, timeZone, startHour, endHour, hourHeight],
+      computePositionedEvents(events, timeZone, startHour, endHour, effectiveHourHeight),
+    [events, timeZone, startHour, endHour, effectiveHourHeight],
   );
 
   const unavailableByResource = useMemo(() => {
@@ -79,14 +83,14 @@ export function ResourceGridView({
         timeZone,
         startHour,
         endHour,
-        hourHeight,
+        effectiveHourHeight,
       );
       if (blocks.length > 0) {
         map.set(resourceId, blocks);
       }
     }
     return map;
-  }, [availability, unavailability, timeZone, startHour, endHour, hourHeight]);
+  }, [availability, unavailability, timeZone, startHour, endHour, effectiveHourHeight]);
 
   useEffect(() => {
     if (!selectedRange || !onSelect) return;
@@ -101,10 +105,10 @@ export function ResourceGridView({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedRange, onSelect]);
 
-  const rowHeight = (hourHeight * intervalMinutes) / 60;
+  const rowHeight = (effectiveHourHeight * intervalMinutes) / 60;
 
   return (
-    <div className={cn(cls('root'), className)}>
+    <div ref={rootRef} className={cn(cls('root'), className)}>
       <div
         className={cls('grid')}
         style={{
@@ -115,6 +119,7 @@ export function ResourceGridView({
       >
         {/* Corner cell */}
         <div
+          ref={headerRef}
           className={cls('cornerCell')}
           style={{ gridRow: 1, gridColumn: 1 }}
         />
@@ -187,7 +192,7 @@ export function ResourceGridView({
               date={date}
               startHour={startHour}
               endHour={endHour}
-              hourHeight={hourHeight}
+              hourHeight={effectiveHourHeight}
               slotDuration={slotDuration}
               cls={cls}
               onSlotClick={onSlotClick}
@@ -207,7 +212,7 @@ export function ResourceGridView({
                 selectedRange={selectedRange}
                 column={colIdx + 2}
                 startHour={startHour}
-                hourHeight={hourHeight}
+                hourHeight={effectiveHourHeight}
                 cls={cls}
               />
             );
@@ -234,7 +239,7 @@ export function ResourceGridView({
           date={date}
           timeZone={timeZone}
           startHour={startHour}
-          hourHeight={hourHeight}
+          hourHeight={effectiveHourHeight}
           cls={cls}
         />
       </div>
