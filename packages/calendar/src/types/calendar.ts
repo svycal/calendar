@@ -94,6 +94,7 @@ export interface ResourceGridViewProps {
   onSelect?: (range: SelectedRange | null) => void;
   classNames?: ResourceGridViewClassNames;
   hourHeight?: number;
+  columnMinWidth?: number;
   renderEvent?: (
     event: CalendarEvent,
     position: PositionedEvent,
