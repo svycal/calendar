@@ -138,6 +138,10 @@ export function ResourceGridView({
                 ...(!slot.isHourStart
                   ? { borderTopStyle: 'dotted' as const }
                   : {}),
+                ...(slot.index === 0 ? { borderTopWidth: 0 } : {}),
+                ...(colIdx === resources.length - 1
+                  ? { borderRightWidth: 0 }
+                  : {}),
               }}
             />
           )),
