@@ -258,6 +258,7 @@ function App() {
             <ResourceGridView
               date={today}
               timeZone="America/New_York"
+              columnMinWidth={300}
               resources={resources}
               events={events}
               availability={availability}
