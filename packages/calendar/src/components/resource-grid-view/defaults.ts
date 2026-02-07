@@ -4,9 +4,9 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   root: 'overflow-auto relative',
   grid: '',
   cornerCell:
-    'bg-white dark:bg-zinc-950 border-b border-r border-zinc-200 dark:border-zinc-700 sticky top-0 left-0 z-30',
+    'bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-700 sticky top-0 left-0 z-30',
   headerCell:
-    'bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-700 sticky top-0 z-20 flex items-center gap-2 px-3 py-2',
+    'bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-700 sticky top-0 z-20 flex items-center gap-2 px-3 py-2',
   headerName: 'text-zinc-950 dark:text-zinc-50 text-sm font-medium truncate',
   headerAvatar: 'size-6 rounded-full object-cover',
   gutterCell:
@@ -30,5 +30,7 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   slotHighlight:
     'bg-blue-400/15 dark:bg-blue-500/20 rounded-md transition-[top,opacity] duration-75',
   selectionHighlight: 'bg-blue-400/25 dark:bg-blue-500/30 rounded-md',
+  allDayCell:
+    'bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-700 sticky z-20 px-1 py-1 flex flex-wrap gap-1',
   unavailableOverlay: 'cal-unavailable-overlay',
 };

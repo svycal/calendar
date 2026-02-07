@@ -171,6 +171,35 @@ const events: CalendarEvent[] = [
     resourceId: '2',
     clientName: 'Grace Lee',
   },
+
+  // All-day events
+  {
+    id: '16',
+    title: 'Conference',
+    startTime: `${today}T00:00:00`,
+    endTime: `${today}T23:59:59`,
+    resourceId: '1',
+    allDay: true,
+    color: '#3b82f6',
+  },
+  {
+    id: '17',
+    title: 'PTO',
+    startTime: `${today}T00:00:00`,
+    endTime: `${today}T23:59:59`,
+    resourceId: '3',
+    allDay: true,
+    color: '#10b981',
+  },
+  {
+    id: '18',
+    title: 'Training Day',
+    startTime: `${today}T00:00:00`,
+    endTime: `${today}T23:59:59`,
+    resourceId: '1',
+    allDay: true,
+    color: '#f59e0b',
+  },
 ];
 
 const availability: Record<string, AvailabilityRange[]> = {

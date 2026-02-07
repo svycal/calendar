@@ -258,7 +258,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     <div
       ref={containerRef}
       style={{
-        gridRow: '2 / -1',
+        gridRow: '3 / -1',
         gridColumn: column,
         position: 'relative',
         pointerEvents: 'auto',

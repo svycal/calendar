@@ -13,6 +13,7 @@ export interface CalendarEvent {
   startTime: string;
   endTime: string;
   resourceId: string;
+  allDay?: boolean;
   color?: string;
   clientName?: string;
   selected?: boolean;
@@ -65,6 +66,7 @@ export interface ResourceGridViewClassNames {
   nowIndicator?: string;
   slotHighlight?: string;
   selectionHighlight?: string;
+  allDayCell?: string;
   unavailableOverlay?: string;
 }
 

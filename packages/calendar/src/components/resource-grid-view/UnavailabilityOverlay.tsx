@@ -18,7 +18,7 @@ export const UnavailabilityOverlay = memo(function UnavailabilityOverlay({
   return (
     <div
       style={{
-        gridRow: '2 / -1',
+        gridRow: '3 / -1',
         gridColumn: column,
         position: 'relative',
         pointerEvents: 'none',

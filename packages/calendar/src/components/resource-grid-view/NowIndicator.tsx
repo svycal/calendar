@@ -81,7 +81,7 @@ export const NowIndicator = memo(function NowIndicator({
   return (
     <div
       style={{
-        gridRow: '2 / -1',
+        gridRow: '3 / -1',
         gridColumn: '1 / -1',
         position: 'relative',
         pointerEvents: 'none',

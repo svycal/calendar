@@ -33,7 +33,7 @@ export const ResourceColumn = memo(function ResourceColumn({
     <div
       className={cls('eventColumn')}
       style={{
-        gridRow: '2 / -1',
+        gridRow: '3 / -1',
         gridColumn: column,
         pointerEvents: 'none',
       }}

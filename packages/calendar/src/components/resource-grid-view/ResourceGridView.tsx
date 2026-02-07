@@ -19,6 +19,7 @@ import { SlotInteractionLayer } from './SlotInteractionLayer';
 import { SelectionOverlay } from './SelectionOverlay';
 import { UnavailabilityOverlay } from './UnavailabilityOverlay';
 import { NowIndicator } from './NowIndicator';
+import { AllDayRow } from './AllDayRow';
 import { useEffectiveHourHeight } from './useEffectiveHourHeight';
 
 export function ResourceGridView({
@@ -45,7 +46,7 @@ export function ResourceGridView({
   const endHour = timeAxis?.endHour ?? 24;
   const intervalMinutes = timeAxis?.intervalMinutes ?? 60;
 
-  const { effectiveHourHeight, rootRef, headerRef } =
+  const { effectiveHourHeight, rootRef, headerRef, allDayRef, headerHeight } =
     useEffectiveHourHeight(hourHeight, endHour - startHour);
 
   const cls = useCallback(
@@ -62,10 +63,36 @@ export function ResourceGridView({
     [startHour, endHour, intervalMinutes],
   );
 
+  const { allDayEvents, timedEvents } = useMemo(() => {
+    const allDay: CalendarEvent[] = [];
+    const timed: CalendarEvent[] = [];
+    for (const event of events) {
+      if (event.allDay) {
+        allDay.push(event);
+      } else {
+        timed.push(event);
+      }
+    }
+    return { allDayEvents: allDay, timedEvents: timed };
+  }, [events]);
+
+  const allDayByResource = useMemo(() => {
+    const map = new Map<string, CalendarEvent[]>();
+    for (const event of allDayEvents) {
+      const list = map.get(event.resourceId);
+      if (list) {
+        list.push(event);
+      } else {
+        map.set(event.resourceId, [event]);
+      }
+    }
+    return map;
+  }, [allDayEvents]);
+
   const positionedByResource = useMemo(
     () =>
-      computePositionedEvents(events, timeZone, startHour, endHour, effectiveHourHeight),
-    [events, timeZone, startHour, endHour, effectiveHourHeight],
+      computePositionedEvents(timedEvents, timeZone, startHour, endHour, effectiveHourHeight),
+    [timedEvents, timeZone, startHour, endHour, effectiveHourHeight],
   );
 
   const unavailableByResource = useMemo(() => {
@@ -125,7 +152,7 @@ export function ResourceGridView({
         style={{
           display: 'grid',
           gridTemplateColumns: `max-content repeat(${resources.length}, minmax(${columnMinWidth}px, 1fr))`,
-          gridTemplateRows: `auto repeat(${timeSlots.length}, ${rowHeight}px)`,
+          gridTemplateRows: `auto auto repeat(${timeSlots.length}, ${rowHeight}px)`,
         }}
       >
         {/* Corner cell */}
@@ -146,12 +173,42 @@ export function ResourceGridView({
           />
         ))}
 
+        {/* All-day gutter cell */}
+        <div
+          ref={allDayRef}
+          className={cn(cls('allDayCell'), 'border-r border-zinc-200 dark:border-zinc-700 sticky left-0 z-30')}
+          style={{
+            gridRow: 2,
+            gridColumn: 1,
+            top: headerHeight,
+          }}
+        />
+
+        {/* All-day cells */}
+        {resources.map((resource, i) => (
+          <div
+            key={`allday-${resource.id}`}
+            className={cls('allDayCell')}
+            style={{
+              gridRow: 2,
+              gridColumn: i + 2,
+              top: headerHeight,
+            }}
+          >
+            <AllDayRow
+              events={allDayByResource.get(resource.id) ?? []}
+              cls={cls}
+              onEventClick={handleEventClick}
+            />
+          </div>
+        ))}
+
         {/* Gutter cells */}
         {timeSlots.map((slot) => (
           <TimeGutter
             key={slot.index}
             label={slot.label}
-            row={slot.index + 2}
+            row={slot.index + 3}
             isHourStart={slot.isHourStart}
             isFirst={slot.index === 0}
             cls={cls}
@@ -167,15 +224,13 @@ export function ResourceGridView({
                 slot.isHourStart ? 'bodyCell' : 'bodyCellMinor',
               )}
               style={{
-                gridRow: slot.index + 2,
+                gridRow: slot.index + 3,
                 gridColumn: colIdx + 2,
                 ...(!slot.isHourStart
                   ? { borderTopStyle: 'dotted' as const }
                   : {}),
                 ...(slot.index === 0 ? { borderTopWidth: 0 } : {}),
-                ...(colIdx === resources.length - 1
-                  ? { borderRightWidth: 0 }
-                  : {}),
+                ...(colIdx === resources.length - 1 ? { borderRightWidth: 0 } : {}),
               }}
             />
           )),
