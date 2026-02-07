@@ -9,7 +9,7 @@ export interface TimeSlotEntry {
 }
 
 export function formatTimeLabel(hour: number, minute: number): string {
-  const period = hour >= 12 ? 'PM' : 'AM';
+  const period = hour >= 12 ? 'pm' : 'am';
   const displayHour = hour % 12 || 12;
   if (minute === 0) return `${displayHour} ${period}`;
   return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
