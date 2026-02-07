@@ -12,4 +12,5 @@
  */
 @import "../../packages/calendar/src/preset.css";
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 @import "../../packages/calendar/src/components.css";

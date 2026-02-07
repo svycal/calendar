@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   ResourceGridView,
   WeekView,
@@ -195,11 +196,21 @@ const unavailability: Record<string, AvailabilityRange[]> = {
 };
 
 function App() {
+  const [dark, setDark] = useState(false);
+
   return (
-    <div className="min-h-screen bg-cal-background p-8">
-      <h1 className="text-cal-foreground mb-8 text-2xl font-bold">
-        Calendar Playground
-      </h1>
+    <div className={`min-h-screen bg-cal-background p-8${dark ? ' dark' : ''}`}>
+      <div className="mb-8 flex items-center gap-4">
+        <h1 className="text-cal-foreground text-2xl font-bold">
+          Calendar Playground
+        </h1>
+        <button
+          onClick={() => setDark(!dark)}
+          className="rounded border border-cal-border bg-cal-background px-3 py-1 text-sm text-cal-foreground hover:opacity-80"
+        >
+          {dark ? '☀️ Light' : '🌙 Dark'}
+        </button>
+      </div>
 
       <div className="space-y-8">
         <section>
