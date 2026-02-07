@@ -10,6 +10,7 @@
 
 /* Unavailable time overlay with cross-hatching */
 .cal-unavailable-overlay {
+  background-attachment: fixed;
   background-image: repeating-linear-gradient(
     -45deg,
     oklch(0 0 0 / 0.02),
