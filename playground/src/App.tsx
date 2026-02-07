@@ -5,6 +5,7 @@ import {
   type CalendarResource,
   type CalendarEvent,
   type AvailabilityRange,
+  type SelectedRange,
 } from '@savvycal/calendar';
 
 // Use today's date so the now indicator renders
@@ -198,6 +199,7 @@ const unavailability: Record<string, AvailabilityRange[]> = {
 
 function App() {
   const [dark, setDark] = useState(false);
+  const [selectedRange, setSelectedRange] = useState<SelectedRange | null>(null);
 
   return (
     <div
@@ -232,6 +234,11 @@ function App() {
               timeAxis={{ startHour: 7, endHour: 18, intervalMinutes: 15 }}
               slotDuration={15}
               onEventClick={(event) => console.log('Clicked:', event)}
+              selectedRange={selectedRange}
+              onSelect={(range) => {
+                setSelectedRange(range);
+                console.log('Selection:', range);
+              }}
               onSlotClick={(info) => console.log('Slot clicked:', info)}
               className="h-full"
             />

@@ -27,5 +27,6 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
     'absolute left-0 right-0 h-0.5 bg-orange-500 dark:bg-orange-400 pointer-events-none',
   slotHighlight:
     'bg-blue-400/15 dark:bg-blue-500/20 rounded-sm transition-[top,opacity] duration-75',
+  selectionHighlight: 'bg-blue-400/25 dark:bg-blue-500/30 rounded-sm',
   unavailableOverlay: 'cal-unavailable-overlay',
 };

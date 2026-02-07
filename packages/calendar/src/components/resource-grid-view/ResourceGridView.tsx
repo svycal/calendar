@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { generateTimeSlots } from '@/lib/time';
 import { computePositionedEvents } from '@/lib/overlap';
@@ -15,6 +15,7 @@ import { GridHeader } from './GridHeader';
 import { TimeGutter } from './TimeGutter';
 import { ResourceColumn } from './ResourceColumn';
 import { SlotInteractionLayer } from './SlotInteractionLayer';
+import { SelectionOverlay } from './SelectionOverlay';
 import { UnavailabilityOverlay } from './UnavailabilityOverlay';
 import { NowIndicator } from './NowIndicator';
 
@@ -28,6 +29,8 @@ export function ResourceGridView({
   timeAxis,
   onEventClick,
   slotDuration,
+  selectedRange,
+  onSelect,
   onSlotClick,
   className,
   classNames,
@@ -84,6 +87,19 @@ export function ResourceGridView({
     }
     return map;
   }, [availability, unavailability, timeZone, startHour, endHour, hourHeight]);
+
+  useEffect(() => {
+    if (!selectedRange || !onSelect) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onSelect(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedRange, onSelect]);
 
   const rowHeight = (hourHeight * intervalMinutes) / 60;
 
@@ -175,8 +191,27 @@ export function ResourceGridView({
               slotDuration={slotDuration}
               cls={cls}
               onSlotClick={onSlotClick}
+              onSelect={onSelect}
             />
           ))}
+
+        {/* Selection overlay */}
+        {selectedRange != null &&
+          (() => {
+            const colIdx = resources.findIndex(
+              (r) => r.id === selectedRange.resourceId,
+            );
+            if (colIdx === -1) return null;
+            return (
+              <SelectionOverlay
+                selectedRange={selectedRange}
+                column={colIdx + 2}
+                startHour={startHour}
+                hourHeight={hourHeight}
+                cls={cls}
+              />
+            );
+          })()}
 
         {/* Resource columns with events */}
         {resources.map((resource, i) => (

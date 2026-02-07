@@ -15,6 +15,7 @@ export type {
   ResourceGridViewProps,
   ResourceGridViewClassNames,
   PositionedEvent,
+  SelectedRange,
   WeekViewProps,
 } from './types/calendar';
 

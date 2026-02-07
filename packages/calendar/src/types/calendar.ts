@@ -30,6 +30,12 @@ export interface AvailabilityRange {
   endTime: string;
 }
 
+export interface SelectedRange {
+  resourceId: string;
+  startTime: string;
+  endTime: string;
+}
+
 export interface TimeAxisConfig {
   startHour?: number;
   endHour?: number;
@@ -56,6 +62,7 @@ export interface ResourceGridViewClassNames {
   eventClientName?: string;
   nowIndicator?: string;
   slotHighlight?: string;
+  selectionHighlight?: string;
   unavailableOverlay?: string;
 }
 
@@ -83,6 +90,8 @@ export interface ResourceGridViewProps {
     endTime: string;
   }) => void;
   className?: string;
+  selectedRange?: SelectedRange | null;
+  onSelect?: (range: SelectedRange | null) => void;
   classNames?: ResourceGridViewClassNames;
   hourHeight?: number;
   renderEvent?: (
