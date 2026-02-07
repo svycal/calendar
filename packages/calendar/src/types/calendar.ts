@@ -23,6 +23,11 @@ export interface TimeSlot {
   available: boolean;
 }
 
+export interface AvailabilityRange {
+  startTime: string;
+  endTime: string;
+}
+
 export interface TimeAxisConfig {
   startHour?: number;
   endHour?: number;
@@ -45,6 +50,7 @@ export interface ResourceGridViewClassNames {
   eventTime?: string;
   nowIndicator?: string;
   slotHighlight?: string;
+  unavailableOverlay?: string;
 }
 
 export interface PositionedEvent {
@@ -60,7 +66,7 @@ export interface ResourceGridViewProps {
   timeZone: string;
   resources: CalendarResource[];
   events: CalendarEvent[];
-  availability?: TimeSlot[];
+  availability?: Record<string, AvailabilityRange[]>;
   timeAxis?: TimeAxisConfig;
   onEventClick?: (event: CalendarEvent) => void;
   slotDuration?: number;

@@ -10,6 +10,7 @@ export type {
   CalendarResource,
   CalendarEvent,
   TimeSlot,
+  AvailabilityRange,
   TimeAxisConfig,
   ResourceGridViewProps,
   ResourceGridViewClassNames,

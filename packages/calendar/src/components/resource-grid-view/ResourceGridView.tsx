@@ -2,6 +2,10 @@ import { useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { generateTimeSlots } from '@/lib/time';
 import { computePositionedEvents } from '@/lib/overlap';
+import {
+  computeUnavailableBlocks,
+  type UnavailableBlock,
+} from '@/lib/availability';
 import type {
   ResourceGridViewClassNames,
   ResourceGridViewProps,
@@ -11,6 +15,7 @@ import { GridHeader } from './GridHeader';
 import { TimeGutter } from './TimeGutter';
 import { ResourceColumn } from './ResourceColumn';
 import { SlotInteractionLayer } from './SlotInteractionLayer';
+import { UnavailabilityOverlay } from './UnavailabilityOverlay';
 import { NowIndicator } from './NowIndicator';
 
 export function ResourceGridView({
@@ -18,6 +23,7 @@ export function ResourceGridView({
   timeZone,
   resources,
   events,
+  availability,
   timeAxis,
   onEventClick,
   slotDuration,
@@ -50,6 +56,25 @@ export function ResourceGridView({
       computePositionedEvents(events, timeZone, startHour, endHour, hourHeight),
     [events, timeZone, startHour, endHour, hourHeight],
   );
+
+  const unavailableByResource = useMemo(() => {
+    if (!availability) return new Map<string, UnavailableBlock[]>();
+
+    const map = new Map<string, UnavailableBlock[]>();
+    for (const [resourceId, ranges] of Object.entries(availability)) {
+      const blocks = computeUnavailableBlocks(
+        ranges,
+        timeZone,
+        startHour,
+        endHour,
+        hourHeight,
+      );
+      if (blocks.length > 0) {
+        map.set(resourceId, blocks);
+      }
+    }
+    return map;
+  }, [availability, timeZone, startHour, endHour, hourHeight]);
 
   const rowHeight = (hourHeight * intervalMinutes) / 60;
 
@@ -102,6 +127,20 @@ export function ResourceGridView({
             />
           )),
         )}
+
+        {/* Unavailability overlays */}
+        {resources.map((resource, i) => {
+          const blocks = unavailableByResource.get(resource.id);
+          if (!blocks) return null;
+          return (
+            <UnavailabilityOverlay
+              key={`unavail-${resource.id}`}
+              blocks={blocks}
+              column={i + 2}
+              cls={cls}
+            />
+          );
+        })}
 
         {/* Slot interaction layers (between body cells and event columns) */}
         {slotDuration != null &&

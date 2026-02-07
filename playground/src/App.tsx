@@ -3,6 +3,7 @@ import {
   WeekView,
   type CalendarResource,
   type CalendarEvent,
+  type AvailabilityRange,
 } from '@savvycal/calendar';
 
 // Use today's date so the now indicator renders
@@ -160,6 +161,28 @@ const events: CalendarEvent[] = [
   },
 ];
 
+const availability: Record<string, AvailabilityRange[]> = {
+  // Dr. Smith: available 9am-12pm and 1pm-5pm (lunch break)
+  '1': [
+    { startTime: `${today}T09:00:00`, endTime: `${today}T12:00:00` },
+    { startTime: `${today}T13:00:00`, endTime: `${today}T17:00:00` },
+  ],
+  // Dr. Johnson: available 8am-3pm
+  '2': [
+    { startTime: `${today}T08:00:00`, endTime: `${today}T15:00:00` },
+  ],
+  // Dr. Williams: available 10am-6pm
+  '3': [
+    { startTime: `${today}T10:00:00`, endTime: `${today}T18:00:00` },
+  ],
+  // Dr. Brown: available 7am-11am and 2pm-5pm
+  '4': [
+    { startTime: `${today}T07:00:00`, endTime: `${today}T11:00:00` },
+    { startTime: `${today}T14:00:00`, endTime: `${today}T17:00:00` },
+  ],
+  // Dr. Davis: not listed — fully available
+};
+
 function App() {
   return (
     <div className="min-h-screen bg-cal-background p-8">
@@ -178,6 +201,7 @@ function App() {
               timeZone="America/New_York"
               resources={resources}
               events={events}
+              availability={availability}
               timeAxis={{ startHour: 7, endHour: 18 }}
               slotDuration={15}
               onEventClick={(event) => console.log('Clicked:', event)}

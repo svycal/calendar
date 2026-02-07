@@ -22,4 +22,5 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
     'absolute left-0 right-0 h-0.5 bg-cal-now-indicator pointer-events-none',
   slotHighlight:
     'bg-cal-slot-highlight rounded-sm transition-[top,opacity] duration-75',
+  unavailableOverlay: 'cal-unavailable-overlay',
 };

@@ -27,6 +27,17 @@
   --cal-slot-highlight: oklch(0.7 0.1 250 / 0.15);
 }
 
+/* Unavailable time overlay with cross-hatching */
+.cal-unavailable-overlay {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    oklch(0 0 0 / 0.02),
+    oklch(0 0 0 / 0.02) 6px,
+    oklch(0 0 0 / 0.08) 6px,
+    oklch(0 0 0 / 0.08) 12px
+  );
+}
+
 /* Dark mode overrides */
 .dark {
   --cal-background: oklch(0.145 0.015 285);
@@ -44,4 +55,14 @@
   --cal-muted: oklch(0.25 0.005 285);
   --cal-muted-foreground: oklch(0.6 0.01 285);
   --cal-slot-highlight: oklch(0.6 0.12 250 / 0.2);
+}
+
+.dark .cal-unavailable-overlay {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    oklch(1 0 0 / 0.02),
+    oklch(1 0 0 / 0.02) 6px,
+    oklch(1 0 0 / 0.08) 6px,
+    oklch(1 0 0 / 0.08) 12px
+  );
 }
