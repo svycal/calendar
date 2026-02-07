@@ -149,6 +149,7 @@ const events: CalendarEvent[] = [
   {
     id: '13',
     title: 'Patient Intake',
+    clientName: 'Bob Williams',
     startTime: `${today}T14:30:00`,
     endTime: `${today}T15:15:00`,
     resourceId: '5',
@@ -177,13 +178,9 @@ const availability: Record<string, AvailabilityRange[]> = {
     { startTime: `${today}T13:00:00`, endTime: `${today}T17:00:00` },
   ],
   // Dr. Johnson: available 8am-3pm
-  '2': [
-    { startTime: `${today}T08:00:00`, endTime: `${today}T15:00:00` },
-  ],
+  '2': [{ startTime: `${today}T08:00:00`, endTime: `${today}T15:00:00` }],
   // Dr. Williams: available 10am-6pm
-  '3': [
-    { startTime: `${today}T10:00:00`, endTime: `${today}T18:00:00` },
-  ],
+  '3': [{ startTime: `${today}T10:00:00`, endTime: `${today}T18:00:00` }],
   // Dr. Brown: available 7am-11am and 2pm-5pm
   '4': [
     { startTime: `${today}T07:00:00`, endTime: `${today}T11:00:00` },
@@ -194,20 +191,18 @@ const availability: Record<string, AvailabilityRange[]> = {
 
 const unavailability: Record<string, AvailabilityRange[]> = {
   // Dr. Johnson: blocked for staff meeting 12pm-1pm (on top of availability window)
-  '2': [
-    { startTime: `${today}T12:00:00`, endTime: `${today}T13:00:00` },
-  ],
+  '2': [{ startTime: `${today}T12:00:00`, endTime: `${today}T13:00:00` }],
   // Dr. Davis: out for lunch 12pm-1pm (no availability set, only unavailability)
-  '5': [
-    { startTime: `${today}T12:00:00`, endTime: `${today}T13:00:00` },
-  ],
+  '5': [{ startTime: `${today}T12:00:00`, endTime: `${today}T13:00:00` }],
 };
 
 function App() {
   const [dark, setDark] = useState(false);
 
   return (
-    <div className={`min-h-screen bg-white dark:bg-gray-950 p-8${dark ? ' dark' : ''}`}>
+    <div
+      className={`min-h-screen bg-white dark:bg-gray-950 p-8${dark ? ' dark' : ''}`}
+    >
       <div className="mb-8 flex items-center gap-4">
         <h1 className="text-gray-950 dark:text-gray-50 text-2xl font-bold">
           Calendar Playground

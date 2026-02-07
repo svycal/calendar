@@ -12,7 +12,6 @@ interface ResourceColumnProps {
   positionedEvents: PositionedEvent[];
   column: number;
   timeZone: string;
-  hourHeight: number;
   cls: (key: keyof ResourceGridViewClassNames) => string;
   onEventClick?: (event: CalendarEvent) => void;
   renderEvent?: (
@@ -26,7 +25,6 @@ export const ResourceColumn = memo(function ResourceColumn({
   positionedEvents,
   column,
   timeZone,
-  hourHeight,
   cls,
   onEventClick,
   renderEvent,
@@ -46,7 +44,6 @@ export const ResourceColumn = memo(function ResourceColumn({
           positioned={positioned}
           resource={resource}
           timeZone={timeZone}
-          hourHeight={hourHeight}
           cls={cls}
           onClick={onEventClick}
           renderEvent={renderEvent}

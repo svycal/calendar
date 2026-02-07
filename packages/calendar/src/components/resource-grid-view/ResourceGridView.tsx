@@ -178,7 +178,6 @@ export function ResourceGridView({
             }
             column={i + 2}
             timeZone={timeZone}
-            hourHeight={hourHeight}
             cls={cls}
             onEventClick={onEventClick}
             renderEvent={renderEvent}
