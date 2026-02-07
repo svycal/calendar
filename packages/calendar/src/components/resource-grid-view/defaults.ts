@@ -17,8 +17,8 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   event:
     'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer bg-gray-100/90 ring-1 ring-inset ring-gray-900/15 dark:bg-gray-800/90 dark:ring-white/15',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
-  eventTitle: 'text-gray-900 dark:text-gray-100 text-xs font-medium truncate',
-  eventTime: 'text-gray-500 dark:text-gray-400 text-[10px] truncate',
+  eventTitle: 'text-gray-900 dark:text-gray-100 text-xs/4 font-medium truncate',
+  eventTime: 'text-gray-500 dark:text-gray-400 text-xs/4 truncate',
   nowIndicator:
     'absolute left-0 right-0 h-0.5 bg-orange-500 dark:bg-orange-400 pointer-events-none',
   slotHighlight:
