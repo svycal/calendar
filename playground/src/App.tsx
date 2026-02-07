@@ -199,7 +199,9 @@ const unavailability: Record<string, AvailabilityRange[]> = {
 
 function App() {
   const [dark, setDark] = useState(false);
-  const [selectedRange, setSelectedRange] = useState<SelectedRange | null>(null);
+  const [selectedRange, setSelectedRange] = useState<SelectedRange | null>(
+    null
+  );
 
   return (
     <div
@@ -213,7 +215,7 @@ function App() {
           onClick={() => setDark(!dark)}
           className="rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-1 text-sm text-zinc-950 dark:text-zinc-50 hover:opacity-80"
         >
-          {dark ? '☀️ Light' : '🌙 Dark'}
+          {dark ? '☀️ Switch to light' : '🌙 Switch to dark'}
         </button>
       </div>
 
@@ -222,7 +224,7 @@ function App() {
           <h2 className="text-zinc-950 dark:text-zinc-50 mb-4 text-xl font-semibold">
             Resource Grid View
           </h2>
-          <div className="h-[600px]">
+          <div className="h-200">
             <ResourceGridView
               date={today}
               timeZone="America/New_York"
