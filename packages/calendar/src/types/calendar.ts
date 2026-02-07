@@ -96,10 +96,10 @@ export interface ResourceGridViewProps {
   hourHeight?: number;
   columnMinWidth?: number;
   renderHeader?: (props: { resource: CalendarResource }) => ReactNode;
-  renderEvent?: (
-    event: CalendarEvent,
-    position: PositionedEvent,
-  ) => ReactNode;
+  renderEvent?: (props: {
+    event: CalendarEvent;
+    position: PositionedEvent;
+  }) => ReactNode;
 }
 
 export interface WeekViewProps {

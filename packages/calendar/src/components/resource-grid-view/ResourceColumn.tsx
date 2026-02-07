@@ -14,10 +14,10 @@ interface ResourceColumnProps {
   timeZone: string;
   cls: (key: keyof ResourceGridViewClassNames) => string;
   onEventClick?: (event: CalendarEvent) => void;
-  renderEvent?: (
-    event: CalendarEvent,
-    position: PositionedEvent,
-  ) => React.ReactNode;
+  renderEvent?: (props: {
+    event: CalendarEvent;
+    position: PositionedEvent;
+  }) => React.ReactNode;
 }
 
 export const ResourceColumn = memo(function ResourceColumn({

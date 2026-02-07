@@ -13,10 +13,10 @@ interface EventChipProps {
   timeZone: string;
   cls: (key: keyof ResourceGridViewClassNames) => string;
   onClick?: (event: CalendarEvent) => void;
-  renderEvent?: (
-    event: CalendarEvent,
-    position: PositionedEvent
-  ) => React.ReactNode;
+  renderEvent?: (props: {
+    event: CalendarEvent;
+    position: PositionedEvent;
+  }) => React.ReactNode;
 }
 
 export const EventChip = memo(function EventChip({
@@ -50,7 +50,7 @@ export const EventChip = memo(function EventChip({
           pointerEvents: 'auto',
         }}
       >
-        {renderEvent(event, positioned)}
+        {renderEvent({ event, position: positioned })}
       </div>
     );
   }
