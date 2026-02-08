@@ -1,4 +1,5 @@
 import { memo, type Ref } from 'react';
+import type { Temporal } from 'temporal-polyfill';
 import type {
   CalendarResource,
   PositionedEvent,
@@ -7,7 +8,7 @@ import type {
   SelectionAppearance,
   TimedCalendarEvent,
 } from '@/types/calendar';
-import { getMinutesFromMidnight } from '@/lib/time';
+import { getMinuteRange } from '@/lib/time';
 import { buildSyntheticEvent } from '@/lib/selection';
 import { EventChip } from './EventChip';
 
@@ -15,6 +16,7 @@ interface SelectionOverlayProps {
   selectedRange: SelectedRange;
   column: number;
   resource: CalendarResource;
+  viewDate: Temporal.PlainDate;
   timeZone: string;
   startHour: number;
   hourHeight: number;
@@ -31,6 +33,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   selectedRange,
   column,
   resource,
+  viewDate,
   timeZone,
   startHour,
   hourHeight,
@@ -42,11 +45,16 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   const pixelsPerMinute = hourHeight / 60;
   const axisStartMin = startHour * 60;
 
-  const startMin = getMinutesFromMidnight(selectedRange.startTime, timeZone);
-  const endMin = getMinutesFromMidnight(selectedRange.endTime, timeZone);
+  const range = getMinuteRange(
+    selectedRange.startTime,
+    selectedRange.endTime,
+    viewDate,
+    timeZone,
+  );
+  if (!range) return null;
 
-  const top = (startMin - axisStartMin) * pixelsPerMinute;
-  const height = (endMin - startMin) * pixelsPerMinute;
+  const top = (range.startMin - axisStartMin) * pixelsPerMinute;
+  const height = (range.endMin - range.startMin) * pixelsPerMinute;
 
   if (height <= 0) return null;
 

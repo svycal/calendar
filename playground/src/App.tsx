@@ -30,6 +30,12 @@ function makeTime(hour: number, minute = 0): Temporal.ZonedDateTime {
   return today.toPlainDateTime({ hour, minute }).toZonedDateTime(tz);
 }
 
+const tomorrow = today.add({ days: 1 });
+
+function makeTomorrowTime(hour: number, minute = 0): Temporal.ZonedDateTime {
+  return tomorrow.toPlainDateTime({ hour, minute }).toZonedDateTime(tz);
+}
+
 const resources: CalendarResource[] = [
   {
     id: '1',
@@ -191,6 +197,16 @@ const events: CalendarEvent[] = [
     clientName: 'Grace Lee',
   },
 
+  // Cross-midnight event (11pm today → 1am tomorrow)
+  {
+    id: '19',
+    title: 'Late Night On-Call',
+    startTime: makeTime(23, 0),
+    endTime: makeTomorrowTime(1, 0),
+    resourceId: '5',
+    color: '#7c3aed',
+  },
+
   // All-day events
   {
     id: '16',
@@ -325,7 +341,7 @@ function App() {
               availability={availability}
               unavailability={unavailability}
               hourHeight={100}
-              timeAxis={{ startHour: 7, endHour: 18, intervalMinutes: 15 }}
+              timeAxis={{ startHour: 7, endHour: 24, intervalMinutes: 15 }}
               snapDuration={15}
               placeholderDuration={30}
               onEventClick={(event) => console.log('Clicked:', event)}

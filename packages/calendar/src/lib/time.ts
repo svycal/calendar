@@ -1,4 +1,4 @@
-import type { Temporal } from 'temporal-polyfill';
+import { Temporal } from 'temporal-polyfill';
 import type { TimeAxisConfig } from '@/types/calendar';
 
 export interface TimeSlotEntry {
@@ -49,6 +49,44 @@ export function generateTimeSlots(config: TimeAxisConfig): TimeSlotEntry[] {
   }
 
   return slots;
+}
+
+export interface MinuteRange {
+  startMin: number;
+  endMin: number;
+}
+
+export function getMinuteRange(
+  startTime: Temporal.ZonedDateTime,
+  endTime: Temporal.ZonedDateTime,
+  viewDate: Temporal.PlainDate,
+  displayTimeZone: string,
+): MinuteRange | null {
+  const start = startTime.withTimeZone(displayTimeZone);
+  const end = endTime.withTimeZone(displayTimeZone);
+  const startDate = start.toPlainDate();
+  const endDate = end.toPlainDate();
+  const endMinutes = end.hour * 60 + end.minute;
+
+  // Entirely before view date (or ends exactly at midnight starting view date)
+  if (Temporal.PlainDate.compare(endDate, viewDate) < 0) return null;
+  if (Temporal.PlainDate.compare(endDate, viewDate) === 0 && endMinutes === 0)
+    return null;
+
+  // Entirely after view date
+  if (Temporal.PlainDate.compare(startDate, viewDate) > 0) return null;
+
+  const startMin =
+    Temporal.PlainDate.compare(startDate, viewDate) < 0
+      ? 0
+      : start.hour * 60 + start.minute;
+
+  const endMin =
+    Temporal.PlainDate.compare(endDate, viewDate) > 0 ? 1440 : endMinutes;
+
+  if (endMin <= startMin) return null;
+
+  return { startMin, endMin };
 }
 
 export function formatEventStartTime(

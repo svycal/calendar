@@ -99,8 +99,8 @@ export function ResourceGridView({
 
   const positionedByResource = useMemo(
     () =>
-      computePositionedEvents(timedEvents, timeZone, startHour, endHour, effectiveHourHeight),
-    [timedEvents, timeZone, startHour, endHour, effectiveHourHeight],
+      computePositionedEvents(timedEvents, timeZone, date, startHour, endHour, effectiveHourHeight),
+    [timedEvents, timeZone, date, startHour, endHour, effectiveHourHeight],
   );
 
   const unavailableByResource = useMemo(() => {
@@ -119,6 +119,7 @@ export function ResourceGridView({
         availability?.[resourceId],
         unavailability?.[resourceId],
         timeZone,
+        date,
         startHour,
         endHour,
         effectiveHourHeight,
@@ -128,7 +129,7 @@ export function ResourceGridView({
       }
     }
     return map;
-  }, [availability, unavailability, timeZone, startHour, endHour, effectiveHourHeight]);
+  }, [availability, unavailability, timeZone, date, startHour, endHour, effectiveHourHeight]);
 
   const handleEventClick = useCallback(
     (event: CalendarEvent) => {
@@ -311,6 +312,7 @@ export function ResourceGridView({
                 selectedRange={selectedRange}
                 column={colIdx + 2}
                 resource={resources[colIdx]}
+                viewDate={date}
                 timeZone={timeZone}
                 startHour={startHour}
                 hourHeight={effectiveHourHeight}

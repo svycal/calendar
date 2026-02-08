@@ -1,5 +1,6 @@
+import type { Temporal } from 'temporal-polyfill';
 import type { TimedCalendarEvent, PositionedEvent } from '@/types/calendar';
-import { getMinutesFromMidnight } from './time';
+import { getMinuteRange } from './time';
 
 interface LayoutEntry {
   event: TimedCalendarEvent;
@@ -27,17 +28,26 @@ export function groupEventsByResource(
 export function computeOverlapLayout(
   events: TimedCalendarEvent[],
   timeZone: string,
+  viewDate: Temporal.PlainDate,
 ): LayoutEntry[] {
   if (events.length === 0) return [];
 
   // Convert to minutes and sort by start time
   const items = events
-    .map((event) => ({
-      event,
-      startMin: getMinutesFromMidnight(event.startTime, timeZone),
-      endMin: getMinutesFromMidnight(event.endTime, timeZone),
-    }))
+    .map((event) => {
+      const range = getMinuteRange(
+        event.startTime,
+        event.endTime,
+        viewDate,
+        timeZone,
+      );
+      if (!range) return null;
+      return { event, startMin: range.startMin, endMin: range.endMin };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null)
     .sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
+
+  if (items.length === 0) return [];
 
   // Find connected overlap groups
   const groups: (typeof items)[] = [];
@@ -101,6 +111,7 @@ export function computeOverlapLayout(
 export function computePositionedEvents(
   events: TimedCalendarEvent[],
   timeZone: string,
+  viewDate: Temporal.PlainDate,
   startHour: number,
   endHour: number,
   hourHeight: number,
@@ -112,7 +123,7 @@ export function computePositionedEvents(
   const pixelsPerMinute = hourHeight / 60;
 
   for (const [resourceId, resourceEvents] of byResource) {
-    const layout = computeOverlapLayout(resourceEvents, timeZone);
+    const layout = computeOverlapLayout(resourceEvents, timeZone, viewDate);
     const positioned: PositionedEvent[] = [];
 
     for (const entry of layout) {

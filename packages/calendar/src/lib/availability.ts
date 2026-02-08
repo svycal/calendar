@@ -1,5 +1,6 @@
+import type { Temporal } from 'temporal-polyfill';
 import type { AvailabilityRange } from '@/types/calendar';
-import { getMinutesFromMidnight } from './time';
+import { getMinuteRange } from './time';
 
 export interface UnavailableBlock {
   top: number;
@@ -14,21 +15,20 @@ interface Interval {
 function toIntervals(
   ranges: AvailabilityRange[],
   timeZone: string,
+  viewDate: Temporal.PlainDate,
   axisStartMin: number,
   axisEndMin: number,
 ): Interval[] {
   return ranges
-    .map((r) => ({
-      start: Math.max(
-        getMinutesFromMidnight(r.startTime, timeZone),
-        axisStartMin,
-      ),
-      end: Math.min(
-        getMinutesFromMidnight(r.endTime, timeZone),
-        axisEndMin,
-      ),
-    }))
-    .filter((i) => i.start < i.end);
+    .map((r) => {
+      const range = getMinuteRange(r.startTime, r.endTime, viewDate, timeZone);
+      if (!range) return null;
+      return {
+        start: Math.max(range.startMin, axisStartMin),
+        end: Math.min(range.endMin, axisEndMin),
+      };
+    })
+    .filter((i): i is NonNullable<typeof i> => i !== null && i.start < i.end);
 }
 
 function mergeIntervals(intervals: Interval[]): Interval[] {
@@ -80,6 +80,7 @@ export function computeUnavailableBlocks(
   availableRanges: AvailabilityRange[] | undefined,
   unavailableRanges: AvailabilityRange[] | undefined,
   timeZone: string,
+  viewDate: Temporal.PlainDate,
   startHour: number,
   endHour: number,
   hourHeight: number,
@@ -92,14 +93,14 @@ export function computeUnavailableBlocks(
 
   // Invert available ranges to get unavailable gaps
   if (availableRanges && availableRanges.length > 0) {
-    const available = toIntervals(availableRanges, timeZone, axisStartMin, axisEndMin);
+    const available = toIntervals(availableRanges, timeZone, viewDate, axisStartMin, axisEndMin);
     unavailableIntervals.push(...invertIntervals(available, axisStartMin, axisEndMin));
   }
 
   // Add explicit unavailable ranges
   if (unavailableRanges && unavailableRanges.length > 0) {
     unavailableIntervals.push(
-      ...toIntervals(unavailableRanges, timeZone, axisStartMin, axisEndMin),
+      ...toIntervals(unavailableRanges, timeZone, viewDate, axisStartMin, axisEndMin),
     );
   }
 
