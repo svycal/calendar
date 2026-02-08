@@ -9,6 +9,7 @@
     "build:lib": "pnpm --filter @savvycal/calendar build",
     "typecheck": "pnpm --filter @savvycal/calendar typecheck && pnpm --filter @savvycal/calendar build && pnpm --filter playground typecheck",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "pnpm build:lib && changeset publish"
