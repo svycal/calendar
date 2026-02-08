@@ -1,11 +1,12 @@
 import { memo } from 'react';
 import type {
+  AllDayCalendarEvent,
   CalendarEvent,
   ResourceGridViewClassNames,
 } from '@/types/calendar';
 
 interface AllDayRowProps {
-  events: CalendarEvent[];
+  events: AllDayCalendarEvent[];
   cls: (key: keyof ResourceGridViewClassNames) => string;
   onEventClick?: (event: CalendarEvent) => void;
 }

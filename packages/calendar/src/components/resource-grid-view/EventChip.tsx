@@ -5,6 +5,7 @@ import type {
   CalendarResource,
   PositionedEvent,
   ResourceGridViewClassNames,
+  TimedCalendarEvent,
 } from '@/types/calendar';
 import { formatEventStartTime } from '@/lib/time';
 
@@ -15,7 +16,7 @@ interface EventChipProps {
   cls: (key: keyof ResourceGridViewClassNames) => string;
   onClick?: (event: CalendarEvent) => void;
   renderEvent?: (props: {
-    event: CalendarEvent;
+    event: TimedCalendarEvent;
     position: PositionedEvent;
   }) => React.ReactNode;
 }

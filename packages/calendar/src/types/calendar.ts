@@ -8,19 +8,30 @@ export interface CalendarResource {
   color?: string;
 }
 
-export interface CalendarEvent {
+interface BaseCalendarEvent {
   id: string;
   title: string;
-  startTime: Temporal.ZonedDateTime;
-  endTime: Temporal.ZonedDateTime;
   resourceId: string;
-  allDay?: boolean;
   color?: string;
   clientName?: string;
   selected?: boolean;
   status?: 'confirmed' | 'canceled';
   metadata?: Record<string, unknown>;
 }
+
+export interface TimedCalendarEvent extends BaseCalendarEvent {
+  allDay?: false;
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
+}
+
+export interface AllDayCalendarEvent extends BaseCalendarEvent {
+  allDay: true;
+  startDate: Temporal.PlainDate;
+  endDate: Temporal.PlainDate;
+}
+
+export type CalendarEvent = TimedCalendarEvent | AllDayCalendarEvent;
 
 export interface TimeSlot {
   startTime: Temporal.ZonedDateTime;
@@ -72,7 +83,7 @@ export interface ResourceGridViewClassNames {
 }
 
 export interface PositionedEvent {
-  event: CalendarEvent;
+  event: TimedCalendarEvent;
   top: number;
   height: number;
   subColumn: number;
@@ -102,7 +113,7 @@ export interface ResourceGridViewProps {
   columnMinWidth?: number;
   renderHeader?: (props: { resource: CalendarResource }) => ReactNode;
   renderEvent?: (props: {
-    event: CalendarEvent;
+    event: TimedCalendarEvent;
     position: PositionedEvent;
   }) => ReactNode;
 }

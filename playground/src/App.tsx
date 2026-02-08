@@ -183,8 +183,8 @@ const events: CalendarEvent[] = [
   {
     id: '16',
     title: 'Conference',
-    startTime: makeTime(0, 0),
-    endTime: makeTime(23, 59),
+    startDate: today,
+    endDate: today,
     resourceId: '1',
     allDay: true,
     color: '#3b82f6',
@@ -192,8 +192,8 @@ const events: CalendarEvent[] = [
   {
     id: '17',
     title: 'PTO',
-    startTime: makeTime(0, 0),
-    endTime: makeTime(23, 59),
+    startDate: today,
+    endDate: today,
     resourceId: '3',
     allDay: true,
     color: '#10b981',
@@ -201,8 +201,8 @@ const events: CalendarEvent[] = [
   {
     id: '18',
     title: 'Training Day',
-    startTime: makeTime(0, 0),
-    endTime: makeTime(23, 59),
+    startDate: today,
+    endDate: today,
     resourceId: '1',
     allDay: true,
     color: '#f59e0b',

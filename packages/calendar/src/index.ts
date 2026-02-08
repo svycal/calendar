@@ -12,6 +12,8 @@ export { resourceGridViewDefaults } from './components/resource-grid-view';
 export type {
   CalendarResource,
   CalendarEvent,
+  TimedCalendarEvent,
+  AllDayCalendarEvent,
   TimeSlot,
   AvailabilityRange,
   TimeAxisConfig,

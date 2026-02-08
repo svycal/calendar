@@ -7,9 +7,11 @@ import {
   type UnavailableBlock,
 } from '@/lib/availability';
 import type {
+  AllDayCalendarEvent,
   CalendarEvent,
   ResourceGridViewClassNames,
   ResourceGridViewProps,
+  TimedCalendarEvent,
 } from '@/types/calendar';
 import { resourceGridViewDefaults } from './defaults';
 import { GridHeader } from './GridHeader';
@@ -64,8 +66,8 @@ export function ResourceGridView({
   );
 
   const { allDayEvents, timedEvents } = useMemo(() => {
-    const allDay: CalendarEvent[] = [];
-    const timed: CalendarEvent[] = [];
+    const allDay: AllDayCalendarEvent[] = [];
+    const timed: TimedCalendarEvent[] = [];
     for (const event of events) {
       if (event.allDay) {
         allDay.push(event);
@@ -77,7 +79,7 @@ export function ResourceGridView({
   }, [events]);
 
   const allDayByResource = useMemo(() => {
-    const map = new Map<string, CalendarEvent[]>();
+    const map = new Map<string, AllDayCalendarEvent[]>();
     for (const event of allDayEvents) {
       const list = map.get(event.resourceId);
       if (list) {

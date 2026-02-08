@@ -1,8 +1,8 @@
-import type { CalendarEvent, PositionedEvent } from '@/types/calendar';
+import type { TimedCalendarEvent, PositionedEvent } from '@/types/calendar';
 import { getMinutesFromMidnight } from './time';
 
 interface LayoutEntry {
-  event: CalendarEvent;
+  event: TimedCalendarEvent;
   startMin: number;
   endMin: number;
   subColumn: number;
@@ -10,9 +10,9 @@ interface LayoutEntry {
 }
 
 export function groupEventsByResource(
-  events: CalendarEvent[],
-): Map<string, CalendarEvent[]> {
-  const map = new Map<string, CalendarEvent[]>();
+  events: TimedCalendarEvent[],
+): Map<string, TimedCalendarEvent[]> {
+  const map = new Map<string, TimedCalendarEvent[]>();
   for (const event of events) {
     const list = map.get(event.resourceId);
     if (list) {
@@ -25,7 +25,7 @@ export function groupEventsByResource(
 }
 
 export function computeOverlapLayout(
-  events: CalendarEvent[],
+  events: TimedCalendarEvent[],
   timeZone: string,
 ): LayoutEntry[] {
   if (events.length === 0) return [];
@@ -99,7 +99,7 @@ export function computeOverlapLayout(
 }
 
 export function computePositionedEvents(
-  events: CalendarEvent[],
+  events: TimedCalendarEvent[],
   timeZone: string,
   startHour: number,
   endHour: number,
