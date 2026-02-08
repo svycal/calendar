@@ -23,8 +23,8 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
     'shadow-lg dark:shadow-lg dark:shadow-white/20 ring-zinc-900/30 dark:ring-white/30',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
   eventTitle: 'text-zinc-900 dark:text-zinc-100 text-xs/4 font-medium truncate',
-  eventTime: 'text-zinc-500 dark:text-zinc-400 text-xs/4 truncate',
-  eventClientName: 'text-zinc-500 dark:text-zinc-400 text-xs/4 truncate',
+  eventTime: 'text-zinc-600 dark:text-zinc-400 text-xs/4 truncate',
+  eventClientName: 'text-zinc-600 dark:text-zinc-400 text-xs/4 truncate',
   nowIndicator:
     'absolute left-0 right-0 h-0.5 bg-orange-500 dark:bg-orange-400 pointer-events-none',
   slotHighlight:
