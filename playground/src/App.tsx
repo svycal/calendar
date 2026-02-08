@@ -20,6 +20,9 @@ import {
   type AvailabilityRange,
   type SelectedRange,
 } from '@savvycal/calendar';
+import StressTestPage from './StressTestPage';
+
+type Page = 'demo' | 'stress-test';
 
 const tz = 'America/Chicago';
 
@@ -264,6 +267,7 @@ const unavailability: Record<string, AvailabilityRange[]> = {
 
 function App() {
   const [dark, setDark] = useState(false);
+  const [page, setPage] = useState<Page>('demo');
   const [selectedRange, setSelectedRange] = useState<SelectedRange | null>(
     null
   );
@@ -318,6 +322,23 @@ function App() {
         <h1 className="text-zinc-950 dark:text-zinc-50 text-2xl font-bold">
           Calendar Playground
         </h1>
+        <div className="flex gap-1 rounded-lg border border-zinc-200 dark:border-zinc-700 p-0.5">
+          {([['demo', 'Demo'], ['stress-test', 'Stress Test']] as const).map(
+            ([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setPage(key)}
+                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                  page === key
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          )}
+        </div>
         <button
           onClick={() => setDark(!dark)}
           className="rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-1 text-sm text-zinc-950 dark:text-zinc-50 hover:opacity-80"
@@ -326,90 +347,94 @@ function App() {
         </button>
       </div>
 
-      <div className="space-y-8">
-        <section>
-          <h2 className="text-zinc-950 dark:text-zinc-50 mb-4 text-xl font-semibold">
-            Resource Grid View
-          </h2>
-          <div className="h-200">
-            <ResourceGridView
+      {page === 'demo' ? (
+        <div className="space-y-8">
+          <section>
+            <h2 className="text-zinc-950 dark:text-zinc-50 mb-4 text-xl font-semibold">
+              Resource Grid View
+            </h2>
+            <div className="h-200">
+              <ResourceGridView
+                date={today}
+                timeZone={tz}
+                columnMinWidth={300}
+                resources={resources}
+                events={events}
+                availability={availability}
+                unavailability={unavailability}
+                hourHeight={100}
+                timeAxis={{ startHour: 7, endHour: 24, intervalMinutes: 15 }}
+                snapDuration={15}
+                placeholderDuration={30}
+                onEventClick={(event) => console.log('Clicked:', event)}
+                selectedRange={selectedRange}
+                selectionRef={refs.setReference}
+                onSelect={(range) => {
+                  setSelectedRange(range);
+                  console.log('Selection:', range);
+                }}
+                onSlotClick={(info) => console.log('Slot clicked:', info)}
+                selectionAppearance={{
+                  style: 'event',
+                  eventData: {
+                    selected: true,
+                    title: 'New appointment',
+                    color: '#3b82f6',
+                  },
+                }}
+                renderCorner={() => (
+                  <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 px-2 py-1">
+                    {
+                      new Intl.DateTimeFormat('en-US', {
+                        timeZone: tz,
+                        timeZoneName: 'short',
+                      })
+                        .formatToParts(new Date())
+                        .find((p) => p.type === 'timeZoneName')?.value
+                    }
+                  </span>
+                )}
+                className="h-full"
+              />
+              {isMounted && (
+                <div
+                  ref={refs.setFloating}
+                  style={{ ...floatingStyles, ...transitionStyles }}
+                  {...getFloatingProps()}
+                  className="z-50 rounded-lg ring ring-zinc-900/10 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                >
+                  <p className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+                    What would you like to do?
+                  </p>
+                  <button
+                    className="mt-4 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+                    onClick={() => {
+                      console.log('Create event:', selectedRange);
+                    }}
+                  >
+                    Create event
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-zinc-950 dark:text-zinc-50 mb-4 text-xl font-semibold">
+              Week View
+            </h2>
+            <WeekView
               date={today}
               timeZone={tz}
-              columnMinWidth={300}
-              resources={resources}
-              events={events}
-              availability={availability}
-              unavailability={unavailability}
-              hourHeight={100}
-              timeAxis={{ startHour: 7, endHour: 24, intervalMinutes: 15 }}
-              snapDuration={15}
-              placeholderDuration={30}
+              resource={resources[0]}
+              events={events.filter((e) => e.resourceId === '1')}
               onEventClick={(event) => console.log('Clicked:', event)}
-              selectedRange={selectedRange}
-              selectionRef={refs.setReference}
-              onSelect={(range) => {
-                setSelectedRange(range);
-                console.log('Selection:', range);
-              }}
-              onSlotClick={(info) => console.log('Slot clicked:', info)}
-              selectionAppearance={{
-                style: 'event',
-                eventData: {
-                  selected: true,
-                  title: 'New appointment',
-                  color: '#3b82f6',
-                },
-              }}
-              renderCorner={() => (
-                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 px-2 py-1">
-                  {
-                    new Intl.DateTimeFormat('en-US', {
-                      timeZone: tz,
-                      timeZoneName: 'short',
-                    })
-                      .formatToParts(new Date())
-                      .find((p) => p.type === 'timeZoneName')?.value
-                  }
-                </span>
-              )}
-              className="h-full"
             />
-            {isMounted && (
-              <div
-                ref={refs.setFloating}
-                style={{ ...floatingStyles, ...transitionStyles }}
-                {...getFloatingProps()}
-                className="z-50 rounded-lg ring ring-zinc-900/10 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
-              >
-                <p className="text-base font-medium text-zinc-900 dark:text-zinc-100">
-                  What would you like to do?
-                </p>
-                <button
-                  className="mt-4 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
-                  onClick={() => {
-                    console.log('Create event:', selectedRange);
-                  }}
-                >
-                  Create event
-                </button>
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-zinc-950 dark:text-zinc-50 mb-4 text-xl font-semibold">
-            Week View
-          </h2>
-          <WeekView
-            date={today}
-            timeZone={tz}
-            resource={resources[0]}
-            events={events.filter((e) => e.resourceId === '1')}
-            onEventClick={(event) => console.log('Clicked:', event)}
-          />
-        </section>
-      </div>
+          </section>
+        </div>
+      ) : (
+        <StressTestPage />
+      )}
     </div>
   );
 }
