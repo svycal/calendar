@@ -99,7 +99,8 @@ export interface ResourceGridViewProps {
   unavailability?: Record<string, AvailabilityRange[]>;
   timeAxis?: TimeAxisConfig;
   onEventClick?: (event: CalendarEvent) => void;
-  slotDuration?: number;
+  snapDuration?: number;
+  placeholderDuration?: number;
   onSlotClick?: (info: {
     resource: CalendarResource;
     startTime: Temporal.ZonedDateTime;

@@ -272,7 +272,8 @@ function App() {
               unavailability={unavailability}
               hourHeight={100}
               timeAxis={{ startHour: 7, endHour: 18, intervalMinutes: 15 }}
-              slotDuration={15}
+              snapDuration={15}
+              placeholderDuration={30}
               onEventClick={(event) => console.log('Clicked:', event)}
               selectedRange={selectedRange}
               onSelect={(range) => {

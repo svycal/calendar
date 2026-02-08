@@ -14,7 +14,8 @@ interface SlotInteractionLayerProps {
   startHour: number;
   endHour: number;
   hourHeight: number;
-  slotDuration: number;
+  snapDuration: number;
+  placeholderDuration: number;
   cls: (key: keyof ResourceGridViewClassNames) => string;
   onSlotClick?: (info: {
     resource: CalendarResource;
@@ -49,7 +50,8 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   startHour,
   endHour,
   hourHeight,
-  slotDuration,
+  snapDuration,
+  placeholderDuration,
   cls,
   onSlotClick,
   onSelect,
@@ -81,15 +83,15 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     (yOffset: number): number | null => {
       const minutesFromStart = yOffset / pixelsPerMinute;
       const snappedMinutes =
-        Math.floor(minutesFromStart / slotDuration) * slotDuration;
+        Math.floor(minutesFromStart / snapDuration) * snapDuration;
       const absoluteMinutes = axisStartMin + snappedMinutes;
 
-      if (absoluteMinutes + slotDuration > axisEndMin) return null;
+      if (absoluteMinutes + placeholderDuration > axisEndMin) return null;
       if (absoluteMinutes < axisStartMin) return null;
 
       return absoluteMinutes;
     },
-    [pixelsPerMinute, slotDuration, axisStartMin, axisEndMin],
+    [pixelsPerMinute, snapDuration, placeholderDuration, axisStartMin, axisEndMin],
   );
 
   // Store values in refs for document handlers
@@ -97,14 +99,16 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   snapToSlotRef.current = snapToSlot;
   const axisEndMinRef = useRef(axisEndMin);
   axisEndMinRef.current = axisEndMin;
-  const slotDurationRef = useRef(slotDuration);
-  slotDurationRef.current = slotDuration;
+  const snapDurationRef = useRef(snapDuration);
+  snapDurationRef.current = snapDuration;
+  const placeholderDurationRef = useRef(placeholderDuration);
+  placeholderDurationRef.current = placeholderDuration;
 
   const computeRange = useCallback(
     (anchor: number, currentSlot: number) => {
       const rangeStart = Math.min(anchor, currentSlot);
       const rangeEnd = Math.min(
-        Math.max(anchor, currentSlot) + slotDurationRef.current,
+        Math.max(anchor, currentSlot) + placeholderDurationRef.current,
         axisEndMinRef.current,
       );
       return { startMin: rangeStart, endMin: rangeEnd };
@@ -128,7 +132,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       let currentSlot = snapToSlotRef.current(yOffset);
       if (currentSlot == null) {
         // Clamped past bottom — use last valid slot
-        currentSlot = axisEndMinRef.current - slotDurationRef.current;
+        currentSlot = axisEndMinRef.current - placeholderDurationRef.current;
       }
 
       const range = computeRange(drag.anchorSlotStart, currentSlot);
@@ -190,7 +194,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       e.preventDefault(); // Prevent text selection
       onSelect(null); // Clear previous selection
 
-      const slotEnd = slotStart + slotDuration;
+      const slotEnd = slotStart + placeholderDuration;
       dragRef.current = {
         anchorSlotStart: slotStart,
         currentStartMin: slotStart,
@@ -206,7 +210,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     [
       onSelect,
       snapToSlot,
-      slotDuration,
+      placeholderDuration,
       handleDocMouseMove,
       handleDocMouseUp,
     ],
@@ -248,7 +252,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       const slotStart = snapToSlot(yOffset);
       if (slotStart == null) return;
 
-      const slotEnd = slotStart + slotDuration;
+      const slotEnd = slotStart + placeholderDuration;
 
       if (onSlotClick) {
         onSlotClick({
@@ -258,14 +262,14 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
         });
       }
     },
-    [onSlotClick, snapToSlot, slotDuration, resource, date, timeZone],
+    [onSlotClick, snapToSlot, placeholderDuration, resource, date, timeZone],
   );
 
   const highlightTop =
     hoveredSlotStart != null
       ? (hoveredSlotStart - axisStartMin) * pixelsPerMinute
       : 0;
-  const highlightHeight = slotDuration * pixelsPerMinute;
+  const highlightHeight = placeholderDuration * pixelsPerMinute;
 
   return (
     <div

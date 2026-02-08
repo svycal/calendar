@@ -33,7 +33,8 @@ export function ResourceGridView({
   unavailability,
   timeAxis,
   onEventClick,
-  slotDuration,
+  snapDuration,
+  placeholderDuration,
   selectedRange,
   onSelect,
   onSlotClick,
@@ -253,7 +254,7 @@ export function ResourceGridView({
         })}
 
         {/* Slot interaction layers (between body cells and event columns) */}
-        {slotDuration != null &&
+        {snapDuration != null &&
           resources.map((resource, i) => (
             <SlotInteractionLayer
               key={`slot-${resource.id}`}
@@ -264,7 +265,8 @@ export function ResourceGridView({
               startHour={startHour}
               endHour={endHour}
               hourHeight={effectiveHourHeight}
-              slotDuration={slotDuration}
+              snapDuration={snapDuration}
+              placeholderDuration={placeholderDuration ?? 15}
               cls={cls}
               onSlotClick={onSlotClick}
               onSelect={onSelect}
