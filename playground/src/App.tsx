@@ -1,6 +1,18 @@
 import { useState } from 'react';
 import { Temporal } from 'temporal-polyfill';
 import {
+  useFloating,
+  autoUpdate,
+  shift,
+  offset,
+  limitShift,
+  flip,
+  size,
+  useTransitionStyles,
+  useDismiss,
+  useInteractions,
+} from '@floating-ui/react';
+import {
   ResourceGridView,
   WeekView,
   type CalendarResource,
@@ -240,6 +252,48 @@ function App() {
     null
   );
 
+  const isPopoverOpen = selectedRange !== null;
+
+  const { context, refs, floatingStyles } = useFloating({
+    open: isPopoverOpen,
+    onOpenChange: (open) => {
+      if (!open) setSelectedRange(null);
+    },
+    middleware: [
+      flip({ crossAxis: true }),
+      shift({ crossAxis: true, limiter: limitShift({ offset: 0 }) }),
+      offset(5),
+      size({
+        apply({ availableHeight, elements }) {
+          elements.floating.style.maxHeight = `${availableHeight}px`;
+        },
+      }),
+    ],
+    placement: 'right',
+    strategy: 'fixed',
+    whileElementsMounted: autoUpdate,
+  });
+
+  const dismiss = useDismiss(context);
+  const { getFloatingProps } = useInteractions([dismiss]);
+
+  const { isMounted, styles: transitionStyles } = useTransitionStyles(context, {
+    common: {
+      transitionProperty: 'all',
+    },
+    duration: {
+      close: 100,
+      open: 200,
+    },
+    initial: ({ side }) => ({
+      opacity: 0,
+      translate: side === 'left' ? '48px' : '-48px',
+    }),
+    open: {
+      opacity: 1,
+    },
+  });
+
   return (
     <div
       className={`antialiased min-h-screen bg-white dark:bg-zinc-950 p-8${dark ? ' dark' : ''}`}
@@ -276,6 +330,7 @@ function App() {
               placeholderDuration={30}
               onEventClick={(event) => console.log('Clicked:', event)}
               selectedRange={selectedRange}
+              selectionRef={refs.setReference}
               onSelect={(range) => {
                 setSelectedRange(range);
                 console.log('Selection:', range);
@@ -291,6 +346,26 @@ function App() {
               }}
               className="h-full"
             />
+            {isMounted && (
+              <div
+                ref={refs.setFloating}
+                style={{ ...floatingStyles, ...transitionStyles }}
+                {...getFloatingProps()}
+                className="z-50 rounded-lg ring ring-zinc-900/10 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+              >
+                <p className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+                  What would you like to do?
+                </p>
+                <button
+                  className="mt-4 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+                  onClick={() => {
+                    console.log('Create event:', selectedRange);
+                  }}
+                >
+                  Create event
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
