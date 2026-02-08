@@ -13,9 +13,9 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
     'bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-700 sticky left-0 z-10 flex items-start justify-end pr-2 -mt-[0.5rem]',
   gutterCellMinor:
     'bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-700 sticky left-0 z-10',
-  gutterLabel: 'text-zinc-500 dark:text-zinc-400 text-xs',
-  bodyCell: 'border-t border-r border-zinc-200 dark:border-zinc-700',
-  bodyCellMinor: 'border-t border-r border-zinc-200 dark:border-zinc-700',
+  gutterLabel: 'font-medium text-zinc-600 dark:text-zinc-400 text-xs',
+  bodyCell: 'border-t border-r border-zinc-300 dark:border-zinc-700',
+  bodyCellMinor: 'border-t border-r border-zinc-300 dark:border-zinc-700',
   eventColumn: 'relative mr-3',
   event:
     'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none bg-zinc-100/90 ring-1 ring-inset ring-zinc-900/15 dark:bg-zinc-800/90 dark:ring-white/15',
