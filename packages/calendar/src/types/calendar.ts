@@ -131,6 +131,7 @@ export interface ResourceGridViewProps {
   dragPreviewAppearance?: SelectionAppearance;
   selectionRef?: Ref<HTMLDivElement>;
   renderCorner?: () => ReactNode;
+  eventGap?: number;
 }
 
 export interface WeekViewProps {

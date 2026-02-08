@@ -19,6 +19,7 @@ interface ResourceColumnProps {
     event: TimedCalendarEvent;
     position: PositionedEvent;
   }) => React.ReactNode;
+  eventGap?: number;
 }
 
 export const ResourceColumn = memo(function ResourceColumn({
@@ -29,6 +30,7 @@ export const ResourceColumn = memo(function ResourceColumn({
   cls,
   onEventClick,
   renderEvent,
+  eventGap,
 }: ResourceColumnProps) {
   return (
     <div
@@ -48,6 +50,7 @@ export const ResourceColumn = memo(function ResourceColumn({
           cls={cls}
           onClick={onEventClick}
           renderEvent={renderEvent}
+          eventGap={eventGap}
         />
       ))}
     </div>

@@ -20,6 +20,7 @@ interface EventChipProps {
     position: PositionedEvent;
   }) => React.ReactNode;
   interactive?: boolean;
+  eventGap?: number;
 }
 
 export const EventChip = memo(function EventChip({
@@ -30,11 +31,19 @@ export const EventChip = memo(function EventChip({
   onClick,
   renderEvent,
   interactive = true,
+  eventGap = 2,
 }: EventChipProps) {
   const { event, top, height, subColumn, totalSubColumns } = positioned;
   const color = event.color ?? resource.color ?? undefined;
   const leftPct = (subColumn / totalSubColumns) * 100;
   const widthPct = (1 / totalSubColumns) * 100;
+
+  // Add a small pixel gap between adjacent sub-columns
+  const gap = eventGap;
+  const leftOffset = (subColumn * gap) / totalSubColumns;
+  const widthShrink = ((totalSubColumns - 1) * gap) / totalSubColumns;
+  const left = widthShrink ? `calc(${leftPct}% + ${leftOffset}px)` : `${leftPct}%`;
+  const width = widthShrink ? `calc(${widthPct}% - ${widthShrink}px)` : `${widthPct}%`;
 
   // 2 lines (~36px): title + collapsed time/client
   // 3 lines (~52px): title + time + client on separate lines
@@ -49,8 +58,8 @@ export const EventChip = memo(function EventChip({
           position: 'absolute',
           top,
           height,
-          left: `${leftPct}%`,
-          width: `${widthPct}%`,
+          left,
+          width,
           pointerEvents: interactive ? 'auto' : 'none',
         }}
       >
@@ -68,8 +77,8 @@ export const EventChip = memo(function EventChip({
       style={{
         top,
         height,
-        left: `${leftPct}%`,
-        width: `${widthPct}%`,
+        left,
+        width,
         pointerEvents: interactive ? 'auto' : 'none',
       }}
       {...(interactive

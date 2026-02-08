@@ -48,6 +48,7 @@ export function ResourceGridView({
   dragPreviewAppearance,
   selectionRef,
   renderCorner,
+  eventGap,
 }: ResourceGridViewProps) {
   const startHour = timeAxis?.startHour ?? 0;
   const endHour = timeAxis?.endHour ?? 24;
@@ -294,6 +295,7 @@ export function ResourceGridView({
             cls={cls}
             onEventClick={handleEventClick}
             renderEvent={renderEvent}
+            eventGap={eventGap}
           />
         ))}
 
