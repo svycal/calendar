@@ -4,7 +4,7 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   root: 'overflow-auto relative',
   grid: '',
   cornerCell:
-    'bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-700 sticky top-0 left-0 z-30',
+    'bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-700 sticky top-0 left-0 z-30 flex items-end justify-end',
   headerCell:
     'bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-700 sticky top-0 z-20 flex items-center gap-2 px-3 py-2',
   headerName: 'text-zinc-950 dark:text-zinc-50 text-sm font-medium truncate',

@@ -344,6 +344,18 @@ function App() {
                   color: '#3b82f6',
                 },
               }}
+              renderCorner={() => (
+                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 px-2 py-1">
+                  {
+                    new Intl.DateTimeFormat('en-US', {
+                      timeZone: tz,
+                      timeZoneName: 'short',
+                    })
+                      .formatToParts(new Date())
+                      .find((p) => p.type === 'timeZoneName')?.value
+                  }
+                </span>
+              )}
               className="h-full"
             />
             {isMounted && (

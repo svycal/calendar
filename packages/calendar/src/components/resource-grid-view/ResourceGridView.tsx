@@ -47,6 +47,7 @@ export function ResourceGridView({
   selectionAppearance,
   dragPreviewAppearance,
   selectionRef,
+  renderCorner,
 }: ResourceGridViewProps) {
   const startHour = timeAxis?.startHour ?? 0;
   const endHour = timeAxis?.endHour ?? 24;
@@ -166,7 +167,9 @@ export function ResourceGridView({
           ref={headerRef}
           className={cls('cornerCell')}
           style={{ gridRow: 1, gridColumn: 1 }}
-        />
+        >
+          {renderCorner?.()}
+        </div>
 
         {/* Header cells */}
         {resources.map((resource, i) => (
