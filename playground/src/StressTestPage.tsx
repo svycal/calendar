@@ -162,7 +162,7 @@ export default function StressTestPage({
 }: {
   eventLayout?: EventLayout;
 }) {
-  const { resources, events, availability } = useMemo(generateData, []);
+  const { resources, events, availability } = useMemo(() => generateData(), []);
 
   return (
     <div className="space-y-4">

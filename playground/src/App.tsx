@@ -396,6 +396,7 @@ function App() {
                 eventLayout={eventLayout}
                 onEventClick={(event) => console.log('Clicked:', event)}
                 selectedRange={selectedRange}
+                // eslint-disable-next-line react-hooks/refs
                 selectionRef={refs.setReference}
                 onSelect={(range) => {
                   setSelectedRange(range);
@@ -426,6 +427,7 @@ function App() {
               />
               {isMounted && (
                 <div
+                  // eslint-disable-next-line react-hooks/refs
                   ref={refs.setFloating}
                   style={{ ...floatingStyles, ...transitionStyles }}
                   {...getFloatingProps()}

@@ -44,32 +44,21 @@ export const NowIndicator = memo(function NowIndicator({
   hourHeight,
   cls,
 }: NowIndicatorProps) {
-  const [offset, setOffset] = useState<number | null>(() =>
-    isTodayInTimeZone(date, timeZone)
-      ? getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight)
-      : null
-  );
+  const [, setTick] = useState(0);
+  const isToday = isTodayInTimeZone(date, timeZone);
+  const offset = isToday
+    ? getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight)
+    : null;
 
   useEffect(() => {
-    if (!isTodayInTimeZone(date, timeZone)) {
-      setOffset(null);
-      return;
-    }
-
-    setOffset(getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight));
+    if (!isToday) return;
 
     const interval = setInterval(() => {
-      if (!isTodayInTimeZone(date, timeZone)) {
-        setOffset(null);
-      } else {
-        setOffset(
-          getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight)
-        );
-      }
+      setTick((t) => t + 1);
     }, 60_000);
 
     return () => clearInterval(interval);
-  }, [date, timeZone, startHour, endHour, hourHeight]);
+  }, [isToday]);
 
   if (offset === null) return null;
 

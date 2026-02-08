@@ -1,4 +1,11 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import type { Temporal } from 'temporal-polyfill';
 import type {
   CalendarResource,
@@ -79,13 +86,9 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
 
   // Stable refs for document-level handlers
   const onSelectRef = useRef(onSelect);
-  onSelectRef.current = onSelect;
   const resourceRef = useRef(resource);
-  resourceRef.current = resource;
   const dateRef = useRef(date);
-  dateRef.current = date;
   const timeZoneRef = useRef(timeZone);
-  timeZoneRef.current = timeZone;
 
   const axisStartMin = startHour * 60;
   const axisEndMin = endHour * 60;
@@ -114,13 +117,9 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
 
   // Store values in refs for document handlers
   const snapToSlotRef = useRef(snapToSlot);
-  snapToSlotRef.current = snapToSlot;
   const axisEndMinRef = useRef(axisEndMin);
-  axisEndMinRef.current = axisEndMin;
   const snapDurationRef = useRef(snapDuration);
-  snapDurationRef.current = snapDuration;
   const placeholderDurationRef = useRef(placeholderDuration);
-  placeholderDurationRef.current = placeholderDuration;
 
   const computeRange = useCallback((anchor: number, currentSlot: number) => {
     const rangeStart = Math.min(anchor, currentSlot);
@@ -159,6 +158,8 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     [computeRange]
   );
 
+  const handleDocMouseUpRef = useRef<() => void>(() => {});
+
   const handleDocMouseUp = useCallback(() => {
     const drag = dragRef.current;
     if (drag) {
@@ -183,16 +184,29 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     dragRef.current = null;
     setDragPreview(null);
     document.removeEventListener('mousemove', handleDocMouseMove);
-    document.removeEventListener('mouseup', handleDocMouseUp);
+    document.removeEventListener('mouseup', handleDocMouseUpRef.current);
   }, [handleDocMouseMove]);
+
+  // Sync all latest-value refs after render, before browser events
+  useLayoutEffect(() => {
+    onSelectRef.current = onSelect;
+    resourceRef.current = resource;
+    dateRef.current = date;
+    timeZoneRef.current = timeZone;
+    snapToSlotRef.current = snapToSlot;
+    axisEndMinRef.current = axisEndMin;
+    snapDurationRef.current = snapDuration;
+    placeholderDurationRef.current = placeholderDuration;
+    handleDocMouseUpRef.current = handleDocMouseUp;
+  });
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       document.removeEventListener('mousemove', handleDocMouseMove);
-      document.removeEventListener('mouseup', handleDocMouseUp);
+      document.removeEventListener('mouseup', handleDocMouseUpRef.current);
     };
-  }, [handleDocMouseMove, handleDocMouseUp]);
+  }, [handleDocMouseMove]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
