@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { generateTimeSlots } from '@/lib/time';
-import { computePositionedEvents } from '@/lib/overlap';
+import { computePositionedEvents, groupByResource } from '@/lib/overlap';
 import {
   computeUnavailableBlocks,
   type UnavailableBlock,
@@ -83,18 +83,10 @@ export function ResourceGridView({
     return { allDayEvents: allDay, timedEvents: timed };
   }, [events]);
 
-  const allDayByResource = useMemo(() => {
-    const map = new Map<string, AllDayCalendarEvent[]>();
-    for (const event of allDayEvents) {
-      const list = map.get(event.resourceId);
-      if (list) {
-        list.push(event);
-      } else {
-        map.set(event.resourceId, [event]);
-      }
-    }
-    return map;
-  }, [allDayEvents]);
+  const allDayByResource = useMemo(
+    () => groupByResource(allDayEvents),
+    [allDayEvents]
+  );
 
   const positionedByResource = useMemo(
     () =>

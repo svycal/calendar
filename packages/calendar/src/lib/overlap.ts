@@ -10,16 +10,16 @@ interface LayoutEntry {
   totalSubColumns: number;
 }
 
-export function groupEventsByResource(
-  events: TimedCalendarEvent[]
-): Map<string, TimedCalendarEvent[]> {
-  const map = new Map<string, TimedCalendarEvent[]>();
-  for (const event of events) {
-    const list = map.get(event.resourceId);
+export function groupByResource<T extends { resourceId: string }>(
+  items: T[]
+): Map<string, T[]> {
+  const map = new Map<string, T[]>();
+  for (const item of items) {
+    const list = map.get(item.resourceId);
     if (list) {
-      list.push(event);
+      list.push(item);
     } else {
-      map.set(event.resourceId, [event]);
+      map.set(item.resourceId, [item]);
     }
   }
   return map;
@@ -116,7 +116,7 @@ export function computePositionedEvents(
   endHour: number,
   hourHeight: number
 ): Map<string, PositionedEvent[]> {
-  const byResource = groupEventsByResource(events);
+  const byResource = groupByResource(events);
   const result = new Map<string, PositionedEvent[]>();
   const axisStartMin = startHour * 60;
   const axisEndMin = endHour * 60;

@@ -16,14 +16,6 @@ export function formatTimeLabel(hour: number, minute: number): string {
   return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
 }
 
-export function getMinutesFromMidnight(
-  zdt: Temporal.ZonedDateTime,
-  displayTimeZone: string
-): number {
-  const inZone = zdt.withTimeZone(displayTimeZone);
-  return inZone.hour * 60 + inZone.minute;
-}
-
 export function generateTimeSlots(config: TimeAxisConfig): TimeSlotEntry[] {
   const startHour = config.startHour ?? 0;
   const endHour = config.endHour ?? 24;
@@ -51,7 +43,7 @@ export function generateTimeSlots(config: TimeAxisConfig): TimeSlotEntry[] {
   return slots;
 }
 
-export interface MinuteRange {
+interface MinuteRange {
   startMin: number;
   endMin: number;
 }
@@ -94,32 +86,5 @@ export function formatEventStartTime(
   displayTimeZone: string
 ): string {
   const inZone = startTime.withTimeZone(displayTimeZone);
-  const h = inZone.hour;
-  const m = inZone.minute;
-  const period = h >= 12 ? 'pm' : 'am';
-  const displayHour = h % 12 || 12;
-  if (m === 0) return `${displayHour} ${period}`;
-  return `${displayHour}:${String(m).padStart(2, '0')} ${period}`;
-}
-
-export function formatEventTimeRange(
-  startTime: Temporal.ZonedDateTime,
-  endTime: Temporal.ZonedDateTime,
-  displayTimeZone: string
-): string {
-  const s = startTime.withTimeZone(displayTimeZone);
-  const e = endTime.withTimeZone(displayTimeZone);
-
-  const period = (h: number) => (h >= 12 ? 'PM' : 'AM');
-  const fmt = (h: number, m: number) =>
-    `${h % 12 || 12}:${String(m).padStart(2, '0')}`;
-
-  const startStr = fmt(s.hour, s.minute);
-  const endStr = fmt(e.hour, e.minute);
-
-  if (period(s.hour) === period(e.hour)) {
-    return `${startStr} – ${endStr} ${period(e.hour)}`;
-  }
-
-  return `${startStr} ${period(s.hour)} – ${endStr} ${period(e.hour)}`;
+  return formatTimeLabel(inZone.hour, inZone.minute);
 }
