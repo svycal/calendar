@@ -59,16 +59,13 @@ export function ResourceGridView({
 
   const cls = useCallback(
     (key: keyof ResourceGridViewClassNames) =>
-      cn(
-        resourceGridViewDefaults[key],
-        classNames?.[key],
-      ),
-    [classNames],
+      cn(resourceGridViewDefaults[key], classNames?.[key]),
+    [classNames]
   );
 
   const timeSlots = useMemo(
     () => generateTimeSlots({ startHour, endHour, intervalMinutes }),
-    [startHour, endHour, intervalMinutes],
+    [startHour, endHour, intervalMinutes]
   );
 
   const { allDayEvents, timedEvents } = useMemo(() => {
@@ -99,8 +96,15 @@ export function ResourceGridView({
 
   const positionedByResource = useMemo(
     () =>
-      computePositionedEvents(timedEvents, timeZone, date, startHour, endHour, effectiveHourHeight),
-    [timedEvents, timeZone, date, startHour, endHour, effectiveHourHeight],
+      computePositionedEvents(
+        timedEvents,
+        timeZone,
+        date,
+        startHour,
+        endHour,
+        effectiveHourHeight
+      ),
+    [timedEvents, timeZone, date, startHour, endHour, effectiveHourHeight]
   );
 
   const unavailableByResource = useMemo(() => {
@@ -122,21 +126,29 @@ export function ResourceGridView({
         date,
         startHour,
         endHour,
-        effectiveHourHeight,
+        effectiveHourHeight
       );
       if (blocks.length > 0) {
         map.set(resourceId, blocks);
       }
     }
     return map;
-  }, [availability, unavailability, timeZone, date, startHour, endHour, effectiveHourHeight]);
+  }, [
+    availability,
+    unavailability,
+    timeZone,
+    date,
+    startHour,
+    endHour,
+    effectiveHourHeight,
+  ]);
 
   const handleEventClick = useCallback(
     (event: CalendarEvent) => {
       onSelect?.(null);
       onEventClick?.(event);
     },
-    [onSelect, onEventClick],
+    [onSelect, onEventClick]
   );
 
   useEffect(() => {
@@ -187,7 +199,7 @@ export function ResourceGridView({
         {/* All-day gutter cell */}
         <div
           ref={allDayRef}
-          className={cn(cls('allDayCell'), 'border-r border-zinc-200 dark:border-zinc-700 sticky left-0 z-30')}
+          className={cn(cls('allDayCell'), 'left-0 z-30')}
           style={{
             gridRow: 2,
             gridColumn: 1,
@@ -231,9 +243,7 @@ export function ResourceGridView({
           resources.map((resource, colIdx) => (
             <div
               key={`${slot.index}-${resource.id}`}
-              className={cls(
-                slot.isHourStart ? 'bodyCell' : 'bodyCellMinor',
-              )}
+              className={cls(slot.isHourStart ? 'bodyCell' : 'bodyCellMinor')}
               style={{
                 gridRow: slot.index + 3,
                 gridColumn: colIdx + 2,
@@ -241,10 +251,12 @@ export function ResourceGridView({
                   ? { borderTopStyle: 'dotted' as const }
                   : {}),
                 ...(slot.index === 0 ? { borderTopWidth: 0 } : {}),
-                ...(colIdx === resources.length - 1 ? { borderRightWidth: 0 } : {}),
+                ...(colIdx === resources.length - 1
+                  ? { borderRightWidth: 0 }
+                  : {}),
               }}
             />
-          )),
+          ))
         )}
 
         {/* Unavailability overlays */}
@@ -288,9 +300,7 @@ export function ResourceGridView({
           <ResourceColumn
             key={resource.id}
             resource={resource}
-            positionedEvents={
-              positionedByResource.get(resource.id) ?? []
-            }
+            positionedEvents={positionedByResource.get(resource.id) ?? []}
             column={i + 2}
             timeZone={timeZone}
             cls={cls}
@@ -304,7 +314,7 @@ export function ResourceGridView({
         {selectedRange != null &&
           (() => {
             const colIdx = resources.findIndex(
-              (r) => r.id === selectedRange.resourceId,
+              (r) => r.id === selectedRange.resourceId
             );
             if (colIdx === -1) return null;
             return (
