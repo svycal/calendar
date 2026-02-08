@@ -44,6 +44,8 @@ export function ResourceGridView({
   columnMinWidth = 120,
   renderHeader,
   renderEvent,
+  selectionAppearance,
+  dragPreviewAppearance,
 }: ResourceGridViewProps) {
   const startHour = timeAxis?.startHour ?? 0;
   const endHour = timeAxis?.endHour ?? 24;
@@ -270,6 +272,8 @@ export function ResourceGridView({
               cls={cls}
               onSlotClick={onSlotClick}
               onSelect={onSelect}
+              dragPreviewAppearance={dragPreviewAppearance}
+              renderEvent={renderEvent}
             />
           ))}
 
@@ -284,10 +288,13 @@ export function ResourceGridView({
               <SelectionOverlay
                 selectedRange={selectedRange}
                 column={colIdx + 2}
+                resource={resources[colIdx]}
                 timeZone={timeZone}
                 startHour={startHour}
                 hourHeight={effectiveHourHeight}
                 cls={cls}
+                appearance={selectionAppearance}
+                renderEvent={renderEvent}
               />
             );
           })()}

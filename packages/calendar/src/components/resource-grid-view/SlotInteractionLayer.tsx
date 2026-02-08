@@ -2,9 +2,14 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import type { Temporal } from 'temporal-polyfill';
 import type {
   CalendarResource,
+  PositionedEvent,
   ResourceGridViewClassNames,
   SelectedRange,
+  SelectionAppearance,
+  TimedCalendarEvent,
 } from '@/types/calendar';
+import { buildSyntheticEvent } from '@/lib/selection';
+import { EventChip } from './EventChip';
 
 interface SlotInteractionLayerProps {
   resource: CalendarResource;
@@ -23,6 +28,11 @@ interface SlotInteractionLayerProps {
     endTime: Temporal.ZonedDateTime;
   }) => void;
   onSelect?: (range: SelectedRange | null) => void;
+  dragPreviewAppearance?: SelectionAppearance;
+  renderEvent?: (props: {
+    event: TimedCalendarEvent;
+    position: PositionedEvent;
+  }) => React.ReactNode;
 }
 
 function minutesToZonedDateTime(
@@ -55,6 +65,8 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   cls,
   onSlotClick,
   onSelect,
+  dragPreviewAppearance = 'highlight',
+  renderEvent,
 }: SlotInteractionLayerProps) {
   const [hoveredSlotStart, setHoveredSlotStart] = useState<number | null>(null);
   const [dragPreview, setDragPreview] = useState<{
@@ -299,20 +311,44 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
           }}
         />
       )}
-      {dragPreview && (
-        <div
-          className={cls('selectionHighlight')}
-          style={{
-            position: 'absolute',
-            top: (dragPreview.startMin - axisStartMin) * pixelsPerMinute,
-            left: 0,
-            right: 0,
-            height:
-              (dragPreview.endMin - dragPreview.startMin) * pixelsPerMinute,
-            pointerEvents: 'none',
-          }}
-        />
-      )}
+      {dragPreview &&
+        (dragPreviewAppearance !== 'highlight' ? (
+          <div className={cls('eventColumn')} style={{ pointerEvents: 'none' }}>
+            <EventChip
+              interactive={false}
+              positioned={{
+                event: buildSyntheticEvent(
+                  resource.id,
+                  minutesToZonedDateTime(date, dragPreview.startMin, timeZone),
+                  minutesToZonedDateTime(date, dragPreview.endMin, timeZone),
+                  dragPreviewAppearance.eventData,
+                ),
+                top: (dragPreview.startMin - axisStartMin) * pixelsPerMinute,
+                height:
+                  (dragPreview.endMin - dragPreview.startMin) * pixelsPerMinute,
+                subColumn: 0,
+                totalSubColumns: 1,
+              }}
+              resource={resource}
+              timeZone={timeZone}
+              cls={cls}
+              renderEvent={renderEvent}
+            />
+          </div>
+        ) : (
+          <div
+            className={cls('selectionHighlight')}
+            style={{
+              position: 'absolute',
+              top: (dragPreview.startMin - axisStartMin) * pixelsPerMinute,
+              left: 0,
+              right: 0,
+              height:
+                (dragPreview.endMin - dragPreview.startMin) * pixelsPerMinute,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
     </div>
   );
 });

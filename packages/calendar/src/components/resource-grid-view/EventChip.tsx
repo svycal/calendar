@@ -19,6 +19,7 @@ interface EventChipProps {
     event: TimedCalendarEvent;
     position: PositionedEvent;
   }) => React.ReactNode;
+  interactive?: boolean;
 }
 
 export const EventChip = memo(function EventChip({
@@ -28,6 +29,7 @@ export const EventChip = memo(function EventChip({
   cls,
   onClick,
   renderEvent,
+  interactive = true,
 }: EventChipProps) {
   const { event, top, height, subColumn, totalSubColumns } = positioned;
   const color = event.color ?? resource.color ?? undefined;
@@ -49,7 +51,7 @@ export const EventChip = memo(function EventChip({
           height,
           left: `${leftPct}%`,
           width: `${widthPct}%`,
-          pointerEvents: 'auto',
+          pointerEvents: interactive ? 'auto' : 'none',
         }}
       >
         {renderEvent({ event, position: positioned })}
@@ -61,28 +63,43 @@ export const EventChip = memo(function EventChip({
 
   return (
     <div
-      role="button"
-      tabIndex={0}
+      {...(interactive ? { role: 'button', tabIndex: 0 } : {})}
       className={cn(cls('event'), event.selected && cls('eventSelected'))}
       style={{
         top,
         height,
         left: `${leftPct}%`,
         width: `${widthPct}%`,
-        pointerEvents: 'auto',
+        pointerEvents: interactive ? 'auto' : 'none',
       }}
-      onClick={() => onClick?.(event)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.(event);
-        }
-      }}
+      {...(interactive
+        ? {
+            onClick: () => onClick?.(event),
+            onKeyDown: (e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick?.(event);
+              }
+            },
+          }
+        : {})}
     >
       {color && (
         <div
           className={cls('eventColorBar')}
-          style={{ backgroundColor: color }}
+          style={
+            event.id === '__selection__'
+              ? {
+                  backgroundImage: `repeating-linear-gradient(
+                    -45deg,
+                    ${color},
+                    ${color} 3px,
+                    transparent 3px,
+                    transparent 6px
+                  )`,
+                }
+              : { backgroundColor: color }
+          }
         />
       )}
       <div

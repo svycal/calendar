@@ -50,6 +50,16 @@ export interface SelectedRange {
   endTime: Temporal.ZonedDateTime;
 }
 
+/** Partial event data for phantom event rendering (omits fields derived from the selection range) */
+export type SelectionEventData = Partial<
+  Omit<TimedCalendarEvent, 'id' | 'resourceId' | 'startTime' | 'endTime' | 'allDay'>
+>;
+
+/** Discriminated union: simple string for highlight, object for event style */
+export type SelectionAppearance =
+  | 'highlight'
+  | { style: 'event'; eventData?: SelectionEventData };
+
 export interface TimeAxisConfig {
   startHour?: number;
   endHour?: number;
@@ -117,6 +127,8 @@ export interface ResourceGridViewProps {
     event: TimedCalendarEvent;
     position: PositionedEvent;
   }) => ReactNode;
+  selectionAppearance?: SelectionAppearance;
+  dragPreviewAppearance?: SelectionAppearance;
 }
 
 export interface WeekViewProps {
