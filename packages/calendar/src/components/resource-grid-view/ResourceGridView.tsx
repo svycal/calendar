@@ -277,7 +277,23 @@ export function ResourceGridView({
             />
           ))}
 
-        {/* Selection overlay */}
+        {/* Resource columns with events */}
+        {resources.map((resource, i) => (
+          <ResourceColumn
+            key={resource.id}
+            resource={resource}
+            positionedEvents={
+              positionedByResource.get(resource.id) ?? []
+            }
+            column={i + 2}
+            timeZone={timeZone}
+            cls={cls}
+            onEventClick={handleEventClick}
+            renderEvent={renderEvent}
+          />
+        ))}
+
+        {/* Selection overlay (after resource columns so it stacks on top) */}
         {selectedRange != null &&
           (() => {
             const colIdx = resources.findIndex(
@@ -298,22 +314,6 @@ export function ResourceGridView({
               />
             );
           })()}
-
-        {/* Resource columns with events */}
-        {resources.map((resource, i) => (
-          <ResourceColumn
-            key={resource.id}
-            resource={resource}
-            positionedEvents={
-              positionedByResource.get(resource.id) ?? []
-            }
-            column={i + 2}
-            timeZone={timeZone}
-            cls={cls}
-            onEventClick={handleEventClick}
-            renderEvent={renderEvent}
-          />
-        ))}
 
         {/* Now indicator */}
         <NowIndicator
