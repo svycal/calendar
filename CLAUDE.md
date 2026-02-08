@@ -11,3 +11,7 @@
 ## Workflow
 
 After changing code, run `pnpm lint:fix` to auto-fix lint and formatting issues.
+
+## Documentation
+
+When changing the public API (props, types, exports), CSS custom properties, or CSS setup instructions, update `packages/calendar/README.md` to reflect the changes.
