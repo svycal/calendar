@@ -9,7 +9,7 @@ import {
   type SelectedRange,
 } from '@savvycal/calendar';
 
-const tz = 'America/New_York';
+const tz = 'America/Chicago';
 
 // Use today's date so the now indicator renders
 const today = Temporal.Now.plainDateISO(tz);
