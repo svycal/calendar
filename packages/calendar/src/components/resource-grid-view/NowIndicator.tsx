@@ -14,7 +14,7 @@ interface NowIndicatorProps {
 
 function isTodayInTimeZone(
   date: Temporal.PlainDate,
-  timeZone: string,
+  timeZone: string
 ): boolean {
   const today = Temporal.Now.plainDateISO(timeZone);
   return Temporal.PlainDate.compare(today, date) === 0;
@@ -24,7 +24,7 @@ function getCurrentMinuteOffset(
   timeZone: string,
   startHour: number,
   endHour: number,
-  hourHeight: number,
+  hourHeight: number
 ): number | null {
   const now = Temporal.Now.zonedDateTimeISO(timeZone);
   const totalMinutes = now.hour * 60 + now.minute;
@@ -47,7 +47,7 @@ export const NowIndicator = memo(function NowIndicator({
   const [offset, setOffset] = useState<number | null>(() =>
     isTodayInTimeZone(date, timeZone)
       ? getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight)
-      : null,
+      : null
   );
 
   useEffect(() => {
@@ -62,7 +62,9 @@ export const NowIndicator = memo(function NowIndicator({
       if (!isTodayInTimeZone(date, timeZone)) {
         setOffset(null);
       } else {
-        setOffset(getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight));
+        setOffset(
+          getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight)
+        );
       }
     }, 60_000);
 

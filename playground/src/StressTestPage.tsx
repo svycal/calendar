@@ -102,8 +102,7 @@ function generateData() {
       if (endHour > 19) continue;
 
       const hasClient = rng() > 0.3;
-      const title =
-        EVENT_TITLES[Math.floor(rng() * EVENT_TITLES.length)];
+      const title = EVENT_TITLES[Math.floor(rng() * EVENT_TITLES.length)];
 
       events.push({
         id: String(eventId++),
@@ -113,8 +112,7 @@ function generateData() {
         resourceId: resource.id,
         ...(hasClient
           ? {
-              clientName:
-                CLIENT_NAMES[Math.floor(rng() * CLIENT_NAMES.length)],
+              clientName: CLIENT_NAMES[Math.floor(rng() * CLIENT_NAMES.length)],
             }
           : {}),
       });
@@ -159,7 +157,11 @@ function generateData() {
   return { resources, events, availability };
 }
 
-export default function StressTestPage({ eventLayout }: { eventLayout?: EventLayout }) {
+export default function StressTestPage({
+  eventLayout,
+}: {
+  eventLayout?: EventLayout;
+}) {
   const { resources, events, availability } = useMemo(generateData, []);
 
   return (

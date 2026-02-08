@@ -7,10 +7,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
  * Also exposes the measured header height so the all-day row can be positioned
  * sticky below the header.
  */
-export function useEffectiveHourHeight(
-  hourHeight: number,
-  totalHours: number,
-) {
+export function useEffectiveHourHeight(hourHeight: number, totalHours: number) {
   const rootRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const allDayRef = useRef<HTMLDivElement>(null);
@@ -27,7 +24,8 @@ export function useEffectiveHourHeight(
       const measuredHeaderHeight = header!.offsetHeight;
       setHeaderHeight(measuredHeaderHeight);
       const allDayHeight = allDayRef.current?.offsetHeight ?? 0;
-      const availableBodyHeight = containerHeight - measuredHeaderHeight - allDayHeight;
+      const availableBodyHeight =
+        containerHeight - measuredHeaderHeight - allDayHeight;
       const stretched = availableBodyHeight / totalHours;
       setEffectiveHourHeight(Math.max(hourHeight, stretched));
     }

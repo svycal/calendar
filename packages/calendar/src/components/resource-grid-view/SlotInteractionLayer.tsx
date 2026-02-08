@@ -38,7 +38,7 @@ interface SlotInteractionLayerProps {
 function minutesToZonedDateTime(
   date: Temporal.PlainDate,
   totalMinutes: number,
-  timeZone: string,
+  timeZone: string
 ): Temporal.ZonedDateTime {
   const hour = Math.floor(totalMinutes / 60);
   const minute = totalMinutes % 60;
@@ -103,7 +103,13 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
 
       return absoluteMinutes;
     },
-    [pixelsPerMinute, snapDuration, placeholderDuration, axisStartMin, axisEndMin],
+    [
+      pixelsPerMinute,
+      snapDuration,
+      placeholderDuration,
+      axisStartMin,
+      axisEndMin,
+    ]
   );
 
   // Store values in refs for document handlers
@@ -116,17 +122,14 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   const placeholderDurationRef = useRef(placeholderDuration);
   placeholderDurationRef.current = placeholderDuration;
 
-  const computeRange = useCallback(
-    (anchor: number, currentSlot: number) => {
-      const rangeStart = Math.min(anchor, currentSlot);
-      const rangeEnd = Math.min(
-        Math.max(anchor, currentSlot) + placeholderDurationRef.current,
-        axisEndMinRef.current,
-      );
-      return { startMin: rangeStart, endMin: rangeEnd };
-    },
-    [],
-  );
+  const computeRange = useCallback((anchor: number, currentSlot: number) => {
+    const rangeStart = Math.min(anchor, currentSlot);
+    const rangeEnd = Math.min(
+      Math.max(anchor, currentSlot) + placeholderDurationRef.current,
+      axisEndMinRef.current
+    );
+    return { startMin: rangeStart, endMin: rangeEnd };
+  }, []);
 
   const handleDocMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -138,7 +141,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       const containerHeight = rect.height;
       const yOffset = Math.max(
         0,
-        Math.min(e.clientY - rect.top, containerHeight),
+        Math.min(e.clientY - rect.top, containerHeight)
       );
 
       let currentSlot = snapToSlotRef.current(yOffset);
@@ -153,7 +156,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       drag.moved = true;
       setDragPreview(range);
     },
-    [computeRange],
+    [computeRange]
   );
 
   const handleDocMouseUp = useCallback(() => {
@@ -168,12 +171,12 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
         startTime: minutesToZonedDateTime(
           dateRef.current,
           drag.currentStartMin,
-          timeZoneRef.current,
+          timeZoneRef.current
         ),
         endTime: minutesToZonedDateTime(
           dateRef.current,
           drag.currentEndMin,
-          timeZoneRef.current,
+          timeZoneRef.current
         ),
       });
     }
@@ -225,7 +228,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       placeholderDuration,
       handleDocMouseMove,
       handleDocMouseUp,
-    ],
+    ]
   );
 
   const handleMouseMove = useCallback(
@@ -240,7 +243,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       const yOffset = e.clientY - rect.top;
       setHoveredSlotStart(snapToSlot(yOffset));
     },
-    [snapToSlot],
+    [snapToSlot]
   );
 
   const handleMouseLeave = useCallback(() => {
@@ -274,7 +277,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
         });
       }
     },
-    [onSlotClick, snapToSlot, placeholderDuration, resource, date, timeZone],
+    [onSlotClick, snapToSlot, placeholderDuration, resource, date, timeZone]
   );
 
   const highlightTop =
@@ -321,7 +324,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
                   resource.id,
                   minutesToZonedDateTime(date, dragPreview.startMin, timeZone),
                   minutesToZonedDateTime(date, dragPreview.endMin, timeZone),
-                  dragPreviewAppearance.eventData,
+                  dragPreviewAppearance.eventData
                 ),
                 top: (dragPreview.startMin - axisStartMin) * pixelsPerMinute,
                 height:

@@ -52,7 +52,10 @@ export interface SelectedRange {
 
 /** Partial event data for phantom event rendering (omits fields derived from the selection range) */
 export type SelectionEventData = Partial<
-  Omit<TimedCalendarEvent, 'id' | 'resourceId' | 'startTime' | 'endTime' | 'allDay'>
+  Omit<
+    TimedCalendarEvent,
+    'id' | 'resourceId' | 'startTime' | 'endTime' | 'allDay'
+  >
 >;
 
 /** Discriminated union: simple string for highlight, object for event style */

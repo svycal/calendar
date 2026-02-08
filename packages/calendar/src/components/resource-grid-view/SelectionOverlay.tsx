@@ -49,7 +49,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
     selectedRange.startTime,
     selectedRange.endTime,
     viewDate,
-    timeZone,
+    timeZone
   );
   if (!range) return null;
 
@@ -88,7 +88,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
                   selectedRange.resourceId,
                   selectedRange.startTime,
                   selectedRange.endTime,
-                  appearance.eventData,
+                  appearance.eventData
                 ),
                 top: 0,
                 height,

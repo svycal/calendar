@@ -17,7 +17,7 @@ function toIntervals(
   timeZone: string,
   viewDate: Temporal.PlainDate,
   axisStartMin: number,
-  axisEndMin: number,
+  axisEndMin: number
 ): Interval[] {
   return ranges
     .map((r) => {
@@ -52,7 +52,7 @@ function mergeIntervals(intervals: Interval[]): Interval[] {
 function invertIntervals(
   available: Interval[],
   axisStartMin: number,
-  axisEndMin: number,
+  axisEndMin: number
 ): Interval[] {
   const merged = mergeIntervals(available);
   const gaps: Interval[] = [];
@@ -83,7 +83,7 @@ export function computeUnavailableBlocks(
   viewDate: Temporal.PlainDate,
   startHour: number,
   endHour: number,
-  hourHeight: number,
+  hourHeight: number
 ): UnavailableBlock[] {
   const axisStartMin = startHour * 60;
   const axisEndMin = endHour * 60;
@@ -93,14 +93,28 @@ export function computeUnavailableBlocks(
 
   // Invert available ranges to get unavailable gaps
   if (availableRanges && availableRanges.length > 0) {
-    const available = toIntervals(availableRanges, timeZone, viewDate, axisStartMin, axisEndMin);
-    unavailableIntervals.push(...invertIntervals(available, axisStartMin, axisEndMin));
+    const available = toIntervals(
+      availableRanges,
+      timeZone,
+      viewDate,
+      axisStartMin,
+      axisEndMin
+    );
+    unavailableIntervals.push(
+      ...invertIntervals(available, axisStartMin, axisEndMin)
+    );
   }
 
   // Add explicit unavailable ranges
   if (unavailableRanges && unavailableRanges.length > 0) {
     unavailableIntervals.push(
-      ...toIntervals(unavailableRanges, timeZone, viewDate, axisStartMin, axisEndMin),
+      ...toIntervals(
+        unavailableRanges,
+        timeZone,
+        viewDate,
+        axisStartMin,
+        axisEndMin
+      )
     );
   }
 

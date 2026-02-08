@@ -11,7 +11,7 @@ interface LayoutEntry {
 }
 
 export function groupEventsByResource(
-  events: TimedCalendarEvent[],
+  events: TimedCalendarEvent[]
 ): Map<string, TimedCalendarEvent[]> {
   const map = new Map<string, TimedCalendarEvent[]>();
   for (const event of events) {
@@ -28,7 +28,7 @@ export function groupEventsByResource(
 export function computeOverlapLayout(
   events: TimedCalendarEvent[],
   timeZone: string,
-  viewDate: Temporal.PlainDate,
+  viewDate: Temporal.PlainDate
 ): LayoutEntry[] {
   if (events.length === 0) return [];
 
@@ -39,7 +39,7 @@ export function computeOverlapLayout(
         event.startTime,
         event.endTime,
         viewDate,
-        timeZone,
+        timeZone
       );
       if (!range) return null;
       return { event, startMin: range.startMin, endMin: range.endMin };
@@ -114,7 +114,7 @@ export function computePositionedEvents(
   viewDate: Temporal.PlainDate,
   startHour: number,
   endHour: number,
-  hourHeight: number,
+  hourHeight: number
 ): Map<string, PositionedEvent[]> {
   const byResource = groupEventsByResource(events);
   const result = new Map<string, PositionedEvent[]>();

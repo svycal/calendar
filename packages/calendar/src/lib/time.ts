@@ -18,7 +18,7 @@ export function formatTimeLabel(hour: number, minute: number): string {
 
 export function getMinutesFromMidnight(
   zdt: Temporal.ZonedDateTime,
-  displayTimeZone: string,
+  displayTimeZone: string
 ): number {
   const inZone = zdt.withTimeZone(displayTimeZone);
   return inZone.hour * 60 + inZone.minute;
@@ -60,7 +60,7 @@ export function getMinuteRange(
   startTime: Temporal.ZonedDateTime,
   endTime: Temporal.ZonedDateTime,
   viewDate: Temporal.PlainDate,
-  displayTimeZone: string,
+  displayTimeZone: string
 ): MinuteRange | null {
   const start = startTime.withTimeZone(displayTimeZone);
   const end = endTime.withTimeZone(displayTimeZone);
@@ -91,7 +91,7 @@ export function getMinuteRange(
 
 export function formatEventStartTime(
   startTime: Temporal.ZonedDateTime,
-  displayTimeZone: string,
+  displayTimeZone: string
 ): string {
   const inZone = startTime.withTimeZone(displayTimeZone);
   const h = inZone.hour;
@@ -105,7 +105,7 @@ export function formatEventStartTime(
 export function formatEventTimeRange(
   startTime: Temporal.ZonedDateTime,
   endTime: Temporal.ZonedDateTime,
-  displayTimeZone: string,
+  displayTimeZone: string
 ): string {
   const s = startTime.withTimeZone(displayTimeZone);
   const e = endTime.withTimeZone(displayTimeZone);

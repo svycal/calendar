@@ -218,9 +218,7 @@ export function ResourceGridView({
               gridRow: 2,
               gridColumn: i + 2,
               top: headerHeight,
-              ...(i === resources.length - 1
-                ? { borderRightWidth: 0 }
-                : {}),
+              ...(i === resources.length - 1 ? { borderRightWidth: 0 } : {}),
             }}
           >
             <AllDayRow

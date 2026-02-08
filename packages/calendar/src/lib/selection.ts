@@ -5,7 +5,7 @@ export function buildSyntheticEvent(
   resourceId: string,
   startTime: Temporal.ZonedDateTime,
   endTime: Temporal.ZonedDateTime,
-  eventData?: SelectionEventData,
+  eventData?: SelectionEventData
 ): TimedCalendarEvent {
   return {
     id: '__selection__',

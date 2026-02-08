@@ -57,7 +57,9 @@ export const EventChip = memo(function EventChip({
     const leftOffset = (subColumn * gap) / totalSubColumns;
     const widthShrink = ((totalSubColumns - 1) * gap) / totalSubColumns;
     left = widthShrink ? `calc(${leftPct}% + ${leftOffset}px)` : `${leftPct}%`;
-    width = widthShrink ? `calc(${widthPct}% - ${widthShrink}px)` : `${widthPct}%`;
+    width = widthShrink
+      ? `calc(${widthPct}% - ${widthShrink}px)`
+      : `${widthPct}%`;
   }
 
   if (event.selected) {
