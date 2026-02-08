@@ -135,6 +135,8 @@ const events: CalendarEvent[] = [
     endTime: makeTime(11, 45),
     resourceId: '3',
     color: '#dc2626',
+    // Testing that selected events move to the top of the stacking order
+    selected: true,
   },
   {
     id: '8',
@@ -325,38 +327,44 @@ function App() {
           Calendar Playground
         </h1>
         <div className="flex gap-1 rounded-lg border border-zinc-200 dark:border-zinc-700 p-0.5">
-          {([['demo', 'Demo'], ['stress-test', 'Stress Test']] as const).map(
-            ([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setPage(key)}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
-                  page === key
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
-              >
-                {label}
-              </button>
-            )
-          )}
+          {(
+            [
+              ['demo', 'Demo'],
+              ['stress-test', 'Stress Test'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setPage(key)}
+              className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                page === key
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
         <div className="flex gap-1 rounded-lg border border-zinc-200 dark:border-zinc-700 p-0.5">
-          {([['columns', 'Columns'], ['stacked', 'Stacked']] as const).map(
-            ([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setEventLayout(key)}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
-                  eventLayout === key
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
-              >
-                {label}
-              </button>
-            )
-          )}
+          {(
+            [
+              ['columns', 'Columns'],
+              ['stacked', 'Stacked'],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setEventLayout(key)}
+              className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                eventLayout === key
+                  ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
         <button
           onClick={() => setDark(!dark)}

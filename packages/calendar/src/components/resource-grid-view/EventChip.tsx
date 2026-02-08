@@ -60,6 +60,10 @@ export const EventChip = memo(function EventChip({
     width = widthShrink ? `calc(${widthPct}% - ${widthShrink}px)` : `${widthPct}%`;
   }
 
+  if (event.selected) {
+    zIndex = 10;
+  }
+
   // 2 lines (~36px): title + collapsed time/client
   // 3 lines (~52px): title + time + client on separate lines
   const canFitTwoLines = height >= 36;
