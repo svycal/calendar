@@ -1,3 +1,4 @@
+import type { Temporal } from 'temporal-polyfill';
 import type { ReactNode } from 'react';
 
 export interface CalendarResource {
@@ -10,8 +11,8 @@ export interface CalendarResource {
 export interface CalendarEvent {
   id: string;
   title: string;
-  startTime: string;
-  endTime: string;
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
   resourceId: string;
   allDay?: boolean;
   color?: string;
@@ -22,20 +23,20 @@ export interface CalendarEvent {
 }
 
 export interface TimeSlot {
-  startTime: string;
-  endTime: string;
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
   available: boolean;
 }
 
 export interface AvailabilityRange {
-  startTime: string;
-  endTime: string;
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
 }
 
 export interface SelectedRange {
   resourceId: string;
-  startTime: string;
-  endTime: string;
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
 }
 
 export interface TimeAxisConfig {
@@ -79,7 +80,7 @@ export interface PositionedEvent {
 }
 
 export interface ResourceGridViewProps {
-  date: string;
+  date: Temporal.PlainDate;
   timeZone: string;
   resources: CalendarResource[];
   events: CalendarEvent[];
@@ -90,8 +91,8 @@ export interface ResourceGridViewProps {
   slotDuration?: number;
   onSlotClick?: (info: {
     resource: CalendarResource;
-    startTime: string;
-    endTime: string;
+    startTime: Temporal.ZonedDateTime;
+    endTime: Temporal.ZonedDateTime;
   }) => void;
   className?: string;
   selectedRange?: SelectedRange | null;
@@ -107,7 +108,7 @@ export interface ResourceGridViewProps {
 }
 
 export interface WeekViewProps {
-  date: string;
+  date: Temporal.PlainDate;
   timeZone: string;
   resource: CalendarResource;
   events: CalendarEvent[];

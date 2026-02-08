@@ -1,3 +1,6 @@
+// Temporal
+export { Temporal } from 'temporal-polyfill';
+
 // Components
 export { ResourceGridView } from './components/resource-grid-view';
 export { WeekView } from './components/WeekView';

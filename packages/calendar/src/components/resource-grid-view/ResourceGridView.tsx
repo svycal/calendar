@@ -258,6 +258,7 @@ export function ResourceGridView({
               resource={resource}
               column={i + 2}
               date={date}
+              timeZone={timeZone}
               startHour={startHour}
               endHour={endHour}
               hourHeight={effectiveHourHeight}
@@ -279,6 +280,7 @@ export function ResourceGridView({
               <SelectionOverlay
                 selectedRange={selectedRange}
                 column={colIdx + 2}
+                timeZone={timeZone}
                 startHour={startHour}
                 hourHeight={effectiveHourHeight}
                 cls={cls}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Temporal } from 'temporal-polyfill';
 import {
   ResourceGridView,
   WeekView,
@@ -8,8 +9,14 @@ import {
   type SelectedRange,
 } from '@savvycal/calendar';
 
+const tz = 'America/New_York';
+
 // Use today's date so the now indicator renders
-const today = new Date().toISOString().split('T')[0];
+const today = Temporal.Now.plainDateISO(tz);
+
+function makeTime(hour: number, minute = 0): Temporal.ZonedDateTime {
+  return today.toPlainDateTime({ hour, minute }).toZonedDateTime(tz);
+}
 
 const resources: CalendarResource[] = [
   {
@@ -49,16 +56,16 @@ const events: CalendarEvent[] = [
   {
     id: '1',
     title: 'Annual Checkup',
-    startTime: `${today}T09:00:00`,
-    endTime: `${today}T09:45:00`,
+    startTime: makeTime(9, 0),
+    endTime: makeTime(9, 45),
     resourceId: '1',
     clientName: 'Alice Thompson',
   },
   {
     id: '2',
     title: 'Walk-in Patient',
-    startTime: `${today}T09:15:00`,
-    endTime: `${today}T09:45:00`,
+    startTime: makeTime(9, 15),
+    endTime: makeTime(9, 45),
     resourceId: '1',
     clientName: 'Bob Barker',
     status: 'canceled',
@@ -66,8 +73,8 @@ const events: CalendarEvent[] = [
   {
     id: '3',
     title: 'Follow-up',
-    startTime: `${today}T14:00:00`,
-    endTime: `${today}T14:30:00`,
+    startTime: makeTime(14, 0),
+    endTime: makeTime(14, 30),
     resourceId: '1',
     clientName: 'Charlie Davis',
   },
@@ -76,8 +83,8 @@ const events: CalendarEvent[] = [
   {
     id: '4',
     title: 'Consultation',
-    startTime: `${today}T10:00:00`,
-    endTime: `${today}T10:45:00`,
+    startTime: makeTime(10, 0),
+    endTime: makeTime(10, 45),
     resourceId: '2',
     clientName: 'Diana Prince',
     selected: true,
@@ -85,8 +92,8 @@ const events: CalendarEvent[] = [
   {
     id: '5',
     title: 'Lab Review',
-    startTime: `${today}T13:00:00`,
-    endTime: `${today}T13:30:00`,
+    startTime: makeTime(13, 0),
+    endTime: makeTime(13, 30),
     resourceId: '2',
     clientName: 'Eve Martinez',
   },
@@ -95,23 +102,23 @@ const events: CalendarEvent[] = [
   {
     id: '6',
     title: 'New Patient',
-    startTime: `${today}T11:00:00`,
-    endTime: `${today}T12:00:00`,
+    startTime: makeTime(11, 0),
+    endTime: makeTime(12, 0),
     resourceId: '3',
   },
   {
     id: '7',
     title: 'Emergency Visit',
-    startTime: `${today}T11:15:00`,
-    endTime: `${today}T11:45:00`,
+    startTime: makeTime(11, 15),
+    endTime: makeTime(11, 45),
     resourceId: '3',
     color: '#dc2626',
   },
   {
     id: '8',
     title: 'Phone Consult',
-    startTime: `${today}T11:30:00`,
-    endTime: `${today}T12:15:00`,
+    startTime: makeTime(11, 30),
+    endTime: makeTime(12, 15),
     resourceId: '3',
   },
 
@@ -119,16 +126,16 @@ const events: CalendarEvent[] = [
   {
     id: '9',
     title: 'Surgery',
-    startTime: `${today}T08:00:00`,
-    endTime: `${today}T11:30:00`,
+    startTime: makeTime(8, 0),
+    endTime: makeTime(11, 30),
     resourceId: '4',
     clientName: 'Frank Wilson',
   },
   {
     id: '10',
     title: 'Post-Op Check',
-    startTime: `${today}T15:00:00`,
-    endTime: `${today}T15:30:00`,
+    startTime: makeTime(15, 0),
+    endTime: makeTime(15, 30),
     resourceId: '4',
   },
 
@@ -136,15 +143,15 @@ const events: CalendarEvent[] = [
   {
     id: '11',
     title: 'Morning Rounds',
-    startTime: `${today}T07:30:00`,
-    endTime: `${today}T08:30:00`,
+    startTime: makeTime(7, 30),
+    endTime: makeTime(8, 30),
     resourceId: '5',
   },
   {
     id: '12',
     title: 'Team Meeting',
-    startTime: `${today}T12:00:00`,
-    endTime: `${today}T13:00:00`,
+    startTime: makeTime(12, 0),
+    endTime: makeTime(13, 0),
     resourceId: '5',
     color: '#6366f1',
   },
@@ -152,22 +159,22 @@ const events: CalendarEvent[] = [
     id: '13',
     title: 'Patient Intake',
     clientName: 'Bob Williams',
-    startTime: `${today}T14:30:00`,
-    endTime: `${today}T15:15:00`,
+    startTime: makeTime(14, 30),
+    endTime: makeTime(15, 15),
     resourceId: '5',
   },
   {
     id: '14',
     title: 'Chart Review',
-    startTime: `${today}T16:00:00`,
-    endTime: `${today}T16:30:00`,
+    startTime: makeTime(16, 0),
+    endTime: makeTime(16, 30),
     resourceId: '5',
   },
   {
     id: '15',
     title: 'Quick Check',
-    startTime: `${today}T09:00:00`,
-    endTime: `${today}T09:15:00`,
+    startTime: makeTime(9, 0),
+    endTime: makeTime(9, 15),
     resourceId: '2',
     clientName: 'Grace Lee',
   },
@@ -176,8 +183,8 @@ const events: CalendarEvent[] = [
   {
     id: '16',
     title: 'Conference',
-    startTime: `${today}T00:00:00`,
-    endTime: `${today}T23:59:59`,
+    startTime: makeTime(0, 0),
+    endTime: makeTime(23, 59),
     resourceId: '1',
     allDay: true,
     color: '#3b82f6',
@@ -185,8 +192,8 @@ const events: CalendarEvent[] = [
   {
     id: '17',
     title: 'PTO',
-    startTime: `${today}T00:00:00`,
-    endTime: `${today}T23:59:59`,
+    startTime: makeTime(0, 0),
+    endTime: makeTime(23, 59),
     resourceId: '3',
     allDay: true,
     color: '#10b981',
@@ -194,8 +201,8 @@ const events: CalendarEvent[] = [
   {
     id: '18',
     title: 'Training Day',
-    startTime: `${today}T00:00:00`,
-    endTime: `${today}T23:59:59`,
+    startTime: makeTime(0, 0),
+    endTime: makeTime(23, 59),
     resourceId: '1',
     allDay: true,
     color: '#f59e0b',
@@ -205,26 +212,26 @@ const events: CalendarEvent[] = [
 const availability: Record<string, AvailabilityRange[]> = {
   // Dr. Smith: available 9am-12pm and 1pm-5pm (lunch break)
   '1': [
-    { startTime: `${today}T09:00:00`, endTime: `${today}T12:00:00` },
-    { startTime: `${today}T13:00:00`, endTime: `${today}T17:00:00` },
+    { startTime: makeTime(9, 0), endTime: makeTime(12, 0) },
+    { startTime: makeTime(13, 0), endTime: makeTime(17, 0) },
   ],
   // Dr. Johnson: available 8am-3pm
-  '2': [{ startTime: `${today}T08:00:00`, endTime: `${today}T15:00:00` }],
+  '2': [{ startTime: makeTime(8, 0), endTime: makeTime(15, 0) }],
   // Dr. Williams: available 10am-6pm
-  '3': [{ startTime: `${today}T10:00:00`, endTime: `${today}T18:00:00` }],
+  '3': [{ startTime: makeTime(10, 0), endTime: makeTime(18, 0) }],
   // Dr. Brown: available 7am-11am and 2pm-5pm
   '4': [
-    { startTime: `${today}T07:00:00`, endTime: `${today}T11:00:00` },
-    { startTime: `${today}T14:00:00`, endTime: `${today}T17:00:00` },
+    { startTime: makeTime(7, 0), endTime: makeTime(11, 0) },
+    { startTime: makeTime(14, 0), endTime: makeTime(17, 0) },
   ],
   // Dr. Davis: not listed — fully available
 };
 
 const unavailability: Record<string, AvailabilityRange[]> = {
   // Dr. Johnson: blocked for staff meeting 12pm-1pm (on top of availability window)
-  '2': [{ startTime: `${today}T12:00:00`, endTime: `${today}T13:00:00` }],
+  '2': [{ startTime: makeTime(12, 0), endTime: makeTime(13, 0) }],
   // Dr. Davis: out for lunch 12pm-1pm (no availability set, only unavailability)
-  '5': [{ startTime: `${today}T12:00:00`, endTime: `${today}T13:00:00` }],
+  '5': [{ startTime: makeTime(12, 0), endTime: makeTime(13, 0) }],
 };
 
 function App() {
@@ -257,7 +264,7 @@ function App() {
           <div className="h-200">
             <ResourceGridView
               date={today}
-              timeZone="America/New_York"
+              timeZone={tz}
               columnMinWidth={300}
               resources={resources}
               events={events}
@@ -284,7 +291,7 @@ function App() {
           </h2>
           <WeekView
             date={today}
-            timeZone="America/New_York"
+            timeZone={tz}
             resource={resources[0]}
             events={events.filter((e) => e.resourceId === '1')}
             onEventClick={(event) => console.log('Clicked:', event)}

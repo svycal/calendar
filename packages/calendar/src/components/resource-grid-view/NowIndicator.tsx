@@ -1,24 +1,22 @@
 import { memo, useEffect, useState } from 'react';
+import { Temporal } from 'temporal-polyfill';
 
 import type { ResourceGridViewClassNames } from '@/types/calendar';
 
 interface NowIndicatorProps {
-  date: string;
+  date: Temporal.PlainDate;
   timeZone: string;
   startHour: number;
   hourHeight: number;
   cls: (key: keyof ResourceGridViewClassNames) => string;
 }
 
-function isTodayInTimeZone(date: string, timeZone: string): boolean {
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-  return formatter.format(now) === date;
+function isTodayInTimeZone(
+  date: Temporal.PlainDate,
+  timeZone: string,
+): boolean {
+  const today = Temporal.Now.plainDateISO(timeZone);
+  return Temporal.PlainDate.compare(today, date) === 0;
 }
 
 function getCurrentMinuteOffset(
@@ -26,17 +24,8 @@ function getCurrentMinuteOffset(
   startHour: number,
   hourHeight: number,
 ): number | null {
-  const now = new Date();
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(now);
-  const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
-  const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
-  const totalMinutes = hour * 60 + minute;
+  const now = Temporal.Now.zonedDateTimeISO(timeZone);
+  const totalMinutes = now.hour * 60 + now.minute;
   const axisStartMin = startHour * 60;
 
   if (totalMinutes < axisStartMin) return null;

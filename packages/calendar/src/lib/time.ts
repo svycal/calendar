@@ -1,3 +1,4 @@
+import type { Temporal } from 'temporal-polyfill';
 import type { TimeAxisConfig } from '@/types/calendar';
 
 export interface TimeSlotEntry {
@@ -16,20 +17,11 @@ export function formatTimeLabel(hour: number, minute: number): string {
 }
 
 export function getMinutesFromMidnight(
-  isoString: string,
-  timeZone: string,
+  zdt: Temporal.ZonedDateTime,
+  displayTimeZone: string,
 ): number {
-  const date = new Date(isoString);
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(date);
-  const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
-  const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
-  return hour * 60 + minute;
+  const inZone = zdt.withTimeZone(displayTimeZone);
+  return inZone.hour * 60 + inZone.minute;
 }
 
 export function generateTimeSlots(config: TimeAxisConfig): TimeSlotEntry[] {
@@ -60,19 +52,12 @@ export function generateTimeSlots(config: TimeAxisConfig): TimeSlotEntry[] {
 }
 
 export function formatEventStartTime(
-  startTime: string,
-  timeZone: string,
+  startTime: Temporal.ZonedDateTime,
+  displayTimeZone: string,
 ): string {
-  const d = new Date(startTime);
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(d);
-  const h = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
-  const m = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
+  const inZone = startTime.withTimeZone(displayTimeZone);
+  const h = inZone.hour;
+  const m = inZone.minute;
   const period = h >= 12 ? 'pm' : 'am';
   const displayHour = h % 12 || 12;
   if (m === 0) return `${displayHour} ${period}`;
@@ -80,26 +65,12 @@ export function formatEventStartTime(
 }
 
 export function formatEventTimeRange(
-  startTime: string,
-  endTime: string,
-  timeZone: string,
+  startTime: Temporal.ZonedDateTime,
+  endTime: Temporal.ZonedDateTime,
+  displayTimeZone: string,
 ): string {
-  const extractTime = (isoString: string) => {
-    const d = new Date(isoString);
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      hour: 'numeric',
-      minute: 'numeric',
-      hour12: false,
-    });
-    const parts = formatter.formatToParts(d);
-    const h = Number(parts.find((p) => p.type === 'hour')?.value ?? 0);
-    const m = Number(parts.find((p) => p.type === 'minute')?.value ?? 0);
-    return { hour: h, minute: m };
-  };
-
-  const s = extractTime(startTime);
-  const e = extractTime(endTime);
+  const s = startTime.withTimeZone(displayTimeZone);
+  const e = endTime.withTimeZone(displayTimeZone);
 
   const period = (h: number) => (h >= 12 ? 'PM' : 'AM');
   const fmt = (h: number, m: number) =>

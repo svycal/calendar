@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import type { Temporal } from 'temporal-polyfill';
 import type {
   CalendarResource,
   ResourceGridViewClassNames,
@@ -8,7 +9,8 @@ import type {
 interface SlotInteractionLayerProps {
   resource: CalendarResource;
   column: number;
-  date: string;
+  date: Temporal.PlainDate;
+  timeZone: string;
   startHour: number;
   endHour: number;
   hourHeight: number;
@@ -16,20 +18,20 @@ interface SlotInteractionLayerProps {
   cls: (key: keyof ResourceGridViewClassNames) => string;
   onSlotClick?: (info: {
     resource: CalendarResource;
-    startTime: string;
-    endTime: string;
+    startTime: Temporal.ZonedDateTime;
+    endTime: Temporal.ZonedDateTime;
   }) => void;
   onSelect?: (range: SelectedRange | null) => void;
 }
 
-function pad2(n: number): string {
-  return n.toString().padStart(2, '0');
-}
-
-function minutesToTimeString(date: string, totalMinutes: number): string {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return `${date}T${pad2(hours)}:${pad2(minutes)}:00`;
+function minutesToZonedDateTime(
+  date: Temporal.PlainDate,
+  totalMinutes: number,
+  timeZone: string,
+): Temporal.ZonedDateTime {
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+  return date.toPlainDateTime({ hour, minute }).toZonedDateTime(timeZone);
 }
 
 interface DragState {
@@ -43,6 +45,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   resource,
   column,
   date,
+  timeZone,
   startHour,
   endHour,
   hourHeight,
@@ -67,6 +70,8 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   resourceRef.current = resource;
   const dateRef = useRef(date);
   dateRef.current = date;
+  const timeZoneRef = useRef(timeZone);
+  timeZoneRef.current = timeZone;
 
   const axisStartMin = startHour * 60;
   const axisEndMin = endHour * 60;
@@ -144,8 +149,16 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       // Fire onSelect with the final settled range
       onSelectRef.current?.({
         resourceId: resourceRef.current.id,
-        startTime: minutesToTimeString(dateRef.current, drag.currentStartMin),
-        endTime: minutesToTimeString(dateRef.current, drag.currentEndMin),
+        startTime: minutesToZonedDateTime(
+          dateRef.current,
+          drag.currentStartMin,
+          timeZoneRef.current,
+        ),
+        endTime: minutesToZonedDateTime(
+          dateRef.current,
+          drag.currentEndMin,
+          timeZoneRef.current,
+        ),
       });
     }
     dragRef.current = null;
@@ -240,12 +253,12 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       if (onSlotClick) {
         onSlotClick({
           resource,
-          startTime: minutesToTimeString(date, slotStart),
-          endTime: minutesToTimeString(date, slotEnd),
+          startTime: minutesToZonedDateTime(date, slotStart, timeZone),
+          endTime: minutesToZonedDateTime(date, slotEnd, timeZone),
         });
       }
     },
-    [onSlotClick, snapToSlot, slotDuration, resource, date],
+    [onSlotClick, snapToSlot, slotDuration, resource, date, timeZone],
   );
 
   const highlightTop =
