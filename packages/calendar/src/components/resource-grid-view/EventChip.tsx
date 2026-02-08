@@ -118,7 +118,7 @@ export const EventChip = memo(function EventChip({
         <div
           className={cls('eventColorBar')}
           style={
-            event.id === '__selection__'
+            event.status === 'tentative'
               ? {
                   backgroundImage: `repeating-linear-gradient(
                     -45deg,

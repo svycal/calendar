@@ -15,7 +15,7 @@ interface BaseCalendarEvent {
   color?: string;
   clientName?: string;
   selected?: boolean;
-  status?: 'confirmed' | 'canceled';
+  status?: 'confirmed' | 'canceled' | 'tentative';
   metadata?: Record<string, unknown>;
 }
 

@@ -13,6 +13,7 @@ export function buildSyntheticEvent(
     startTime,
     endTime,
     title: eventData?.title ?? '',
+    status: 'tentative' as const,
     ...eventData,
   };
 }
