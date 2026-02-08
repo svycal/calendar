@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type Ref } from 'react';
 import type {
   CalendarResource,
   PositionedEvent,
@@ -20,6 +20,7 @@ interface SelectionOverlayProps {
   hourHeight: number;
   cls: (key: keyof ResourceGridViewClassNames) => string;
   appearance?: SelectionAppearance;
+  selectionRef?: Ref<HTMLDivElement>;
   renderEvent?: (props: {
     event: TimedCalendarEvent;
     position: PositionedEvent;
@@ -35,6 +36,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   hourHeight,
   cls,
   appearance = 'highlight',
+  selectionRef,
   renderEvent,
 }: SelectionOverlayProps) {
   const pixelsPerMinute = hourHeight / 60;
@@ -59,40 +61,48 @@ export const SelectionOverlay = memo(function SelectionOverlay({
         pointerEvents: 'none',
       }}
     >
-      {isEventStyle ? (
-        <div className={cls('eventColumn')}>
-          <EventChip
-            interactive={false}
-            positioned={{
-              event: buildSyntheticEvent(
-                selectedRange.resourceId,
-                selectedRange.startTime,
-                selectedRange.endTime,
-                appearance.eventData,
-              ),
-              top,
-              height,
-              subColumn: 0,
-              totalSubColumns: 1,
+      <div
+        ref={selectionRef}
+        style={{
+          position: 'absolute',
+          top,
+          left: 0,
+          right: 0,
+          height,
+        }}
+      >
+        {isEventStyle ? (
+          <div className={cls('eventColumn')} style={{ height: '100%' }}>
+            <EventChip
+              interactive={false}
+              positioned={{
+                event: buildSyntheticEvent(
+                  selectedRange.resourceId,
+                  selectedRange.startTime,
+                  selectedRange.endTime,
+                  appearance.eventData,
+                ),
+                top: 0,
+                height,
+                subColumn: 0,
+                totalSubColumns: 1,
+              }}
+              resource={resource}
+              timeZone={timeZone}
+              cls={cls}
+              renderEvent={renderEvent}
+            />
+          </div>
+        ) : (
+          <div
+            className={cls('selectionHighlight')}
+            style={{
+              position: 'absolute',
+              inset: 0,
             }}
-            resource={resource}
-            timeZone={timeZone}
-            cls={cls}
-            renderEvent={renderEvent}
           />
-        </div>
-      ) : (
-        <div
-          className={cls('selectionHighlight')}
-          style={{
-            position: 'absolute',
-            top,
-            left: 0,
-            right: 0,
-            height,
-          }}
-        />
-      )}
+        )}
+      </div>
     </div>
   );
 });

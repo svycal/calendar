@@ -1,5 +1,5 @@
 import type { Temporal } from 'temporal-polyfill';
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 
 export interface CalendarResource {
   id: string;
@@ -129,6 +129,7 @@ export interface ResourceGridViewProps {
   }) => ReactNode;
   selectionAppearance?: SelectionAppearance;
   dragPreviewAppearance?: SelectionAppearance;
+  selectionRef?: Ref<HTMLDivElement>;
 }
 
 export interface WeekViewProps {
