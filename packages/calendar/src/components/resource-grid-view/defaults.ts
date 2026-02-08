@@ -4,33 +4,32 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   root: 'overflow-auto relative',
   grid: 'min-w-max',
   cornerCell:
-    'bg-white dark:bg-zinc-950 border-r border-zinc-300 dark:border-zinc-700 sticky top-0 left-0 z-30 flex items-end justify-end',
+    'bg-cal-surface border-r border-cal-border sticky top-0 left-0 z-30 flex items-end justify-end',
   headerCell:
-    'bg-white dark:bg-zinc-950 border-zinc-300 dark:border-zinc-700 sticky top-0 z-20 flex items-center gap-2 px-3 py-2',
-  headerName: 'text-zinc-950 dark:text-zinc-50 text-sm font-medium truncate',
+    'bg-cal-surface border-cal-border sticky top-0 z-20 flex items-center gap-2 px-3 py-2',
+  headerName: 'text-cal-text text-sm font-medium truncate',
   headerAvatar: 'size-6 rounded-full object-cover',
   gutterCell:
-    'bg-white dark:bg-zinc-950 border-r border-zinc-300 dark:border-zinc-700 sticky left-0 z-10 flex items-start justify-end pr-2 -mt-[0.5rem]',
+    'bg-cal-surface border-r border-cal-border sticky left-0 z-10 flex items-start justify-end pr-2 -mt-[0.5rem]',
   gutterCellMinor:
-    'bg-white dark:bg-zinc-950 border-r border-zinc-300 dark:border-zinc-700 sticky left-0 z-10',
-  gutterLabel: 'font-medium text-zinc-600 dark:text-zinc-400 text-xs',
-  bodyCell: 'border-t border-r border-zinc-300 dark:border-zinc-700',
-  bodyCellMinor: 'border-t border-r border-zinc-300 dark:border-zinc-700',
+    'bg-cal-surface border-r border-cal-border sticky left-0 z-10',
+  gutterLabel: 'font-medium text-cal-text-muted text-xs',
+  bodyCell: 'border-t border-r border-cal-border',
+  bodyCellMinor: 'border-t border-r border-cal-border',
   eventColumn: 'relative mr-3',
   event:
-    'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none bg-zinc-100/90 ring-1 ring-inset ring-zinc-900/15 dark:bg-zinc-800/90 dark:ring-white/15',
+    'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring',
   eventSelected:
-    'shadow-lg dark:shadow-lg dark:shadow-white/20 ring-zinc-900/30 dark:ring-white/30',
+    'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
-  eventTitle: 'text-zinc-900 dark:text-zinc-100 text-xs/4 font-medium truncate',
-  eventTime: 'text-zinc-600 dark:text-zinc-400 text-xs/4 truncate',
-  eventClientName: 'text-zinc-600 dark:text-zinc-400 text-xs/4 truncate',
-  nowIndicator:
-    'absolute left-0 right-0 h-0.5 bg-orange-500 dark:bg-orange-400 pointer-events-none',
+  eventTitle: 'text-cal-text-body text-xs/4 font-medium truncate',
+  eventTime: 'text-cal-text-muted text-xs/4 truncate',
+  eventClientName: 'text-cal-text-muted text-xs/4 truncate',
+  nowIndicator: 'absolute left-0 right-0 h-0.5 bg-cal-now pointer-events-none',
   slotHighlight:
-    'bg-blue-400/15 dark:bg-blue-500/20 rounded-md transition-[top,opacity] duration-75',
-  selectionHighlight: 'bg-blue-400/25 dark:bg-blue-500/30 rounded-md',
+    'bg-cal-slot-highlight rounded-md transition-[top,opacity] duration-75',
+  selectionHighlight: 'bg-cal-selection rounded-md',
   allDayCell:
-    'border-r sticky z-20 bg-white dark:bg-zinc-950 border-b border-zinc-300 dark:border-zinc-700 px-1 py-1 flex flex-wrap gap-1',
+    'border-r sticky z-20 bg-cal-surface border-b border-cal-border px-1 py-1 flex flex-wrap gap-1',
   unavailableOverlay: 'cal-unavailable-overlay',
 };

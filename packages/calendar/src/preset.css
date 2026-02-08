@@ -20,3 +20,74 @@
 @source ".";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-cal-surface: var(--color-white);
+  --color-cal-border: var(--color-zinc-300);
+  --color-cal-text: var(--color-zinc-950);
+  --color-cal-text-body: var(--color-zinc-900);
+  --color-cal-text-muted: var(--color-zinc-600);
+  --color-cal-event-bg: color-mix(in oklab, var(--color-zinc-100) 90%, transparent);
+  --color-cal-event-ring: color-mix(
+    in oklab,
+    var(--color-zinc-900) 15%,
+    transparent
+  );
+  --color-cal-event-ring-selected: color-mix(
+    in oklab,
+    var(--color-zinc-900) 30%,
+    transparent
+  );
+  --color-cal-event-shadow: color-mix(in oklab, black 10%, transparent);
+  --color-cal-now: var(--color-orange-500);
+  --color-cal-slot-highlight: color-mix(
+    in oklab,
+    var(--color-blue-400) 15%,
+    transparent
+  );
+  --color-cal-selection: color-mix(
+    in oklab,
+    var(--color-blue-400) 25%,
+    transparent
+  );
+}
+
+/*
+ * Dark mode overrides.
+ * @theme output lands in @layer theme, so unlayered CSS always wins
+ * regardless of source order.
+ */
+.dark {
+  --color-cal-surface: var(--color-zinc-950);
+  --color-cal-border: var(--color-zinc-700);
+  --color-cal-text: var(--color-zinc-50);
+  --color-cal-text-body: var(--color-zinc-100);
+  --color-cal-text-muted: var(--color-zinc-400);
+  --color-cal-event-bg: color-mix(
+    in oklab,
+    var(--color-zinc-800) 90%,
+    transparent
+  );
+  --color-cal-event-ring: color-mix(
+    in oklab,
+    var(--color-white) 15%,
+    transparent
+  );
+  --color-cal-event-ring-selected: color-mix(
+    in oklab,
+    var(--color-white) 30%,
+    transparent
+  );
+  --color-cal-event-shadow: color-mix(in oklab, white 20%, transparent);
+  --color-cal-now: var(--color-orange-400);
+  --color-cal-slot-highlight: color-mix(
+    in oklab,
+    var(--color-blue-500) 20%,
+    transparent
+  );
+  --color-cal-selection: color-mix(
+    in oklab,
+    var(--color-blue-500) 30%,
+    transparent
+  );
+}
