@@ -281,7 +281,14 @@ function App() {
                 console.log('Selection:', range);
               }}
               onSlotClick={(info) => console.log('Slot clicked:', info)}
-              selectionAppearance={{ style: 'event', eventData: { title: 'New Event', color: '#3b82f6' } }}
+              selectionAppearance={{
+                style: 'event',
+                eventData: {
+                  selected: true,
+                  title: 'New appointment',
+                  color: '#3b82f6',
+                },
+              }}
               className="h-full"
             />
           </div>
