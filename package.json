@@ -10,6 +10,7 @@
     "typecheck": "pnpm --filter @savvycal/calendar typecheck && pnpm --filter @savvycal/calendar build && pnpm --filter playground typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "format:md": "prettier --write \"**/*.md\"",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "pnpm build:lib && changeset publish"

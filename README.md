@@ -4,10 +4,10 @@ A fully-featured resource grid calendar component built with React, Tailwind CSS
 
 ## Packages
 
-| Package | Description |
-| --- | --- |
-| [`@savvycal/calendar`](packages/calendar) | The calendar component library. |
-| [`playground`](playground) | Development playground for testing components. |
+| Package                                   | Description                                    |
+| ----------------------------------------- | ---------------------------------------------- |
+| [`@savvycal/calendar`](packages/calendar) | The calendar component library.                |
+| [`playground`](playground)                | Development playground for testing components. |
 
 ## Development
 
@@ -26,6 +26,9 @@ pnpm typecheck
 
 # Lint
 pnpm lint:fix
+
+# Format markdown files
+pnpm format:md
 ```
 
 ## Release

@@ -7,6 +7,7 @@
 - **Typecheck**: `pnpm typecheck`
 - **Lint**: `pnpm lint`
 - **Lint fix**: `pnpm lint:fix`
+- **Format markdown**: `pnpm format:md`
 
 ## Workflow
 
