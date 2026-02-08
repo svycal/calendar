@@ -309,6 +309,7 @@ export function ResourceGridView({
           date={date}
           timeZone={timeZone}
           startHour={startHour}
+          endHour={endHour}
           hourHeight={effectiveHourHeight}
           cls={cls}
         />

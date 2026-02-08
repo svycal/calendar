@@ -7,6 +7,7 @@ interface NowIndicatorProps {
   date: Temporal.PlainDate;
   timeZone: string;
   startHour: number;
+  endHour: number;
   hourHeight: number;
   cls: (key: keyof ResourceGridViewClassNames) => string;
 }
@@ -22,13 +23,15 @@ function isTodayInTimeZone(
 function getCurrentMinuteOffset(
   timeZone: string,
   startHour: number,
+  endHour: number,
   hourHeight: number,
 ): number | null {
   const now = Temporal.Now.zonedDateTimeISO(timeZone);
   const totalMinutes = now.hour * 60 + now.minute;
   const axisStartMin = startHour * 60;
+  const axisEndMin = endHour * 60;
 
-  if (totalMinutes < axisStartMin) return null;
+  if (totalMinutes < axisStartMin || totalMinutes >= axisEndMin) return null;
 
   return ((totalMinutes - axisStartMin) / 60) * hourHeight;
 }
@@ -37,12 +40,13 @@ export const NowIndicator = memo(function NowIndicator({
   date,
   timeZone,
   startHour,
+  endHour,
   hourHeight,
   cls,
 }: NowIndicatorProps) {
   const [offset, setOffset] = useState<number | null>(() =>
     isTodayInTimeZone(date, timeZone)
-      ? getCurrentMinuteOffset(timeZone, startHour, hourHeight)
+      ? getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight)
       : null,
   );
 
@@ -52,18 +56,18 @@ export const NowIndicator = memo(function NowIndicator({
       return;
     }
 
-    setOffset(getCurrentMinuteOffset(timeZone, startHour, hourHeight));
+    setOffset(getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight));
 
     const interval = setInterval(() => {
       if (!isTodayInTimeZone(date, timeZone)) {
         setOffset(null);
       } else {
-        setOffset(getCurrentMinuteOffset(timeZone, startHour, hourHeight));
+        setOffset(getCurrentMinuteOffset(timeZone, startHour, endHour, hourHeight));
       }
     }, 60_000);
 
     return () => clearInterval(interval);
-  }, [date, timeZone, startHour, hourHeight]);
+  }, [date, timeZone, startHour, endHour, hourHeight]);
 
   if (offset === null) return null;
 
