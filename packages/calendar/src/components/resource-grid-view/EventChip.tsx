@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import type {
   CalendarEvent,
   CalendarResource,
+  EventLayout,
   PositionedEvent,
   ResourceGridViewClassNames,
   TimedCalendarEvent,
@@ -21,6 +22,8 @@ interface EventChipProps {
   }) => React.ReactNode;
   interactive?: boolean;
   eventGap?: number;
+  eventLayout?: EventLayout;
+  stackOffset?: number;
 }
 
 export const EventChip = memo(function EventChip({
@@ -32,18 +35,30 @@ export const EventChip = memo(function EventChip({
   renderEvent,
   interactive = true,
   eventGap = 2,
+  eventLayout = 'columns',
+  stackOffset = 8,
 }: EventChipProps) {
   const { event, top, height, subColumn, totalSubColumns } = positioned;
   const color = event.color ?? resource.color ?? undefined;
-  const leftPct = (subColumn / totalSubColumns) * 100;
-  const widthPct = (1 / totalSubColumns) * 100;
 
-  // Add a small pixel gap between adjacent sub-columns
-  const gap = eventGap;
-  const leftOffset = (subColumn * gap) / totalSubColumns;
-  const widthShrink = ((totalSubColumns - 1) * gap) / totalSubColumns;
-  const left = widthShrink ? `calc(${leftPct}% + ${leftOffset}px)` : `${leftPct}%`;
-  const width = widthShrink ? `calc(${widthPct}% - ${widthShrink}px)` : `${widthPct}%`;
+  let left: string;
+  let width: string;
+  let zIndex: number | undefined;
+
+  if (eventLayout === 'stacked') {
+    const maxOffset = (totalSubColumns - 1) * stackOffset;
+    left = subColumn > 0 ? `${subColumn * stackOffset}px` : '0';
+    width = maxOffset > 0 ? `calc(100% - ${maxOffset}px)` : '100%';
+    zIndex = subColumn + 1;
+  } else {
+    const leftPct = (subColumn / totalSubColumns) * 100;
+    const widthPct = (1 / totalSubColumns) * 100;
+    const gap = eventGap;
+    const leftOffset = (subColumn * gap) / totalSubColumns;
+    const widthShrink = ((totalSubColumns - 1) * gap) / totalSubColumns;
+    left = widthShrink ? `calc(${leftPct}% + ${leftOffset}px)` : `${leftPct}%`;
+    width = widthShrink ? `calc(${widthPct}% - ${widthShrink}px)` : `${widthPct}%`;
+  }
 
   // 2 lines (~36px): title + collapsed time/client
   // 3 lines (~52px): title + time + client on separate lines
@@ -60,6 +75,7 @@ export const EventChip = memo(function EventChip({
           height,
           left,
           width,
+          zIndex,
           pointerEvents: interactive ? 'auto' : 'none',
         }}
       >
@@ -79,6 +95,7 @@ export const EventChip = memo(function EventChip({
         height,
         left,
         width,
+        zIndex,
         pointerEvents: interactive ? 'auto' : 'none',
       }}
       {...(interactive

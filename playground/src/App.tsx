@@ -19,6 +19,7 @@ import {
   type CalendarEvent,
   type AvailabilityRange,
   type SelectedRange,
+  type EventLayout,
 } from '@savvycal/calendar';
 import StressTestPage from './StressTestPage';
 
@@ -268,6 +269,7 @@ const unavailability: Record<string, AvailabilityRange[]> = {
 function App() {
   const [dark, setDark] = useState(false);
   const [page, setPage] = useState<Page>('demo');
+  const [eventLayout, setEventLayout] = useState<EventLayout>('columns');
   const [selectedRange, setSelectedRange] = useState<SelectedRange | null>(
     null
   );
@@ -339,6 +341,23 @@ function App() {
             )
           )}
         </div>
+        <div className="flex gap-1 rounded-lg border border-zinc-200 dark:border-zinc-700 p-0.5">
+          {([['columns', 'Columns'], ['stacked', 'Stacked']] as const).map(
+            ([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setEventLayout(key)}
+                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                  eventLayout === key
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          )}
+        </div>
         <button
           onClick={() => setDark(!dark)}
           className="rounded border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-1 text-sm text-zinc-950 dark:text-zinc-50 hover:opacity-80"
@@ -366,6 +385,7 @@ function App() {
                 timeAxis={{ startHour: 7, endHour: 24, intervalMinutes: 15 }}
                 snapDuration={15}
                 placeholderDuration={30}
+                eventLayout={eventLayout}
                 onEventClick={(event) => console.log('Clicked:', event)}
                 selectedRange={selectedRange}
                 selectionRef={refs.setReference}
@@ -433,7 +453,7 @@ function App() {
           </section>
         </div>
       ) : (
-        <StressTestPage />
+        <StressTestPage eventLayout={eventLayout} />
       )}
     </div>
   );

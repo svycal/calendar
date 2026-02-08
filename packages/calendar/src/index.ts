@@ -23,6 +23,7 @@ export type {
   SelectedRange,
   SelectionAppearance,
   SelectionEventData,
+  EventLayout,
   WeekViewProps,
 } from './types/calendar';
 

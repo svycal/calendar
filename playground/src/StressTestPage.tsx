@@ -5,6 +5,7 @@ import {
   type CalendarResource,
   type CalendarEvent,
   type AvailabilityRange,
+  type EventLayout,
 } from '@savvycal/calendar';
 
 const tz = 'America/Chicago';
@@ -158,7 +159,7 @@ function generateData() {
   return { resources, events, availability };
 }
 
-export default function StressTestPage() {
+export default function StressTestPage({ eventLayout }: { eventLayout?: EventLayout }) {
   const { resources, events, availability } = useMemo(generateData, []);
 
   return (
@@ -177,6 +178,7 @@ export default function StressTestPage() {
           hourHeight={100}
           timeAxis={{ startHour: 7, endHour: 24, intervalMinutes: 15 }}
           snapDuration={15}
+          eventLayout={eventLayout}
           onEventClick={(event) => console.log('Clicked:', event)}
           className="h-full"
         />

@@ -92,6 +92,8 @@ export interface ResourceGridViewClassNames {
   unavailableOverlay?: string;
 }
 
+export type EventLayout = 'columns' | 'stacked';
+
 export interface PositionedEvent {
   event: TimedCalendarEvent;
   top: number;
@@ -132,6 +134,8 @@ export interface ResourceGridViewProps {
   selectionRef?: Ref<HTMLDivElement>;
   renderCorner?: () => ReactNode;
   eventGap?: number;
+  eventLayout?: EventLayout;
+  stackOffset?: number;
 }
 
 export interface WeekViewProps {

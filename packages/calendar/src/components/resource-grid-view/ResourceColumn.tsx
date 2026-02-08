@@ -2,6 +2,7 @@ import { memo } from 'react';
 import type {
   CalendarEvent,
   CalendarResource,
+  EventLayout,
   PositionedEvent,
   ResourceGridViewClassNames,
   TimedCalendarEvent,
@@ -20,6 +21,8 @@ interface ResourceColumnProps {
     position: PositionedEvent;
   }) => React.ReactNode;
   eventGap?: number;
+  eventLayout?: EventLayout;
+  stackOffset?: number;
 }
 
 export const ResourceColumn = memo(function ResourceColumn({
@@ -31,6 +34,8 @@ export const ResourceColumn = memo(function ResourceColumn({
   onEventClick,
   renderEvent,
   eventGap,
+  eventLayout,
+  stackOffset,
 }: ResourceColumnProps) {
   return (
     <div
@@ -51,6 +56,8 @@ export const ResourceColumn = memo(function ResourceColumn({
           onClick={onEventClick}
           renderEvent={renderEvent}
           eventGap={eventGap}
+          eventLayout={eventLayout}
+          stackOffset={stackOffset}
         />
       ))}
     </div>
