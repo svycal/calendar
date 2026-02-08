@@ -2,7 +2,7 @@ import type { ResourceGridViewClassNames } from '@/types/calendar';
 
 export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   root: 'overflow-auto relative',
-  grid: '',
+  grid: 'min-w-max',
   cornerCell:
     'bg-white dark:bg-zinc-950 border-r border-zinc-300 dark:border-zinc-700 sticky top-0 left-0 z-30 flex items-end justify-end',
   headerCell:
