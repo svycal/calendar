@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { generateTimeSlots } from '@/lib/time';
+import {
+  generateTimeSlots,
+  formatDateLabel,
+  formatTimeRange,
+} from '@/lib/time';
 import { computePositionedEvents, groupByResource } from '@/lib/overlap';
 import {
   computeUnavailableBlocks,
@@ -11,6 +15,7 @@ import type {
   CalendarEvent,
   ResourceGridViewClassNames,
   ResourceGridViewProps,
+  SelectedRange,
   TimedCalendarEvent,
 } from '@/types/calendar';
 import { resourceGridViewDefaults } from './defaults';
@@ -23,6 +28,7 @@ import { UnavailabilityOverlay } from './UnavailabilityOverlay';
 import { NowIndicator } from './NowIndicator';
 import { AllDayRow } from './AllDayRow';
 import { useEffectiveHourHeight } from './useEffectiveHourHeight';
+import { useAnnouncer } from './useAnnouncer';
 
 export function ResourceGridView({
   date,
@@ -139,12 +145,49 @@ export function ResourceGridView({
     effectiveHourHeight,
   ]);
 
+  const { message: announcerMessage, announce } = useAnnouncer();
+
+  const gridAriaLabel = useMemo(
+    () => `Schedule for ${formatDateLabel(date)}`,
+    [date]
+  );
+
   const handleEventClick = useCallback(
     (event: CalendarEvent) => {
       onSelect?.(null);
       onEventClick?.(event);
+
+      if (!event.allDay) {
+        const parts = [
+          event.title,
+          formatTimeRange(event.startTime, event.endTime, timeZone),
+        ];
+        if (event.clientName) parts.push(event.clientName);
+        const resource = resources.find((r) => r.id === event.resourceId);
+        if (resource) parts.push(resource.name);
+        announce(`Selected: ${parts.join(', ')}`);
+      } else {
+        const parts = [event.title, 'all day'];
+        if (event.clientName) parts.push(event.clientName);
+        announce(`Selected: ${parts.join(', ')}`);
+      }
     },
-    [onSelect, onEventClick]
+    [onSelect, onEventClick, timeZone, resources, announce]
+  );
+
+  const handleSelect = useCallback(
+    (range: SelectedRange | null) => {
+      onSelect?.(range);
+      if (range) {
+        const parts = [
+          formatTimeRange(range.startTime, range.endTime, timeZone),
+        ];
+        const resource = resources.find((r) => r.id === range.resourceId);
+        if (resource) parts.push(resource.name);
+        announce(`Selected time: ${parts.join(', ')}`);
+      }
+    },
+    [onSelect, timeZone, resources, announce]
   );
 
   useEffect(() => {
@@ -166,6 +209,9 @@ export function ResourceGridView({
     <div ref={rootRef} className={cn(cls('root'), className)}>
       <div
         className={cls('grid')}
+        role="region"
+        aria-roledescription="calendar"
+        aria-label={gridAriaLabel}
         style={{
           display: 'grid',
           gridTemplateColumns: `max-content repeat(${resources.length}, minmax(${columnMinWidth}px, 1fr))`,
@@ -288,7 +334,7 @@ export function ResourceGridView({
               placeholderDuration={placeholderDuration ?? 15}
               cls={cls}
               onSlotClick={onSlotClick}
-              onSelect={onSelect}
+              onSelect={handleSelect}
               dragPreviewAppearance={dragPreviewAppearance}
               renderEvent={renderEvent}
             />
@@ -346,6 +392,24 @@ export function ResourceGridView({
           hourHeight={effectiveHourHeight}
           cls={cls}
         />
+      </div>
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        role="status"
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          borderWidth: 0,
+        }}
+      >
+        {announcerMessage}
       </div>
     </div>
   );

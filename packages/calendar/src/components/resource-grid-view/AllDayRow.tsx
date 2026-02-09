@@ -27,10 +27,13 @@ export const AllDayRow = memo(function AllDayRow({
     <>
       {events.map((event) => {
         const isSelected = event.id === selectedEventId;
+        const labelParts = [event.title, 'all day'];
+        if (event.clientName) labelParts.push(event.clientName);
         const button = (
           <button
             key={event.id}
             type="button"
+            aria-label={labelParts.join(', ')}
             className={cn(cls('event'), isSelected && cls('eventSelected'))}
             style={{
               position: 'relative',

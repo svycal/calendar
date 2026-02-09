@@ -17,6 +17,7 @@ export const UnavailabilityOverlay = memo(function UnavailabilityOverlay({
 
   return (
     <div
+      aria-hidden="true"
       style={{
         gridRow: '3 / -1',
         gridColumn: column,

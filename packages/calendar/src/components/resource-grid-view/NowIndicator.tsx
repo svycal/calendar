@@ -64,6 +64,7 @@ export const NowIndicator = memo(function NowIndicator({
 
   return (
     <div
+      aria-hidden="true"
       style={{
         gridRow: '3 / -1',
         gridColumn: '1 / -1',

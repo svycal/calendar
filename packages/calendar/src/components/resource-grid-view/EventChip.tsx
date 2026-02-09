@@ -8,7 +8,7 @@ import type {
   ResourceGridViewClassNames,
   TimedCalendarEvent,
 } from '@/types/calendar';
-import { formatEventStartTime } from '@/lib/time';
+import { formatEventStartTime, formatTimeRange } from '@/lib/time';
 
 interface EventChipProps {
   positioned: PositionedEvent;
@@ -97,10 +97,25 @@ export const EventChip = memo(function EventChip({
 
   const startTimeStr = formatEventStartTime(event.startTime, timeZone);
 
+  const ariaLabel = interactive
+    ? (() => {
+        const parts = [
+          event.title,
+          formatTimeRange(event.startTime, event.endTime, timeZone),
+        ];
+        if (event.clientName) parts.push(event.clientName);
+        if (event.status === 'canceled') parts.push('canceled');
+        else if (event.status === 'tentative') parts.push('tentative');
+        return parts.join(', ');
+      })()
+    : undefined;
+
   return (
     <div
       ref={selectedEventRef}
-      {...(interactive ? { role: 'button', tabIndex: 0 } : {})}
+      {...(interactive
+        ? { role: 'button', tabIndex: 0, 'aria-label': ariaLabel }
+        : {})}
       className={cn(cls('event'), isSelected && cls('eventSelected'))}
       style={{
         top,

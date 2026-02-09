@@ -470,6 +470,22 @@ export type {
 } from '@savvycal/calendar';
 ```
 
+## Accessibility
+
+The calendar includes built-in ARIA support for screen readers:
+
+- **Grid region** — The grid container has `role="region"` with `aria-roledescription="calendar"` and a descriptive `aria-label` (e.g. "Schedule for Monday, February 9, 2026").
+- **Column headers** — Each resource header has `role="columnheader"`.
+- **Event labels** — Interactive events include an `aria-label` with the event title, time range, client name, and status (if canceled or tentative). All-day events are labeled with the title and "all day".
+- **Live region announcements** — A visually-hidden `aria-live="polite"` region announces state changes:
+  - Selecting an event: `"Selected: Meeting, 2 pm to 3 pm, Jane Doe"`
+  - Selecting a time range: `"Selected time: 2 pm to 3 pm, Dr. Smith"`
+- **Decorative overlays** — The now indicator, unavailability overlays, selection overlay, and slot highlights are marked `aria-hidden="true"` to reduce noise.
+
+### Custom renderers
+
+When using `renderEvent`, the library does **not** add `aria-label` or `role` attributes to the wrapper `<div>`. Your custom renderer is responsible for providing its own accessible markup.
+
 ## License
 
 MIT

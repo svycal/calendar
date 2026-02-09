@@ -62,6 +62,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
 
   return (
     <div
+      aria-hidden="true"
       style={{
         gridRow: '3 / -1',
         gridColumn: column,

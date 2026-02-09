@@ -20,6 +20,7 @@ export const GridHeader = memo(function GridHeader({
 }: GridHeaderProps) {
   return (
     <div
+      role="columnheader"
       className={cls('headerCell')}
       style={{ gridRow: 1, gridColumn: column }}
     >

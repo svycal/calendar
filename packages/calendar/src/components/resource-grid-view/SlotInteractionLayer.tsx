@@ -317,6 +317,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     >
       {hoveredSlotStart != null && !dragPreview && (
         <div
+          aria-hidden="true"
           className={cls('slotHighlight')}
           style={{
             position: 'absolute',
@@ -330,7 +331,11 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       )}
       {dragPreview &&
         (dragPreviewAppearance !== 'highlight' ? (
-          <div className={cls('eventColumn')} style={{ pointerEvents: 'none' }}>
+          <div
+            aria-hidden="true"
+            className={cls('eventColumn')}
+            style={{ pointerEvents: 'none' }}
+          >
             <EventChip
               interactive={false}
               positioned={{
@@ -354,6 +359,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
           </div>
         ) : (
           <div
+            aria-hidden="true"
             className={cls('selectionHighlight')}
             style={{
               position: 'absolute',

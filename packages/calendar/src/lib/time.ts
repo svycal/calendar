@@ -88,3 +88,26 @@ export function formatEventStartTime(
   const inZone = startTime.withTimeZone(displayTimeZone);
   return formatTimeLabel(inZone.hour, inZone.minute);
 }
+
+export function formatDateLabel(date: Temporal.PlainDate): string {
+  const dt = date.toPlainDateTime({ hour: 12 });
+  const jsDate = new Date(dt.toString());
+  return jsDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+export function formatTimeRange(
+  startTime: Temporal.ZonedDateTime,
+  endTime: Temporal.ZonedDateTime,
+  displayTimeZone: string
+): string {
+  const start = startTime.withTimeZone(displayTimeZone);
+  const end = endTime.withTimeZone(displayTimeZone);
+  const startLabel = formatTimeLabel(start.hour, start.minute);
+  const endLabel = formatTimeLabel(end.hour, end.minute);
+  return `${startLabel} to ${endLabel}`;
+}
