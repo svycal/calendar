@@ -22,9 +22,9 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   eventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
-  eventTitle: 'text-cal-text-body text-xs/4 font-medium truncate',
-  eventTime: 'text-cal-text-muted text-xs/4 truncate',
-  eventClientName: 'text-cal-text-muted text-xs/4 truncate',
+  eventTitle: 'text-cal-text-body text-xs/4 font-medium',
+  eventTime: 'text-cal-text-muted text-xs/4',
+  eventClientName: 'text-cal-text-muted text-xs/4',
   nowIndicator: 'absolute left-0 right-0 h-0.5 bg-cal-now pointer-events-none',
   slotHighlight:
     'bg-cal-slot-highlight rounded-md transition-[top,opacity] duration-75',
