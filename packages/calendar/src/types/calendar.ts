@@ -10,10 +10,10 @@ export interface CalendarResource {
 
 interface BaseCalendarEvent {
   id: string;
-  title: string;
+  title: ReactNode;
   resourceId: string;
   color?: string;
-  clientName?: string;
+  clientName?: ReactNode;
   status?: 'confirmed' | 'canceled' | 'tentative';
   metadata?: Record<string, unknown>;
 }
