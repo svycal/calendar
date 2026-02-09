@@ -276,7 +276,7 @@ function App() {
 
   const {
     context: selectionContext,
-    refs: selectionRefs,
+    refs: { setReference: setSelectionRef, setFloating: setSelectionFloating },
     floatingStyles: selectionFloatingStyles,
   } = useFloating({
     open: selectedRange !== null,
@@ -323,7 +323,7 @@ function App() {
 
   const {
     context: eventContext,
-    refs: eventRefs,
+    refs: { setReference: setEventRef, setFloating: setEventFloating },
     floatingStyles: eventFloatingStyles,
   } = useFloating({
     open: selectedEventId !== null,
@@ -449,11 +449,9 @@ function App() {
                   setSelectedRange(null);
                 }}
                 selectedRange={selectedRange}
-                // eslint-disable-next-line react-hooks/refs
-                selectionRef={selectionRefs.setReference}
+                selectionRef={setSelectionRef}
                 selectedEventId={selectedEventId}
-                // eslint-disable-next-line react-hooks/refs
-                selectedEventRef={eventRefs.setReference}
+                selectedEventRef={setEventRef}
                 onSelect={(range) => {
                   setSelectedRange(range);
                   setSelectedEventId(null);
@@ -483,8 +481,7 @@ function App() {
               />
               {isSelectionMounted && (
                 <div
-                  // eslint-disable-next-line react-hooks/refs
-                  ref={selectionRefs.setFloating}
+                  ref={setSelectionFloating}
                   style={{
                     ...selectionFloatingStyles,
                     ...selectionTransitionStyles,
@@ -507,8 +504,7 @@ function App() {
               )}
               {isEventMounted && (
                 <div
-                  // eslint-disable-next-line react-hooks/refs
-                  ref={eventRefs.setFloating}
+                  ref={setEventFloating}
                   style={{
                     ...eventFloatingStyles,
                     ...eventTransitionStyles,
