@@ -47,6 +47,8 @@ export function ResourceGridView({
   selectionAppearance,
   dragPreviewAppearance,
   selectionRef,
+  selectedEventId,
+  selectedEventRef,
   renderCorner,
   eventGap,
   eventLayout = 'columns',
@@ -217,6 +219,8 @@ export function ResourceGridView({
               events={allDayByResource.get(resource.id) ?? []}
               cls={cls}
               onEventClick={handleEventClick}
+              selectedEventId={selectedEventId}
+              selectedEventRef={selectedEventRef}
             />
           </div>
         ))}
@@ -304,6 +308,8 @@ export function ResourceGridView({
             eventGap={eventGap}
             eventLayout={eventLayout}
             stackOffset={stackOffset}
+            selectedEventId={selectedEventId}
+            selectedEventRef={selectedEventRef}
           />
         ))}
 

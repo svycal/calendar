@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type Ref } from 'react';
 import type {
   CalendarEvent,
   CalendarResource,
@@ -23,6 +23,8 @@ interface ResourceColumnProps {
   eventGap?: number;
   eventLayout?: EventLayout;
   stackOffset?: number;
+  selectedEventId?: string | null;
+  selectedEventRef?: Ref<HTMLDivElement>;
 }
 
 export const ResourceColumn = memo(function ResourceColumn({
@@ -36,6 +38,8 @@ export const ResourceColumn = memo(function ResourceColumn({
   eventGap,
   eventLayout,
   stackOffset,
+  selectedEventId,
+  selectedEventRef,
 }: ResourceColumnProps) {
   return (
     <div
@@ -46,20 +50,25 @@ export const ResourceColumn = memo(function ResourceColumn({
         pointerEvents: 'none',
       }}
     >
-      {positionedEvents.map((positioned) => (
-        <EventChip
-          key={positioned.event.id}
-          positioned={positioned}
-          resource={resource}
-          timeZone={timeZone}
-          cls={cls}
-          onClick={onEventClick}
-          renderEvent={renderEvent}
-          eventGap={eventGap}
-          eventLayout={eventLayout}
-          stackOffset={stackOffset}
-        />
-      ))}
+      {positionedEvents.map((positioned) => {
+        const isSelected = positioned.event.id === selectedEventId;
+        return (
+          <EventChip
+            key={positioned.event.id}
+            positioned={positioned}
+            resource={resource}
+            timeZone={timeZone}
+            cls={cls}
+            onClick={onEventClick}
+            renderEvent={renderEvent}
+            eventGap={eventGap}
+            eventLayout={eventLayout}
+            stackOffset={stackOffset}
+            isSelected={isSelected}
+            selectedEventRef={isSelected ? selectedEventRef : undefined}
+          />
+        );
+      })}
     </div>
   );
 });

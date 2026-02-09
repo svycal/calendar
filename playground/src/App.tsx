@@ -109,7 +109,6 @@ const events: CalendarEvent[] = [
     endTime: makeTime(10, 45),
     resourceId: '2',
     clientName: 'Diana Prince',
-    selected: true,
   },
   {
     id: '5',
@@ -135,8 +134,6 @@ const events: CalendarEvent[] = [
     endTime: makeTime(11, 45),
     resourceId: '3',
     color: '#dc2626',
-    // Testing that selected events move to the top of the stacking order
-    selected: true,
   },
   {
     id: '8',
@@ -275,11 +272,14 @@ function App() {
   const [selectedRange, setSelectedRange] = useState<SelectedRange | null>(
     null
   );
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  const isPopoverOpen = selectedRange !== null;
-
-  const { context, refs, floatingStyles } = useFloating({
-    open: isPopoverOpen,
+  const {
+    context: selectionContext,
+    refs: selectionRefs,
+    floatingStyles: selectionFloatingStyles,
+  } = useFloating({
+    open: selectedRange !== null,
     onOpenChange: (open) => {
       if (!open) setSelectedRange(null);
     },
@@ -298,25 +298,75 @@ function App() {
     whileElementsMounted: autoUpdate,
   });
 
-  const dismiss = useDismiss(context);
-  const { getFloatingProps } = useInteractions([dismiss]);
+  const selectionDismiss = useDismiss(selectionContext);
+  const { getFloatingProps: getSelectionFloatingProps } = useInteractions([
+    selectionDismiss,
+  ]);
 
-  const { isMounted, styles: transitionStyles } = useTransitionStyles(context, {
-    common: {
-      transitionProperty: 'all',
+  const { isMounted: isSelectionMounted, styles: selectionTransitionStyles } =
+    useTransitionStyles(selectionContext, {
+      common: {
+        transitionProperty: 'all',
+      },
+      duration: {
+        close: 100,
+        open: 200,
+      },
+      initial: ({ side }) => ({
+        opacity: 0,
+        translate: side === 'left' ? '48px' : '-48px',
+      }),
+      open: {
+        opacity: 1,
+      },
+    });
+
+  const {
+    context: eventContext,
+    refs: eventRefs,
+    floatingStyles: eventFloatingStyles,
+  } = useFloating({
+    open: selectedEventId !== null,
+    onOpenChange: (open) => {
+      if (!open) setSelectedEventId(null);
     },
-    duration: {
-      close: 100,
-      open: 200,
-    },
-    initial: ({ side }) => ({
-      opacity: 0,
-      translate: side === 'left' ? '48px' : '-48px',
-    }),
-    open: {
-      opacity: 1,
-    },
+    middleware: [
+      flip({ crossAxis: true }),
+      shift({ crossAxis: true, limiter: limitShift({ offset: 0 }) }),
+      offset(5),
+      size({
+        apply({ availableHeight, elements }) {
+          elements.floating.style.maxHeight = `${availableHeight}px`;
+        },
+      }),
+    ],
+    placement: 'right',
+    strategy: 'fixed',
+    whileElementsMounted: autoUpdate,
   });
+
+  const eventDismiss = useDismiss(eventContext);
+  const { getFloatingProps: getEventFloatingProps } = useInteractions([
+    eventDismiss,
+  ]);
+
+  const { isMounted: isEventMounted, styles: eventTransitionStyles } =
+    useTransitionStyles(eventContext, {
+      common: {
+        transitionProperty: 'all',
+      },
+      duration: {
+        close: 100,
+        open: 200,
+      },
+      initial: ({ side }) => ({
+        opacity: 0,
+        translate: side === 'left' ? '48px' : '-48px',
+      }),
+      open: {
+        opacity: 1,
+      },
+    });
 
   return (
     <div
@@ -394,19 +444,25 @@ function App() {
                 snapDuration={15}
                 placeholderDuration={30}
                 eventLayout={eventLayout}
-                onEventClick={(event) => console.log('Clicked:', event)}
+                onEventClick={(event) => {
+                  setSelectedEventId(event.id);
+                  setSelectedRange(null);
+                }}
                 selectedRange={selectedRange}
                 // eslint-disable-next-line react-hooks/refs
-                selectionRef={refs.setReference}
+                selectionRef={selectionRefs.setReference}
+                selectedEventId={selectedEventId}
+                // eslint-disable-next-line react-hooks/refs
+                selectedEventRef={eventRefs.setReference}
                 onSelect={(range) => {
                   setSelectedRange(range);
+                  setSelectedEventId(null);
                   console.log('Selection:', range);
                 }}
                 onSlotClick={(info) => console.log('Slot clicked:', info)}
                 selectionAppearance={{
                   style: 'event',
                   eventData: {
-                    selected: true,
                     title: 'New appointment',
                     color: '#3b82f6',
                   },
@@ -425,12 +481,15 @@ function App() {
                 )}
                 className="h-full"
               />
-              {isMounted && (
+              {isSelectionMounted && (
                 <div
                   // eslint-disable-next-line react-hooks/refs
-                  ref={refs.setFloating}
-                  style={{ ...floatingStyles, ...transitionStyles }}
-                  {...getFloatingProps()}
+                  ref={selectionRefs.setFloating}
+                  style={{
+                    ...selectionFloatingStyles,
+                    ...selectionTransitionStyles,
+                  }}
+                  {...getSelectionFloatingProps()}
                   className="z-50 rounded-lg ring ring-zinc-900/10 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
                 >
                   <p className="text-base font-medium text-zinc-900 dark:text-zinc-100">
@@ -443,6 +502,33 @@ function App() {
                     }}
                   >
                     Create event
+                  </button>
+                </div>
+              )}
+              {isEventMounted && (
+                <div
+                  // eslint-disable-next-line react-hooks/refs
+                  ref={eventRefs.setFloating}
+                  style={{
+                    ...eventFloatingStyles,
+                    ...eventTransitionStyles,
+                  }}
+                  {...getEventFloatingProps()}
+                  className="z-50 rounded-lg ring ring-zinc-900/10 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                >
+                  <p className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+                    Event selected
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                    {events.find((e) => e.id === selectedEventId)?.title}
+                  </p>
+                  <button
+                    className="mt-4 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+                    onClick={() => {
+                      console.log('Edit event:', selectedEventId);
+                    }}
+                  >
+                    Edit event
                   </button>
                 </div>
               )}

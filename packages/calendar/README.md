@@ -108,6 +108,8 @@ function App() {
 | `selectionAppearance`   | `SelectionAppearance`                    | —       | How the selection is rendered. `'highlight'` shows a translucent overlay; `{ style: 'event', eventData? }` renders it as a phantom event. |
 | `dragPreviewAppearance` | `SelectionAppearance`                    | —       | Appearance of the drag preview while the user is actively dragging (before releasing). Falls back to `selectionAppearance` if not set.    |
 | `selectionRef`          | `Ref<HTMLDivElement>`                    | —       | Ref attached to the selection element, useful for positioning popovers (e.g. with [Floating UI](https://floating-ui.com)).                |
+| `selectedEventId`       | `string \| null`                         | —       | ID of the currently selected event (controlled). Applies selected styling and enables `selectedEventRef`.                                 |
+| `selectedEventRef`      | `Ref<HTMLDivElement>`                    | —       | Ref attached to the selected event element, useful for positioning popovers.                                                              |
 
 ### Availability
 
@@ -167,7 +169,6 @@ interface TimedCalendarEvent {
   allDay?: false;
   color?: string;
   clientName?: string;
-  selected?: boolean;
   status?: 'confirmed' | 'canceled' | 'tentative';
   metadata?: Record<string, unknown>;
 }
@@ -181,7 +182,6 @@ interface AllDayCalendarEvent {
   allDay: true;
   color?: string;
   clientName?: string;
-  selected?: boolean;
   status?: 'confirmed' | 'canceled' | 'tentative';
   metadata?: Record<string, unknown>;
 }
@@ -352,7 +352,6 @@ const [selectedRange, setSelectedRange] = useState<SelectedRange | null>(null);
     eventData: {
       title: 'New appointment',
       color: '#3b82f6',
-      selected: true,
     },
   }}
   // ...
@@ -390,6 +389,39 @@ const { refs, floatingStyles } = useFloating({
   selectedRange && (
     <div ref={refs.setFloating} style={floatingStyles}>
       {/* Popover content */}
+    </div>
+  );
+}
+```
+
+### Event selection & popover positioning
+
+Use `selectedEventId` and `selectedEventRef` to track which event is selected and position a popover next to it:
+
+```tsx
+const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+
+const { refs, floatingStyles } = useFloating({
+  open: selectedEventId !== null,
+  onOpenChange: (open) => {
+    if (!open) setSelectedEventId(null);
+  },
+  middleware: [flip(), shift(), offset(5)],
+  placement: 'right',
+  whileElementsMounted: autoUpdate,
+});
+
+<ResourceGridView
+  selectedEventId={selectedEventId}
+  selectedEventRef={refs.setReference}
+  onEventClick={(event) => setSelectedEventId(event.id)}
+  // ...
+/>;
+
+{
+  selectedEventId && (
+    <div ref={refs.setFloating} style={floatingStyles}>
+      {/* Event popover content */}
     </div>
   );
 }

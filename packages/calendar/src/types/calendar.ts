@@ -14,7 +14,6 @@ interface BaseCalendarEvent {
   resourceId: string;
   color?: string;
   clientName?: string;
-  selected?: boolean;
   status?: 'confirmed' | 'canceled' | 'tentative';
   metadata?: Record<string, unknown>;
 }
@@ -135,6 +134,8 @@ export interface ResourceGridViewProps {
   selectionAppearance?: SelectionAppearance;
   dragPreviewAppearance?: SelectionAppearance;
   selectionRef?: Ref<HTMLDivElement>;
+  selectedEventId?: string | null;
+  selectedEventRef?: Ref<HTMLDivElement>;
   renderCorner?: () => ReactNode;
   eventGap?: number;
   eventLayout?: EventLayout;

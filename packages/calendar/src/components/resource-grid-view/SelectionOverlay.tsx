@@ -83,6 +83,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
           <div className={cls('eventColumn')} style={{ height: '100%' }}>
             <EventChip
               interactive={false}
+              isSelected
               positioned={{
                 event: buildSyntheticEvent(
                   selectedRange.resourceId,

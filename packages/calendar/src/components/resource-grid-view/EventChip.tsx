@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type Ref } from 'react';
 import { cn } from '@/lib/utils';
 import type {
   CalendarEvent,
@@ -24,6 +24,8 @@ interface EventChipProps {
   eventGap?: number;
   eventLayout?: EventLayout;
   stackOffset?: number;
+  isSelected?: boolean;
+  selectedEventRef?: Ref<HTMLDivElement>;
 }
 
 export const EventChip = memo(function EventChip({
@@ -37,6 +39,8 @@ export const EventChip = memo(function EventChip({
   eventGap = 2,
   eventLayout = 'columns',
   stackOffset = 8,
+  isSelected,
+  selectedEventRef,
 }: EventChipProps) {
   const { event, top, height, subColumn, totalSubColumns } = positioned;
   const color = event.color ?? resource.color ?? undefined;
@@ -62,7 +66,7 @@ export const EventChip = memo(function EventChip({
       : `${widthPct}%`;
   }
 
-  if (event.selected) {
+  if (isSelected) {
     zIndex = 10;
   }
 
@@ -75,6 +79,7 @@ export const EventChip = memo(function EventChip({
   if (renderEvent) {
     return (
       <div
+        ref={selectedEventRef}
         style={{
           position: 'absolute',
           top,
@@ -94,8 +99,9 @@ export const EventChip = memo(function EventChip({
 
   return (
     <div
+      ref={selectedEventRef}
       {...(interactive ? { role: 'button', tabIndex: 0 } : {})}
-      className={cn(cls('event'), event.selected && cls('eventSelected'))}
+      className={cn(cls('event'), isSelected && cls('eventSelected'))}
       style={{
         top,
         height,
