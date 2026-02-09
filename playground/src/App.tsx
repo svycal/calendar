@@ -14,7 +14,6 @@ import {
 } from '@floating-ui/react';
 import {
   ResourceGridView,
-  WeekView,
   type CalendarResource,
   type CalendarEvent,
   type AvailabilityRange,
@@ -529,19 +528,6 @@ function App() {
                 </div>
               )}
             </div>
-          </section>
-
-          <section>
-            <h2 className="text-zinc-950 dark:text-zinc-50 mb-4 text-xl font-semibold">
-              Week View
-            </h2>
-            <WeekView
-              date={today}
-              timeZone={tz}
-              resource={resources[0]}
-              events={events.filter((e) => e.resourceId === '1')}
-              onEventClick={(event) => console.log('Clicked:', event)}
-            />
           </section>
         </div>
       ) : (

@@ -3,8 +3,6 @@ export { Temporal } from 'temporal-polyfill';
 
 // Components
 export { ResourceGridView } from './components/resource-grid-view';
-export { WeekView } from './components/WeekView';
-
 // Defaults
 export { resourceGridViewDefaults } from './components/resource-grid-view';
 
@@ -24,7 +22,6 @@ export type {
   SelectionAppearance,
   SelectionEventData,
   EventLayout,
-  WeekViewProps,
 } from './types/calendar';
 
 // Utilities

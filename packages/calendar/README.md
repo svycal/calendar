@@ -126,22 +126,6 @@ function App() {
 | `renderEvent`  | `(props: { event: TimedCalendarEvent, position: PositionedEvent }) => ReactNode` | Custom renderer for timed events.                                    |
 | `renderCorner` | `() => ReactNode`                                                                | Custom renderer for the top-left corner cell (e.g. time zone label). |
 
-## WeekView props
-
-`WeekView` is a simpler single-resource weekly calendar.
-
-| Prop           | Type                              | Default                                              | Description                                            |
-| -------------- | --------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ |
-| `date`         | `Temporal.PlainDate`              | —                                                    | A date within the week to display.                     |
-| `timeZone`     | `string`                          | —                                                    | IANA time zone identifier.                             |
-| `resource`     | `CalendarResource`                | —                                                    | The single resource to display events for.             |
-| `events`       | `CalendarEvent[]`                 | —                                                    | Array of events.                                       |
-| `availability` | `TimeSlot[]`                      | —                                                    | Availability slots for the resource.                   |
-| `timeAxis`     | `TimeAxisConfig`                  | `{ startHour: 0, endHour: 24, intervalMinutes: 60 }` | Controls the visible hour range and gutter interval.   |
-| `weekStartsOn` | `0 \| 1 \| 2 \| 3 \| 4 \| 5 \| 6` | —                                                    | Day the week starts on (0 = Sunday, 1 = Monday, etc.). |
-| `onEventClick` | `(event: CalendarEvent) => void`  | —                                                    | Called when an event is clicked.                       |
-| `className`    | `string`                          | —                                                    | Class name applied to the root element.                |
-
 ## Data types
 
 ### CalendarResource
@@ -439,8 +423,6 @@ const { refs, floatingStyles } = useFloating({
 ```ts
 // Components
 export { ResourceGridView } from '@savvycal/calendar';
-export { WeekView } from '@savvycal/calendar';
-
 // Defaults
 export { resourceGridViewDefaults } from '@savvycal/calendar';
 
@@ -466,7 +448,6 @@ export type {
   SelectionAppearance,
   SelectionEventData,
   EventLayout,
-  WeekViewProps,
 } from '@savvycal/calendar';
 ```
 

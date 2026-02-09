@@ -141,15 +141,3 @@ export interface ResourceGridViewProps {
   eventLayout?: EventLayout;
   stackOffset?: number;
 }
-
-export interface WeekViewProps {
-  date: Temporal.PlainDate;
-  timeZone: string;
-  resource: CalendarResource;
-  events: CalendarEvent[];
-  availability?: TimeSlot[];
-  timeAxis?: TimeAxisConfig;
-  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
-  onEventClick?: (event: CalendarEvent) => void;
-  className?: string;
-}
