@@ -39,6 +39,8 @@ export const AllDayRow = memo(function AllDayRow({
               position: 'relative',
               inset: 'unset',
               cursor: 'pointer',
+              flex: '1 1 0',
+              minWidth: 0,
             }}
             onClick={() => onEventClick?.(event)}
           >
@@ -54,7 +56,11 @@ export const AllDayRow = memo(function AllDayRow({
 
         if (isSelected) {
           return (
-            <div key={event.id} ref={selectedEventRef}>
+            <div
+              key={event.id}
+              ref={selectedEventRef}
+              style={{ flex: '1 1 0', minWidth: 0 }}
+            >
               {button}
             </div>
           );

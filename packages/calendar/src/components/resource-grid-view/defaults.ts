@@ -18,7 +18,7 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   bodyCellMinor: 'border-t border-r border-cal-border',
   eventColumn: 'relative mr-3',
   event:
-    'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring',
+    'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring',
   eventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
@@ -30,6 +30,6 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
     'bg-cal-slot-highlight rounded-md transition-[top,opacity] duration-75',
   selectionHighlight: 'bg-cal-selection rounded-md',
   allDayCell:
-    'border-r sticky z-20 bg-cal-surface border-b border-cal-border px-1 py-1 flex flex-wrap gap-1',
+    'border-r sticky z-20 bg-cal-surface border-b border-cal-border px-1 py-1 flex gap-1',
   unavailableOverlay: 'cal-unavailable-overlay',
 };
