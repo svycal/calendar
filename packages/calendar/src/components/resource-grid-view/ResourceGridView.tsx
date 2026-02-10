@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
   generateTimeSlots,
@@ -53,6 +53,7 @@ export function ResourceGridView({
   selectionAppearance,
   dragPreviewAppearance,
   selectionRef,
+  selectionLingerMs = 0,
   selectedEventId,
   selectedEventRef,
   renderCorner,
@@ -72,6 +73,30 @@ export function ResourceGridView({
       cn(resourceGridViewDefaults[key], classNames?.[key]),
     [classNames]
   );
+
+  // Keep the selection overlay mounted briefly after clearing so popover
+  // close transitions can finish without losing their reference element.
+  const staleSelectionRef = useRef<SelectedRange | null>(null);
+  const [staleSelection, setStaleSelection] = useState<SelectedRange | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (selectedRange) {
+      staleSelectionRef.current = selectedRange;
+    } else if (staleSelectionRef.current && selectionLingerMs > 0) {
+      const last = staleSelectionRef.current;
+      staleSelectionRef.current = null;
+      setStaleSelection(last);
+      const timer = setTimeout(
+        () => setStaleSelection(null),
+        selectionLingerMs
+      );
+      return () => clearTimeout(timer);
+    }
+  }, [selectedRange, selectionLingerMs]);
+
+  const effectiveSelectedRange = selectedRange ?? staleSelection;
 
   const timeSlots = useMemo(
     () => generateTimeSlots({ startHour, endHour, intervalMinutes }),
@@ -224,7 +249,7 @@ export function ResourceGridView({
           className={cls('cornerCell')}
           style={{ gridRow: 1, gridColumn: 1 }}
         >
-          {renderCorner?.()}
+          {renderCorner?.({ timeZone, date })}
         </div>
 
         {/* Header cells */}
@@ -360,15 +385,15 @@ export function ResourceGridView({
         ))}
 
         {/* Selection overlay (after resource columns so it stacks on top) */}
-        {selectedRange != null &&
+        {effectiveSelectedRange != null &&
           (() => {
             const colIdx = resources.findIndex(
-              (r) => r.id === selectedRange.resourceId
+              (r) => r.id === effectiveSelectedRange.resourceId
             );
             if (colIdx === -1) return null;
             return (
               <SelectionOverlay
-                selectedRange={selectedRange}
+                selectedRange={effectiveSelectedRange}
                 column={colIdx + 2}
                 resource={resources[colIdx]}
                 viewDate={date}

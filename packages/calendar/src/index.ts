@@ -26,3 +26,9 @@ export type {
 
 // Utilities
 export { cn } from './lib/utils';
+export { timedEvent, allDayEvent } from './lib/events';
+export {
+  selectedRangeToComponents,
+  selectedRangeToISO,
+  groupAvailabilityByResource,
+} from './lib/ranges';

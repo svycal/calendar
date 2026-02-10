@@ -15,7 +15,6 @@ interface BaseCalendarEvent {
   color?: string;
   clientName?: ReactNode;
   status?: 'confirmed' | 'canceled' | 'tentative';
-  metadata?: Record<string, unknown>;
 }
 
 export interface TimedCalendarEvent extends BaseCalendarEvent {
@@ -134,9 +133,14 @@ export interface ResourceGridViewProps {
   selectionAppearance?: SelectionAppearance;
   dragPreviewAppearance?: SelectionAppearance;
   selectionRef?: Ref<HTMLDivElement>;
+  /** How long (ms) the selection overlay remains in DOM after clearing, to allow popover close transitions. Default: 0 */
+  selectionLingerMs?: number;
   selectedEventId?: string | null;
   selectedEventRef?: Ref<HTMLDivElement>;
-  renderCorner?: () => ReactNode;
+  renderCorner?: (props: {
+    timeZone: string;
+    date: Temporal.PlainDate;
+  }) => ReactNode;
   eventGap?: number;
   eventLayout?: EventLayout;
   stackOffset?: number;
