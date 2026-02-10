@@ -49,6 +49,12 @@ function minutesToZonedDateTime(
 ): Temporal.ZonedDateTime {
   const hour = Math.floor(totalMinutes / 60);
   const minute = totalMinutes % 60;
+  if (hour >= 24) {
+    return date
+      .add({ days: Math.floor(hour / 24) })
+      .toPlainDateTime({ hour: hour % 24, minute })
+      .toZonedDateTime(timeZone);
+  }
   return date.toPlainDateTime({ hour, minute }).toZonedDateTime(timeZone);
 }
 
