@@ -77,22 +77,27 @@ export function ResourceGridView({
   // Keep the selection overlay mounted briefly after clearing so popover
   // close transitions can finish without losing their reference element.
   const staleSelectionRef = useRef<SelectedRange | null>(null);
+  const lingerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [staleSelection, setStaleSelection] = useState<SelectedRange | null>(
     null
   );
 
   useEffect(() => {
     if (selectedRange) {
+      // New selection starting — cancel any pending linger timer
+      if (lingerTimerRef.current !== null) {
+        clearTimeout(lingerTimerRef.current);
+        lingerTimerRef.current = null;
+      }
       staleSelectionRef.current = selectedRange;
     } else if (staleSelectionRef.current && selectionLingerMs > 0) {
       const last = staleSelectionRef.current;
       staleSelectionRef.current = null;
       setStaleSelection(last);
-      const timer = setTimeout(
-        () => setStaleSelection(null),
-        selectionLingerMs
-      );
-      return () => clearTimeout(timer);
+      lingerTimerRef.current = setTimeout(() => {
+        lingerTimerRef.current = null;
+        setStaleSelection(null);
+      }, selectionLingerMs);
     }
   }, [selectedRange, selectionLingerMs]);
 

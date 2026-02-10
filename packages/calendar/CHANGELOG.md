@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.3.0
+
+### Minor Changes
+
+- Fix stale selection linger using ref-based timer
+
 ## 0.2.0
 
 ### Minor Changes
