@@ -1,7 +1,7 @@
 import { memo, useEffect, useState } from 'react';
 import { Temporal } from 'temporal-polyfill';
 
-import type { ResourceGridViewClassNames } from '@/types/calendar';
+import type { GridViewClassNames } from '@/types/calendar';
 
 interface NowIndicatorProps {
   date: Temporal.PlainDate;
@@ -9,7 +9,7 @@ interface NowIndicatorProps {
   startHour: number;
   endHour: number;
   hourHeight: number;
-  cls: (key: keyof ResourceGridViewClassNames) => string;
+  cls: (key: keyof GridViewClassNames) => string;
 }
 
 function isTodayInTimeZone(

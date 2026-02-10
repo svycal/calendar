@@ -14,10 +14,12 @@ import {
 } from '@floating-ui/react';
 import {
   ResourceGridView,
+  DayGridView,
   type CalendarResource,
   type CalendarEvent,
   type AvailabilityRange,
   type SelectedRange,
+  type DayGridSelectedRange,
   type EventLayout,
 } from '@savvycal/calendar';
 import StressTestPage from './StressTestPage';
@@ -257,6 +259,107 @@ const availability: Record<string, AvailabilityRange[]> = {
   // Dr. Davis: not listed — fully available
 };
 
+// Week range for DayGridView demo (Mon-Sun containing today)
+const weekStart = today.subtract({ days: today.dayOfWeek - 1 }); // Monday
+const weekEnd = weekStart.add({ days: 6 }); // Sunday
+
+function makeDayTime(
+  date: Temporal.PlainDate,
+  hour: number,
+  minute = 0
+): Temporal.ZonedDateTime {
+  return date.toPlainDateTime({ hour, minute }).toZonedDateTime(tz);
+}
+
+const weekEvents: CalendarEvent[] = [
+  {
+    id: 'w1',
+    title: 'Team Standup',
+    startTime: makeDayTime(weekStart, 9, 0),
+    endTime: makeDayTime(weekStart, 9, 30),
+    resourceId: '',
+    color: '#3b82f6',
+  },
+  {
+    id: 'w2',
+    title: 'Design Review',
+    startTime: makeDayTime(weekStart, 14, 0),
+    endTime: makeDayTime(weekStart, 15, 0),
+    resourceId: '',
+    color: '#8b5cf6',
+    clientName: 'Design Team',
+  },
+  {
+    id: 'w3',
+    title: 'Lunch with Client',
+    startTime: makeDayTime(weekStart.add({ days: 1 }), 12, 0),
+    endTime: makeDayTime(weekStart.add({ days: 1 }), 13, 0),
+    resourceId: '',
+    color: '#10b981',
+    clientName: 'Jane Cooper',
+  },
+  {
+    id: 'w4',
+    title: 'Sprint Planning',
+    startTime: makeDayTime(weekStart.add({ days: 1 }), 10, 0),
+    endTime: makeDayTime(weekStart.add({ days: 1 }), 11, 30),
+    resourceId: '',
+    color: '#f59e0b',
+  },
+  {
+    id: 'w5',
+    title: '1:1 with Manager',
+    startTime: makeDayTime(weekStart.add({ days: 2 }), 15, 0),
+    endTime: makeDayTime(weekStart.add({ days: 2 }), 15, 30),
+    resourceId: '',
+    color: '#ef4444',
+  },
+  {
+    id: 'w6',
+    title: 'Workshop',
+    startTime: makeDayTime(weekStart.add({ days: 3 }), 9, 0),
+    endTime: makeDayTime(weekStart.add({ days: 3 }), 12, 0),
+    resourceId: '',
+    color: '#6366f1',
+  },
+  {
+    id: 'w7',
+    title: 'Coffee Chat',
+    startTime: makeDayTime(weekStart.add({ days: 4 }), 10, 0),
+    endTime: makeDayTime(weekStart.add({ days: 4 }), 10, 30),
+    resourceId: '',
+    color: '#ec4899',
+    clientName: 'Alex Kim',
+  },
+  // Overlapping events on Wednesday
+  {
+    id: 'w8',
+    title: 'Code Review',
+    startTime: makeDayTime(weekStart.add({ days: 2 }), 10, 0),
+    endTime: makeDayTime(weekStart.add({ days: 2 }), 11, 0),
+    resourceId: '',
+    color: '#14b8a6',
+  },
+  {
+    id: 'w9',
+    title: 'Architecture Discussion',
+    startTime: makeDayTime(weekStart.add({ days: 2 }), 10, 30),
+    endTime: makeDayTime(weekStart.add({ days: 2 }), 11, 30),
+    resourceId: '',
+    color: '#f97316',
+  },
+  // All-day event
+  {
+    id: 'w10',
+    title: 'Company Offsite',
+    startDate: weekStart.add({ days: 4 }),
+    endDate: weekStart.add({ days: 4 }),
+    resourceId: '',
+    allDay: true,
+    color: '#7c3aed',
+  },
+];
+
 const unavailability: Record<string, AvailabilityRange[]> = {
   // Dr. Johnson: blocked for staff meeting 12pm-1pm (on top of availability window)
   '2': [{ startTime: makeTime(12, 0), endTime: makeTime(13, 0) }],
@@ -272,6 +375,8 @@ function App() {
     null
   );
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [dayGridSelectedRange, setDayGridSelectedRange] =
+    useState<DayGridSelectedRange | null>(null);
 
   const {
     context: selectionContext,
@@ -527,6 +632,55 @@ function App() {
                   </button>
                 </div>
               )}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-zinc-950 dark:text-zinc-50 mb-4 text-xl font-semibold">
+              Day Grid View (Week)
+            </h2>
+            <div className="h-200">
+              <DayGridView
+                activeRange={{ startDate: weekStart, endDate: weekEnd }}
+                timeZone={tz}
+                events={weekEvents}
+                hourHeight={100}
+                timeAxis={{ startHour: 7, endHour: 20, intervalMinutes: 15 }}
+                snapDuration={15}
+                placeholderDuration={30}
+                eventLayout={eventLayout}
+                onEventClick={(event) => {
+                  console.log('Day grid event clicked:', event);
+                }}
+                selectedRange={dayGridSelectedRange}
+                onSelect={(range) => {
+                  setDayGridSelectedRange(range);
+                  console.log('Day grid selection:', range);
+                }}
+                onSlotClick={(info) =>
+                  console.log('Day grid slot clicked:', info)
+                }
+                selectionAppearance={{
+                  style: 'event',
+                  eventData: {
+                    title: 'New event',
+                    color: '#3b82f6',
+                  },
+                }}
+                renderCorner={() => (
+                  <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 px-2 py-1">
+                    {
+                      new Intl.DateTimeFormat('en-US', {
+                        timeZone: tz,
+                        timeZoneName: 'short',
+                      })
+                        .formatToParts(new Date())
+                        .find((p) => p.type === 'timeZoneName')?.value
+                    }
+                  </span>
+                )}
+                className="h-full"
+              />
             </div>
           </section>
         </div>

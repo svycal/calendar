@@ -100,6 +100,25 @@ export function formatDateLabel(date: Temporal.PlainDate): string {
   });
 }
 
+export function generateDateRange(
+  startDate: Temporal.PlainDate,
+  endDate: Temporal.PlainDate
+): Temporal.PlainDate[] {
+  const dates: Temporal.PlainDate[] = [];
+  let current = startDate;
+  while (Temporal.PlainDate.compare(current, endDate) <= 0) {
+    dates.push(current);
+    current = current.add({ days: 1 });
+  }
+  return dates;
+}
+
+export function formatDayOfWeek(date: Temporal.PlainDate): string {
+  const dt = date.toPlainDateTime({ hour: 12 });
+  const jsDate = new Date(dt.toString());
+  return jsDate.toLocaleDateString('en-US', { weekday: 'short' });
+}
+
 export function formatTimeRange(
   startTime: Temporal.ZonedDateTime,
   endTime: Temporal.ZonedDateTime,

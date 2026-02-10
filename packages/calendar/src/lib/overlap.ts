@@ -1,5 +1,9 @@
-import type { Temporal } from 'temporal-polyfill';
-import type { TimedCalendarEvent, PositionedEvent } from '@/types/calendar';
+import { Temporal } from 'temporal-polyfill';
+import type {
+  AllDayCalendarEvent,
+  TimedCalendarEvent,
+  PositionedEvent,
+} from '@/types/calendar';
 import { getMinuteRange } from './time';
 
 interface LayoutEntry {
@@ -149,6 +153,91 @@ export function computePositionedEvents(
     }
 
     result.set(resourceId, positioned);
+  }
+
+  return result;
+}
+
+export function groupByDate(
+  events: TimedCalendarEvent[],
+  timeZone: string
+): Map<string, TimedCalendarEvent[]> {
+  const map = new Map<string, TimedCalendarEvent[]>();
+  for (const event of events) {
+    const start = event.startTime.withTimeZone(timeZone);
+    const key = start.toPlainDate().toString();
+    const list = map.get(key);
+    if (list) {
+      list.push(event);
+    } else {
+      map.set(key, [event]);
+    }
+  }
+  return map;
+}
+
+export function groupAllDayByDate(
+  events: AllDayCalendarEvent[],
+  dates: Temporal.PlainDate[]
+): Map<string, AllDayCalendarEvent[]> {
+  const map = new Map<string, AllDayCalendarEvent[]>();
+  for (const date of dates) {
+    map.set(date.toString(), []);
+  }
+  for (const event of events) {
+    for (const date of dates) {
+      if (
+        Temporal.PlainDate.compare(date, event.startDate) >= 0 &&
+        Temporal.PlainDate.compare(date, event.endDate) <= 0
+      ) {
+        map.get(date.toString())!.push(event);
+      }
+    }
+  }
+  return map;
+}
+
+export function computePositionedEventsByDate(
+  events: TimedCalendarEvent[],
+  timeZone: string,
+  dates: Temporal.PlainDate[],
+  startHour: number,
+  endHour: number,
+  hourHeight: number
+): Map<string, PositionedEvent[]> {
+  const byDate = groupByDate(events, timeZone);
+  const result = new Map<string, PositionedEvent[]>();
+  const axisStartMin = startHour * 60;
+  const axisEndMin = endHour * 60;
+  const pixelsPerMinute = hourHeight / 60;
+
+  for (const date of dates) {
+    const key = date.toString();
+    const dateEvents = byDate.get(key) ?? [];
+    const layout = computeOverlapLayout(dateEvents, timeZone, date);
+    const positioned: PositionedEvent[] = [];
+
+    for (const entry of layout) {
+      if (entry.endMin <= axisStartMin || entry.startMin >= axisEndMin) {
+        continue;
+      }
+
+      const clampedStart = Math.max(entry.startMin, axisStartMin);
+      const clampedEnd = Math.min(entry.endMin, axisEndMin);
+
+      const top = (clampedStart - axisStartMin) * pixelsPerMinute;
+      const height = (clampedEnd - clampedStart) * pixelsPerMinute;
+
+      positioned.push({
+        event: entry.event,
+        top,
+        height,
+        subColumn: entry.subColumn,
+        totalSubColumns: entry.totalSubColumns,
+      });
+    }
+
+    result.set(key, positioned);
   }
 
   return result;

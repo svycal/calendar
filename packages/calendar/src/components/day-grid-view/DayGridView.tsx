@@ -1,43 +1,39 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Temporal } from 'temporal-polyfill';
+import { Temporal } from 'temporal-polyfill';
 import { cn } from '@/lib/utils';
 import {
   generateTimeSlots,
-  formatDateLabel,
   formatTimeRange,
+  generateDateRange,
+  formatDayOfWeek,
 } from '@/lib/time';
-import { computePositionedEvents, groupByResource } from '@/lib/overlap';
 import {
-  computeUnavailableBlocks,
-  type UnavailableBlock,
-} from '@/lib/availability';
+  computePositionedEventsByDate,
+  groupAllDayByDate,
+} from '@/lib/overlap';
 import type {
   AllDayCalendarEvent,
   CalendarEvent,
-  ResourceGridViewClassNames,
-  ResourceGridViewProps,
-  SelectedRange,
+  DayGridSelectedRange,
+  DayGridViewClassNames,
+  DayGridViewProps,
   TimedCalendarEvent,
 } from '@/types/calendar';
-import { resourceGridViewDefaults } from './defaults';
-import { GridHeader } from './GridHeader';
-import { ResourceColumn } from './ResourceColumn';
+import { dayGridViewDefaults } from './defaults';
+import { DayHeader } from './DayHeader';
+import { DayColumn } from './DayColumn';
 import { TimeGutter } from '../shared/TimeGutter';
 import { SlotInteractionLayer } from '../shared/SlotInteractionLayer';
 import { SelectionOverlay } from '../shared/SelectionOverlay';
-import { UnavailabilityOverlay } from '../shared/UnavailabilityOverlay';
 import { NowIndicator } from '../shared/NowIndicator';
 import { AllDayRow } from '../shared/AllDayRow';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
 import { useAnnouncer } from '../shared/useAnnouncer';
 
-export function ResourceGridView({
-  date,
+export function DayGridView({
+  activeRange,
   timeZone,
-  resources,
   events,
-  availability,
-  unavailability,
   timeAxis,
   onEventClick,
   snapDuration,
@@ -61,31 +57,38 @@ export function ResourceGridView({
   eventGap,
   eventLayout = 'columns',
   stackOffset = 8,
-}: ResourceGridViewProps) {
+}: DayGridViewProps) {
   const startHour = timeAxis?.startHour ?? 0;
   const endHour = timeAxis?.endHour ?? 24;
   const intervalMinutes = timeAxis?.intervalMinutes ?? 60;
+
+  const dates = useMemo(
+    () => generateDateRange(activeRange.startDate, activeRange.endDate),
+    [activeRange.startDate, activeRange.endDate]
+  );
+
+  const todayStr = useMemo(() => {
+    return Temporal.Now.plainDateISO(timeZone).toString();
+  }, [timeZone]);
 
   const { effectiveHourHeight, rootRef, headerRef, allDayRef, headerHeight } =
     useEffectiveHourHeight(hourHeight, endHour - startHour);
 
   const cls = useCallback(
-    (key: keyof ResourceGridViewClassNames) =>
-      cn(resourceGridViewDefaults[key], classNames?.[key]),
+    (key: keyof DayGridViewClassNames) =>
+      cn(dayGridViewDefaults[key], classNames?.[key]),
     [classNames]
   );
 
   // Keep the selection overlay mounted briefly after clearing so popover
   // close transitions can finish without losing their reference element.
-  const staleSelectionRef = useRef<SelectedRange | null>(null);
+  const staleSelectionRef = useRef<DayGridSelectedRange | null>(null);
   const lingerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [staleSelection, setStaleSelection] = useState<SelectedRange | null>(
-    null
-  );
+  const [staleSelection, setStaleSelection] =
+    useState<DayGridSelectedRange | null>(null);
 
   useEffect(() => {
     if (selectedRange) {
-      // New selection starting — cancel any pending linger timer
       if (lingerTimerRef.current !== null) {
         clearTimeout(lingerTimerRef.current);
         lingerTimerRef.current = null;
@@ -122,66 +125,31 @@ export function ResourceGridView({
     return { allDayEvents: allDay, timedEvents: timed };
   }, [events]);
 
-  const allDayByResource = useMemo(
-    () => groupByResource(allDayEvents),
-    [allDayEvents]
+  const allDayByDate = useMemo(
+    () => groupAllDayByDate(allDayEvents, dates),
+    [allDayEvents, dates]
   );
 
-  const positionedByResource = useMemo(
+  const positionedByDate = useMemo(
     () =>
-      computePositionedEvents(
+      computePositionedEventsByDate(
         timedEvents,
         timeZone,
-        date,
+        dates,
         startHour,
         endHour,
         effectiveHourHeight
       ),
-    [timedEvents, timeZone, date, startHour, endHour, effectiveHourHeight]
+    [timedEvents, timeZone, dates, startHour, endHour, effectiveHourHeight]
   );
-
-  const unavailableByResource = useMemo(() => {
-    if (!availability && !unavailability)
-      return new Map<string, UnavailableBlock[]>();
-
-    // Collect all resource IDs referenced by either prop
-    const resourceIds = new Set([
-      ...Object.keys(availability ?? {}),
-      ...Object.keys(unavailability ?? {}),
-    ]);
-
-    const map = new Map<string, UnavailableBlock[]>();
-    for (const resourceId of resourceIds) {
-      const blocks = computeUnavailableBlocks(
-        availability?.[resourceId],
-        unavailability?.[resourceId],
-        timeZone,
-        date,
-        startHour,
-        endHour,
-        effectiveHourHeight
-      );
-      if (blocks.length > 0) {
-        map.set(resourceId, blocks);
-      }
-    }
-    return map;
-  }, [
-    availability,
-    unavailability,
-    timeZone,
-    date,
-    startHour,
-    endHour,
-    effectiveHourHeight,
-  ]);
 
   const { message: announcerMessage, announce } = useAnnouncer();
 
-  const gridAriaLabel = useMemo(
-    () => `Schedule for ${formatDateLabel(date)}`,
-    [date]
-  );
+  const gridAriaLabel = useMemo(() => {
+    const startStr = formatDayOfWeek(activeRange.startDate);
+    const endStr = formatDayOfWeek(activeRange.endDate);
+    return `Schedule for ${startStr} to ${endStr}`;
+  }, [activeRange.startDate, activeRange.endDate]);
 
   const handleEventClick = useCallback(
     (event: CalendarEvent) => {
@@ -194,8 +162,6 @@ export function ResourceGridView({
           formatTimeRange(event.startTime, event.endTime, timeZone),
         ];
         if (event.clientName) parts.push(event.clientName);
-        const resource = resources.find((r) => r.id === event.resourceId);
-        if (resource) parts.push(resource.name);
         announce(`Selected: ${parts.join(', ')}`);
       } else {
         const parts = [event.title, 'all day'];
@@ -203,7 +169,7 @@ export function ResourceGridView({
         announce(`Selected: ${parts.join(', ')}`);
       }
     },
-    [onSelect, onEventClick, timeZone, resources, announce]
+    [onSelect, onEventClick, timeZone, announce]
   );
 
   const handleSlotInteractionSelect = useCallback(
@@ -218,18 +184,15 @@ export function ResourceGridView({
         onSelect?.(null);
         return;
       }
-      const selectedRangeValue: SelectedRange = {
-        resourceId: range.columnId,
+      const dayGridRange: DayGridSelectedRange = {
         startTime: range.startTime,
         endTime: range.endTime,
       };
-      onSelect?.(selectedRangeValue);
+      onSelect?.(dayGridRange);
       const parts = [formatTimeRange(range.startTime, range.endTime, timeZone)];
-      const resource = resources.find((r) => r.id === range.columnId);
-      if (resource) parts.push(resource.name);
       announce(`Selected time: ${parts.join(', ')}`);
     },
-    [onSelect, timeZone, resources, announce]
+    [onSelect, timeZone, announce]
   );
 
   const handleSlotClick = useCallback(
@@ -238,15 +201,14 @@ export function ResourceGridView({
       startTime: Temporal.ZonedDateTime;
       endTime: Temporal.ZonedDateTime;
     }) => {
-      const resource = resources.find((r) => r.id === info.columnId);
-      if (!resource) return;
+      const date = Temporal.PlainDate.from(info.columnId);
       onSlotClick?.({
-        resource,
+        date,
         startTime: info.startTime,
         endTime: info.endTime,
       });
     },
-    [onSlotClick, resources]
+    [onSlotClick]
   );
 
   useEffect(() => {
@@ -264,6 +226,9 @@ export function ResourceGridView({
 
   const rowHeight = (effectiveHourHeight * intervalMinutes) / 60;
 
+  // Find today index for now indicator
+  const todayDate = dates.find((d) => d.toString() === todayStr);
+
   return (
     <div ref={rootRef} className={cn(cls('root'), className)}>
       <div
@@ -273,7 +238,7 @@ export function ResourceGridView({
         aria-label={gridAriaLabel}
         style={{
           display: 'grid',
-          gridTemplateColumns: `max-content repeat(${resources.length}, minmax(${columnMinWidth}px, 1fr))`,
+          gridTemplateColumns: `max-content repeat(${dates.length}, minmax(${columnMinWidth}px, 1fr))`,
           gridTemplateRows: `auto auto repeat(${timeSlots.length}, ${rowHeight}px)`,
         }}
       >
@@ -283,14 +248,15 @@ export function ResourceGridView({
           className={cls('cornerCell')}
           style={{ gridRow: 1, gridColumn: 1 }}
         >
-          {renderCorner?.({ timeZone, date })}
+          {renderCorner?.({ timeZone })}
         </div>
 
         {/* Header cells */}
-        {resources.map((resource, i) => (
-          <GridHeader
-            key={resource.id}
-            resource={resource}
+        {dates.map((date, i) => (
+          <DayHeader
+            key={date.toString()}
+            date={date}
+            isToday={date.toString() === todayStr}
             column={i + 2}
             cls={cls}
             renderHeader={renderHeader}
@@ -309,19 +275,19 @@ export function ResourceGridView({
         />
 
         {/* All-day cells */}
-        {resources.map((resource, i) => (
+        {dates.map((date, i) => (
           <div
-            key={`allday-${resource.id}`}
+            key={`allday-${date.toString()}`}
             className={cls('allDayCell')}
             style={{
               gridRow: 2,
               gridColumn: i + 2,
               top: headerHeight,
-              ...(i === resources.length - 1 ? { borderRightWidth: 0 } : {}),
+              ...(i === dates.length - 1 ? { borderRightWidth: 0 } : {}),
             }}
           >
             <AllDayRow
-              events={allDayByResource.get(resource.id) ?? []}
+              events={allDayByDate.get(date.toString()) ?? []}
               cls={cls}
               onEventClick={handleEventClick}
               selectedEventId={selectedEventId}
@@ -344,9 +310,9 @@ export function ResourceGridView({
 
         {/* Body cells */}
         {timeSlots.map((slot) =>
-          resources.map((resource, colIdx) => (
+          dates.map((date, colIdx) => (
             <div
-              key={`${slot.index}-${resource.id}`}
+              key={`${slot.index}-${date.toString()}`}
               className={cls(slot.isHourStart ? 'bodyCell' : 'bodyCellMinor')}
               style={{
                 gridRow: slot.index + 3,
@@ -355,35 +321,18 @@ export function ResourceGridView({
                   ? { borderTopStyle: 'dotted' as const }
                   : {}),
                 ...(slot.index === 0 ? { borderTopWidth: 0 } : {}),
-                ...(colIdx === resources.length - 1
-                  ? { borderRightWidth: 0 }
-                  : {}),
+                ...(colIdx === dates.length - 1 ? { borderRightWidth: 0 } : {}),
               }}
             />
           ))
         )}
 
-        {/* Unavailability overlays */}
-        {resources.map((resource, i) => {
-          const blocks = unavailableByResource.get(resource.id);
-          if (!blocks) return null;
-          return (
-            <UnavailabilityOverlay
-              key={`unavail-${resource.id}`}
-              blocks={blocks}
-              column={i + 2}
-              cls={cls}
-            />
-          );
-        })}
-
-        {/* Slot interaction layers (between body cells and event columns) */}
+        {/* Slot interaction layers */}
         {snapDuration != null &&
-          resources.map((resource, i) => (
+          dates.map((date, i) => (
             <SlotInteractionLayer
-              key={`slot-${resource.id}`}
-              columnId={resource.id}
-              fallbackColor={resource.color}
+              key={`slot-${date.toString()}`}
+              columnId={date.toString()}
               column={i + 2}
               date={date}
               timeZone={timeZone}
@@ -400,12 +349,11 @@ export function ResourceGridView({
             />
           ))}
 
-        {/* Resource columns with events */}
-        {resources.map((resource, i) => (
-          <ResourceColumn
-            key={resource.id}
-            resource={resource}
-            positionedEvents={positionedByResource.get(resource.id) ?? []}
+        {/* Day columns with events */}
+        {dates.map((date, i) => (
+          <DayColumn
+            key={date.toString()}
+            positionedEvents={positionedByDate.get(date.toString()) ?? []}
             column={i + 2}
             timeZone={timeZone}
             cls={cls}
@@ -419,20 +367,22 @@ export function ResourceGridView({
           />
         ))}
 
-        {/* Selection overlay (after resource columns so it stacks on top) */}
+        {/* Selection overlay */}
         {effectiveSelectedRange != null &&
           (() => {
-            const colIdx = resources.findIndex(
-              (r) => r.id === effectiveSelectedRange.resourceId
+            const selDate = effectiveSelectedRange.startTime
+              .withTimeZone(timeZone)
+              .toPlainDate();
+            const colIdx = dates.findIndex(
+              (d) => Temporal.PlainDate.compare(d, selDate) === 0
             );
             if (colIdx === -1) return null;
             return (
               <SelectionOverlay
                 startTime={effectiveSelectedRange.startTime}
                 endTime={effectiveSelectedRange.endTime}
-                fallbackColor={resources[colIdx].color}
                 column={colIdx + 2}
-                viewDate={date}
+                viewDate={dates[colIdx]}
                 timeZone={timeZone}
                 startHour={startHour}
                 hourHeight={effectiveHourHeight}
@@ -444,15 +394,17 @@ export function ResourceGridView({
             );
           })()}
 
-        {/* Now indicator */}
-        <NowIndicator
-          date={date}
-          timeZone={timeZone}
-          startHour={startHour}
-          endHour={endHour}
-          hourHeight={effectiveHourHeight}
-          cls={cls}
-        />
+        {/* Now indicator — only if today is in the active range */}
+        {todayDate && (
+          <NowIndicator
+            date={todayDate}
+            timeZone={timeZone}
+            startHour={startHour}
+            endHour={endHour}
+            hourHeight={effectiveHourHeight}
+            cls={cls}
+          />
+        )}
       </div>
       <div
         aria-live="polite"
