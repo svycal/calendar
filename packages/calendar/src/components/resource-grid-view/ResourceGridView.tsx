@@ -364,7 +364,7 @@ export function ResourceGridView({
               placeholderDuration={placeholderDuration ?? 15}
               cls={cls}
               onSlotClick={onSlotClick}
-              onSelect={handleSelect}
+              onSelect={onSelect ? handleSelect : undefined}
               dragPreviewAppearance={dragPreviewAppearance}
               renderEvent={renderEvent}
             />
