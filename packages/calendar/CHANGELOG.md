@@ -1,5 +1,17 @@
 # @savvycal/calendar
 
+## 0.4.0
+
+### Minor Changes
+
+- Remove app-specific helper functions
+
+### Bug Fixes
+
+- Only enable drag selection when onSelect handler is provided
+- Fix tentative preview event not rendering at bottom of grid
+- Fix selected events stacking above the time gutter
+
 ## 0.3.0
 
 ### Minor Changes

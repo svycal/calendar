@@ -48,6 +48,7 @@ export const ResourceColumn = memo(function ResourceColumn({
         gridRow: '3 / -1',
         gridColumn: column,
         pointerEvents: 'none',
+        isolation: 'isolate',
       }}
     >
       {positionedEvents.map((positioned) => {
