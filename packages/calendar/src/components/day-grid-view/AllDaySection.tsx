@@ -26,6 +26,13 @@ export const AllDaySection = memo(function AllDaySection({
   const laneCount =
     positioned.length > 0 ? Math.max(...positioned.map((p) => p.lane)) + 1 : 0;
 
+  // Add top/bottom padding rows so dividers span through the padding area
+  const hasEvents = positioned.length > 0;
+  const paddingRow = hasEvents ? '4px' : '0px';
+  const totalRows = hasEvents
+    ? `${paddingRow} repeat(${laneCount}, auto) ${paddingRow}`
+    : 'auto';
+
   return (
     <div
       className={cls('allDayLane')}
@@ -34,33 +41,34 @@ export const AllDaySection = memo(function AllDaySection({
         gridColumn: `2 / -1`,
         display: 'grid',
         gridTemplateColumns: 'subgrid',
-        gridTemplateRows: laneCount > 0 ? `repeat(${laneCount}, auto)` : 'auto',
+        gridTemplateRows: totalRows,
         position: 'sticky',
         top: headerHeight,
         zIndex: 20,
         gap: '2px 0',
-        padding: positioned.length > 0 ? '4px 0' : undefined,
       }}
     >
-      {/* Column divider backgrounds */}
+      {/* Column dividers — span all rows including padding rows */}
       {dates.map((date, i) => (
         <div
           key={date.toString()}
+          className={
+            i < dates.length - 1 ? 'border-r border-cal-border' : undefined
+          }
           style={{
             gridColumn: i + 1,
-            gridRow: `1 / -1`,
-            borderRight: i < dates.length - 1 ? '1px solid' : undefined,
-            borderColor: 'var(--cal-border)',
+            gridRow: '1 / -1',
             pointerEvents: 'none',
           }}
         />
       ))}
 
-      {/* Event chips */}
+      {/* Event chips — offset by 1 row for the top padding row */}
       {positioned.map((p) => (
         <AllDayEventChip
           key={p.event.id}
           positioned={p}
+          laneOffset={hasEvents ? 1 : 0}
           cls={cls}
           onEventClick={onEventClick}
           selectedEventId={selectedEventId}
