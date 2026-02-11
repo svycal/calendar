@@ -406,6 +406,28 @@ const unavailability: Record<string, AvailabilityRange[]> = {
   '5': [{ startTime: makeTime(12, 0), endTime: makeTime(13, 0) }],
 };
 
+// DayGridView availability: 9am-12pm and 1pm-5pm each day
+const dayGridAvailability: AvailabilityRange[] = [
+  ...Array.from({ length: 7 }, (_, i) => {
+    const date = weekStart.add({ days: i });
+    return [
+      { startTime: makeDayTime(date, 9, 0), endTime: makeDayTime(date, 12, 0) },
+      {
+        startTime: makeDayTime(date, 13, 0),
+        endTime: makeDayTime(date, 17, 0),
+      },
+    ];
+  }).flat(),
+];
+
+// DayGridView unavailability: Wednesday afternoon blocked
+const dayGridUnavailability: AvailabilityRange[] = [
+  {
+    startTime: makeDayTime(weekStart.add({ days: 2 }), 14, 0),
+    endTime: makeDayTime(weekStart.add({ days: 2 }), 16, 0),
+  },
+];
+
 function App() {
   const [dark, setDark] = useState(false);
   const [page, setPage] = useState<Page>('demo');
@@ -683,6 +705,8 @@ function App() {
                 activeRange={{ startDate: weekStart, endDate: weekEnd }}
                 timeZone={tz}
                 events={weekEvents}
+                availability={dayGridAvailability}
+                unavailability={dayGridUnavailability}
                 hourHeight={100}
                 timeAxis={{ startHour: 0, endHour: 24, intervalMinutes: 15 }}
                 snapDuration={15}

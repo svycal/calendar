@@ -172,6 +172,13 @@ function App() {
 | `timeZone`    | `string`                                          | IANA time zone identifier (e.g. `"America/Chicago"`).  |
 | `events`      | `CalendarEvent[]`                                 | Array of timed and/or all-day events.                  |
 
+#### Availability
+
+| Prop            | Type                  | Default | Description                                                                                      |
+| --------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `availability`  | `AvailabilityRange[]` | —       | Time ranges that are available. Times outside these ranges are shown as unavailable.              |
+| `unavailability`| `AvailabilityRange[]` | —       | Time ranges explicitly marked unavailable. Applied on top of availability.                        |
+
 #### Layout, events & interaction
 
 The following props work identically to `ResourceGridView`: `timeAxis`, `hourHeight`, `columnMinWidth`, `eventLayout`, `eventGap`, `stackOffset`, `className`, `classNames` (uses `DayGridViewClassNames`), `onEventClick`, `snapDuration`, `placeholderDuration`, `selectionAppearance`, `dragPreviewAppearance`, `selectedEventId`, `selectedEventRef`.

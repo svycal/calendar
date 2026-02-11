@@ -172,6 +172,8 @@ export interface DayGridViewProps {
   };
   timeZone: string;
   events: CalendarEvent[];
+  availability?: AvailabilityRange[];
+  unavailability?: AvailabilityRange[];
   timeAxis?: TimeAxisConfig;
   onEventClick?: (event: CalendarEvent) => void;
   snapDuration?: number;

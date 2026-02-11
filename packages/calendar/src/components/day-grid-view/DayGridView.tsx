@@ -11,6 +11,10 @@ import {
   computePositionedEventsByDate,
   layoutAllDayEvents,
 } from '@/lib/overlap';
+import {
+  computeUnavailableBlocks,
+  type UnavailableBlock,
+} from '@/lib/availability';
 import type {
   AllDayCalendarEvent,
   CalendarEvent,
@@ -19,6 +23,7 @@ import type {
   DayGridViewProps,
   TimedCalendarEvent,
 } from '@/types/calendar';
+import { UnavailabilityOverlay } from '../shared/UnavailabilityOverlay';
 import { dayGridViewDefaults } from './defaults';
 import { DayHeader } from './DayHeader';
 import { DayColumn } from './DayColumn';
@@ -34,6 +39,8 @@ export function DayGridView({
   activeRange,
   timeZone,
   events,
+  availability,
+  unavailability,
   timeAxis,
   onEventClick,
   snapDuration,
@@ -142,6 +149,36 @@ export function DayGridView({
       ),
     [timedEvents, timeZone, dates, startHour, endHour, effectiveHourHeight]
   );
+
+  const unavailableByDate = useMemo(() => {
+    if (!availability && !unavailability)
+      return new Map<string, UnavailableBlock[]>();
+
+    const map = new Map<string, UnavailableBlock[]>();
+    for (const date of dates) {
+      const blocks = computeUnavailableBlocks(
+        availability,
+        unavailability,
+        timeZone,
+        date,
+        startHour,
+        endHour,
+        effectiveHourHeight
+      );
+      if (blocks.length > 0) {
+        map.set(date.toString(), blocks);
+      }
+    }
+    return map;
+  }, [
+    availability,
+    unavailability,
+    timeZone,
+    dates,
+    startHour,
+    endHour,
+    effectiveHourHeight,
+  ]);
 
   const { message: announcerMessage, announce } = useAnnouncer();
 
@@ -315,6 +352,20 @@ export function DayGridView({
             />
           ))
         )}
+
+        {/* Unavailability overlays */}
+        {dates.map((date, i) => {
+          const blocks = unavailableByDate.get(date.toString());
+          if (!blocks) return null;
+          return (
+            <UnavailabilityOverlay
+              key={`unavail-${date.toString()}`}
+              blocks={blocks}
+              column={i + 2}
+              cls={cls}
+            />
+          );
+        })}
 
         {/* Slot interaction layers */}
         {snapDuration != null &&
