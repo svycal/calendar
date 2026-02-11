@@ -348,6 +348,15 @@ const weekEvents: CalendarEvent[] = [
     resourceId: '',
     color: '#f97316',
   },
+  // Cross-midnight event (11pm Wednesday → 1am Thursday)
+  {
+    id: 'w14',
+    title: 'Late Deployment',
+    startTime: makeDayTime(weekStart.add({ days: 2 }), 23, 0),
+    endTime: makeDayTime(weekStart.add({ days: 3 }), 1, 0),
+    resourceId: '',
+    color: '#7c3aed',
+  },
   // All-day events
   {
     id: 'w10',
@@ -675,7 +684,7 @@ function App() {
                 timeZone={tz}
                 events={weekEvents}
                 hourHeight={100}
-                timeAxis={{ startHour: 7, endHour: 20, intervalMinutes: 15 }}
+                timeAxis={{ startHour: 0, endHour: 24, intervalMinutes: 15 }}
                 snapDuration={15}
                 placeholderDuration={30}
                 eventLayout={eventLayout}

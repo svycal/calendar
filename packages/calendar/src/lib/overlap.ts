@@ -165,12 +165,24 @@ export function groupByDate(
   const map = new Map<string, TimedCalendarEvent[]>();
   for (const event of events) {
     const start = event.startTime.withTimeZone(timeZone);
-    const key = start.toPlainDate().toString();
-    const list = map.get(key);
-    if (list) {
-      list.push(event);
-    } else {
-      map.set(key, [event]);
+    const end = event.endTime.withTimeZone(timeZone);
+    const startDate = start.toPlainDate();
+    const endDate = end.toPlainDate();
+    const endMinutes = end.hour * 60 + end.minute;
+
+    // If event ends exactly at midnight, the last meaningful date is the day before
+    const lastDate = endMinutes === 0 ? endDate.subtract({ days: 1 }) : endDate;
+
+    let current = startDate;
+    while (Temporal.PlainDate.compare(current, lastDate) <= 0) {
+      const key = current.toString();
+      const list = map.get(key);
+      if (list) {
+        list.push(event);
+      } else {
+        map.set(key, [event]);
+      }
+      current = current.add({ days: 1 });
     }
   }
   return map;
