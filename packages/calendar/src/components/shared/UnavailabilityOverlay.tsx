@@ -1,11 +1,11 @@
 import { memo } from 'react';
-import type { ResourceGridViewClassNames } from '@/types/calendar';
+import type { GridViewClassNames } from '@/types/calendar';
 import type { UnavailableBlock } from '@/lib/availability';
 
 interface UnavailabilityOverlayProps {
   blocks: UnavailableBlock[];
   column: number;
-  cls: (key: keyof ResourceGridViewClassNames) => string;
+  cls: (key: keyof GridViewClassNames) => string;
 }
 
 export const UnavailabilityOverlay = memo(function UnavailabilityOverlay({

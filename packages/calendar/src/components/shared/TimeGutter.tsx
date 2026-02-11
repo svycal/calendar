@@ -1,12 +1,12 @@
 import { memo } from 'react';
-import type { ResourceGridViewClassNames } from '@/types/calendar';
+import type { GridViewClassNames } from '@/types/calendar';
 
 interface TimeGutterProps {
   label: string;
   row: number;
   isHourStart: boolean;
   isFirst: boolean;
-  cls: (key: keyof ResourceGridViewClassNames) => string;
+  cls: (key: keyof GridViewClassNames) => string;
 }
 
 export const TimeGutter = memo(function TimeGutter({

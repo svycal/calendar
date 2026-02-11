@@ -3,12 +3,12 @@ import { cn } from '@/lib/utils';
 import type {
   AllDayCalendarEvent,
   CalendarEvent,
-  ResourceGridViewClassNames,
+  GridViewClassNames,
 } from '@/types/calendar';
 
 interface AllDayRowProps {
   events: AllDayCalendarEvent[];
-  cls: (key: keyof ResourceGridViewClassNames) => string;
+  cls: (key: keyof GridViewClassNames) => string;
   onEventClick?: (event: CalendarEvent) => void;
   selectedEventId?: string | null;
   selectedEventRef?: Ref<HTMLDivElement>;

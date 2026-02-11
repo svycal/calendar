@@ -1,6 +1,6 @@
 # @savvycal/calendar
 
-A fully-featured resource grid calendar component built with React, Tailwind CSS v4, and the Temporal API.
+A fully-featured calendar component library built with React, Tailwind CSS v4, and the Temporal API. Includes a resource grid view (resources as columns) and a day grid view (days as columns).
 
 ## Installation
 
@@ -125,6 +125,106 @@ function App() {
 | `renderHeader` | `(props: { resource: CalendarResource }) => ReactNode`                           | Custom renderer for resource column headers.                         |
 | `renderEvent`  | `(props: { event: TimedCalendarEvent, position: PositionedEvent }) => ReactNode` | Custom renderer for timed events.                                    |
 | `renderCorner` | `() => ReactNode`                                                                | Custom renderer for the top-left corner cell (e.g. time zone label). |
+
+## DayGridView
+
+A day-based grid view that shows days as columns (e.g. a week view).
+
+### Quick start
+
+```tsx
+import { DayGridView, Temporal } from '@savvycal/calendar';
+
+const today = Temporal.Now.plainDateISO();
+const weekStart = today.subtract({ days: today.dayOfWeek - 1 });
+const weekEnd = weekStart.add({ days: 6 });
+
+function App() {
+  return (
+    <DayGridView
+      activeRange={{ startDate: weekStart, endDate: weekEnd }}
+      timeZone="America/Chicago"
+      events={[
+        {
+          id: 'evt-1',
+          title: 'Meeting',
+          resourceId: '',
+          startTime: today
+            .toPlainDateTime({ hour: 10 })
+            .toZonedDateTime('America/Chicago'),
+          endTime: today
+            .toPlainDateTime({ hour: 11 })
+            .toZonedDateTime('America/Chicago'),
+        },
+      ]}
+    />
+  );
+}
+```
+
+### DayGridView props
+
+#### Required
+
+| Prop          | Type                                              | Description                                            |
+| ------------- | ------------------------------------------------- | ------------------------------------------------------ |
+| `activeRange` | `{ startDate: PlainDate; endDate: PlainDate }`    | The date range to display (inclusive).                  |
+| `timeZone`    | `string`                                          | IANA time zone identifier (e.g. `"America/Chicago"`).  |
+| `events`      | `CalendarEvent[]`                                 | Array of timed and/or all-day events.                  |
+
+#### Availability
+
+| Prop            | Type                  | Default | Description                                                                                      |
+| --------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `availability`  | `AvailabilityRange[]` | —       | Time ranges that are available. Times outside these ranges are shown as unavailable.              |
+| `unavailability`| `AvailabilityRange[]` | —       | Time ranges explicitly marked unavailable. Applied on top of availability.                        |
+
+#### Layout, events & interaction
+
+The following props work identically to `ResourceGridView`: `timeAxis`, `hourHeight`, `columnMinWidth`, `eventLayout`, `eventGap`, `stackOffset`, `className`, `classNames` (uses `DayGridViewClassNames`), `onEventClick`, `snapDuration`, `placeholderDuration`, `selectionAppearance`, `dragPreviewAppearance`, `selectedEventId`, `selectedEventRef`.
+
+#### Selection
+
+| Prop            | Type                                              | Description                                     |
+| --------------- | ------------------------------------------------- | ----------------------------------------------- |
+| `selectedRange` | `DayGridSelectedRange \| null`                    | The currently selected time range (controlled).  |
+| `onSelect`      | `(range: DayGridSelectedRange \| null) => void`   | Called when the user selects or clears a range.  |
+| `selectionRef`  | `Ref<HTMLDivElement>`                             | Ref attached to the selection overlay element.   |
+
+#### Slot click
+
+| Prop          | Type                                                       | Description                             |
+| ------------- | ---------------------------------------------------------- | --------------------------------------- |
+| `onSlotClick` | `(info: { date, startTime, endTime }) => void`             | Called when an empty time slot is clicked. Receives the `date` (PlainDate) and time range. |
+
+#### Render props
+
+| Prop           | Type                                                                             | Description                                                          |
+| -------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `renderHeader` | `(props: { date: PlainDate, isToday: boolean }) => ReactNode`                    | Custom renderer for day column headers.                              |
+| `renderEvent`  | `(props: { event: TimedCalendarEvent, position: PositionedEvent }) => ReactNode` | Custom renderer for timed events.                                    |
+| `renderCorner` | `(props: { timeZone: string }) => ReactNode`                                     | Custom renderer for the top-left corner cell (e.g. time zone label). |
+
+### DayGridSelectedRange
+
+```ts
+interface DayGridSelectedRange {
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
+}
+```
+
+### DayGridViewClassNames
+
+Extends `GridViewClassNames` with day-specific keys:
+
+| Key                | Description                                 |
+| ------------------ | ------------------------------------------- |
+| `headerWeekday`    | Weekday abbreviation text (e.g. "Mon").     |
+| `headerDayNumber`  | Day number text.                            |
+| `headerToday`      | Additional classes for today's day number.  |
+
+All shared keys from `GridViewClassNames` (root, grid, event, etc.) also apply.
 
 ## Data types
 
@@ -422,9 +522,12 @@ const { refs, floatingStyles } = useFloating({
 
 ```ts
 // Components
-export { ResourceGridView } from '@savvycal/calendar';
+export { ResourceGridView, DayGridView } from '@savvycal/calendar';
 // Defaults
-export { resourceGridViewDefaults } from '@savvycal/calendar';
+export {
+  resourceGridViewDefaults,
+  dayGridViewDefaults,
+} from '@savvycal/calendar';
 
 // Temporal polyfill
 export { Temporal } from '@savvycal/calendar';
@@ -443,6 +546,10 @@ export type {
   TimeAxisConfig,
   ResourceGridViewProps,
   ResourceGridViewClassNames,
+  GridViewClassNames,
+  DayGridViewProps,
+  DayGridViewClassNames,
+  DayGridSelectedRange,
   PositionedEvent,
   SelectedRange,
   SelectionAppearance,

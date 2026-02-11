@@ -8,10 +8,8 @@ import {
 } from 'react';
 import type { Temporal } from 'temporal-polyfill';
 import type {
-  CalendarResource,
+  GridViewClassNames,
   PositionedEvent,
-  ResourceGridViewClassNames,
-  SelectedRange,
   SelectionAppearance,
   TimedCalendarEvent,
 } from '@/types/calendar';
@@ -19,7 +17,8 @@ import { buildSyntheticEvent } from '@/lib/selection';
 import { EventChip } from './EventChip';
 
 interface SlotInteractionLayerProps {
-  resource: CalendarResource;
+  columnId: string;
+  fallbackColor?: string;
   column: number;
   date: Temporal.PlainDate;
   timeZone: string;
@@ -28,13 +27,19 @@ interface SlotInteractionLayerProps {
   hourHeight: number;
   snapDuration: number;
   placeholderDuration: number;
-  cls: (key: keyof ResourceGridViewClassNames) => string;
+  cls: (key: keyof GridViewClassNames) => string;
   onSlotClick?: (info: {
-    resource: CalendarResource;
+    columnId: string;
     startTime: Temporal.ZonedDateTime;
     endTime: Temporal.ZonedDateTime;
   }) => void;
-  onSelect?: (range: SelectedRange | null) => void;
+  onSelect?: (
+    range: {
+      columnId: string;
+      startTime: Temporal.ZonedDateTime;
+      endTime: Temporal.ZonedDateTime;
+    } | null
+  ) => void;
   dragPreviewAppearance?: SelectionAppearance;
   renderEvent?: (props: {
     event: TimedCalendarEvent;
@@ -66,7 +71,8 @@ interface DragState {
 }
 
 export const SlotInteractionLayer = memo(function SlotInteractionLayer({
-  resource,
+  columnId,
+  fallbackColor,
   column,
   date,
   timeZone,
@@ -92,7 +98,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
 
   // Stable refs for document-level handlers
   const onSelectRef = useRef(onSelect);
-  const resourceRef = useRef(resource);
+  const columnIdRef = useRef(columnId);
   const dateRef = useRef(date);
   const timeZoneRef = useRef(timeZone);
 
@@ -174,7 +180,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       }
       // Fire onSelect with the final settled range
       onSelectRef.current?.({
-        resourceId: resourceRef.current.id,
+        columnId: columnIdRef.current,
         startTime: minutesToZonedDateTime(
           dateRef.current,
           drag.currentStartMin,
@@ -196,7 +202,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   // Sync all latest-value refs after render, before browser events
   useLayoutEffect(() => {
     onSelectRef.current = onSelect;
-    resourceRef.current = resource;
+    columnIdRef.current = columnId;
     dateRef.current = date;
     timeZoneRef.current = timeZone;
     snapToSlotRef.current = snapToSlot;
@@ -291,13 +297,13 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
 
       if (onSlotClick) {
         onSlotClick({
-          resource,
+          columnId,
           startTime: minutesToZonedDateTime(date, slotStart, timeZone),
           endTime: minutesToZonedDateTime(date, slotEnd, timeZone),
         });
       }
     },
-    [onSlotClick, snapToSlot, placeholderDuration, resource, date, timeZone]
+    [onSlotClick, snapToSlot, placeholderDuration, columnId, date, timeZone]
   );
 
   const highlightTop =
@@ -346,7 +352,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
               interactive={false}
               positioned={{
                 event: buildSyntheticEvent(
-                  resource.id,
+                  '',
                   minutesToZonedDateTime(date, dragPreview.startMin, timeZone),
                   minutesToZonedDateTime(date, dragPreview.endMin, timeZone),
                   dragPreviewAppearance.eventData
@@ -357,7 +363,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
                 subColumn: 0,
                 totalSubColumns: 1,
               }}
-              resource={resource}
+              fallbackColor={fallbackColor}
               timeZone={timeZone}
               cls={cls}
               renderEvent={renderEvent}

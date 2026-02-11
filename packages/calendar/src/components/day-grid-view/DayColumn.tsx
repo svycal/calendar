@@ -1,7 +1,6 @@
 import { memo, type Ref } from 'react';
 import type {
   CalendarEvent,
-  CalendarResource,
   EventLayout,
   GridViewClassNames,
   PositionedEvent,
@@ -9,8 +8,7 @@ import type {
 } from '@/types/calendar';
 import { EventChip } from '../shared/EventChip';
 
-interface ResourceColumnProps {
-  resource: CalendarResource;
+interface DayColumnProps {
   positionedEvents: PositionedEvent[];
   column: number;
   timeZone: string;
@@ -27,8 +25,7 @@ interface ResourceColumnProps {
   selectedEventRef?: Ref<HTMLDivElement>;
 }
 
-export const ResourceColumn = memo(function ResourceColumn({
-  resource,
+export const DayColumn = memo(function DayColumn({
   positionedEvents,
   column,
   timeZone,
@@ -40,7 +37,7 @@ export const ResourceColumn = memo(function ResourceColumn({
   stackOffset,
   selectedEventId,
   selectedEventRef,
-}: ResourceColumnProps) {
+}: DayColumnProps) {
   return (
     <div
       className={cls('eventColumn')}
@@ -57,7 +54,6 @@ export const ResourceColumn = memo(function ResourceColumn({
           <EventChip
             key={positioned.event.id}
             positioned={positioned}
-            fallbackColor={resource.color}
             timeZone={timeZone}
             cls={cls}
             onClick={onEventClick}

@@ -2,19 +2,18 @@ import { memo, type Ref } from 'react';
 import { cn } from '@/lib/utils';
 import type {
   CalendarEvent,
-  CalendarResource,
   EventLayout,
+  GridViewClassNames,
   PositionedEvent,
-  ResourceGridViewClassNames,
   TimedCalendarEvent,
 } from '@/types/calendar';
 import { formatEventStartTime, formatTimeRange } from '@/lib/time';
 
 interface EventChipProps {
   positioned: PositionedEvent;
-  resource: CalendarResource;
+  fallbackColor?: string;
   timeZone: string;
-  cls: (key: keyof ResourceGridViewClassNames) => string;
+  cls: (key: keyof GridViewClassNames) => string;
   onClick?: (event: CalendarEvent) => void;
   renderEvent?: (props: {
     event: TimedCalendarEvent;
@@ -30,7 +29,7 @@ interface EventChipProps {
 
 export const EventChip = memo(function EventChip({
   positioned,
-  resource,
+  fallbackColor,
   timeZone,
   cls,
   onClick,
@@ -43,7 +42,7 @@ export const EventChip = memo(function EventChip({
   selectedEventRef,
 }: EventChipProps) {
   const { event, top, height, subColumn, totalSubColumns } = positioned;
-  const color = event.color ?? resource.color ?? undefined;
+  const color = event.color ?? fallbackColor;
 
   let left: string;
   let width: string;

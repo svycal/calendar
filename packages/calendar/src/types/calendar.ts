@@ -67,13 +67,12 @@ export interface TimeAxisConfig {
   intervalMinutes?: number;
 }
 
-export interface ResourceGridViewClassNames {
+export interface GridViewClassNames {
   root?: string;
   grid?: string;
   cornerCell?: string;
   headerCell?: string;
   headerName?: string;
-  headerAvatar?: string;
   gutterCell?: string;
   gutterCellMinor?: string;
   gutterLabel?: string;
@@ -91,6 +90,21 @@ export interface ResourceGridViewClassNames {
   selectionHighlight?: string;
   allDayCell?: string;
   unavailableOverlay?: string;
+}
+
+export interface ResourceGridViewClassNames extends GridViewClassNames {
+  headerAvatar?: string;
+}
+
+export interface DayGridViewClassNames extends GridViewClassNames {
+  headerWeekday?: string;
+  headerDayNumber?: string;
+  headerToday?: string;
+  allDayLane?: string;
+  allDayEvent?: string;
+  allDayEventSelected?: string;
+  allDayEventColorBar?: string;
+  allDayEventTitle?: string;
 }
 
 export type EventLayout = 'columns' | 'stacked';
@@ -141,6 +155,55 @@ export interface ResourceGridViewProps {
     timeZone: string;
     date: Temporal.PlainDate;
   }) => ReactNode;
+  eventGap?: number;
+  eventLayout?: EventLayout;
+  stackOffset?: number;
+}
+
+export interface DayGridSelectedRange {
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
+}
+
+export interface DayGridViewProps {
+  activeRange: {
+    startDate: Temporal.PlainDate;
+    endDate: Temporal.PlainDate;
+  };
+  timeZone: string;
+  events: CalendarEvent[];
+  availability?: AvailabilityRange[];
+  unavailability?: AvailabilityRange[];
+  timeAxis?: TimeAxisConfig;
+  onEventClick?: (event: CalendarEvent) => void;
+  snapDuration?: number;
+  placeholderDuration?: number;
+  onSlotClick?: (info: {
+    date: Temporal.PlainDate;
+    startTime: Temporal.ZonedDateTime;
+    endTime: Temporal.ZonedDateTime;
+  }) => void;
+  className?: string;
+  selectedRange?: DayGridSelectedRange | null;
+  onSelect?: (range: DayGridSelectedRange | null) => void;
+  classNames?: DayGridViewClassNames;
+  hourHeight?: number;
+  columnMinWidth?: number;
+  renderHeader?: (props: {
+    date: Temporal.PlainDate;
+    isToday: boolean;
+  }) => ReactNode;
+  renderEvent?: (props: {
+    event: TimedCalendarEvent;
+    position: PositionedEvent;
+  }) => ReactNode;
+  selectionAppearance?: SelectionAppearance;
+  dragPreviewAppearance?: SelectionAppearance;
+  selectionRef?: Ref<HTMLDivElement>;
+  selectionLingerMs?: number;
+  selectedEventId?: string | null;
+  selectedEventRef?: Ref<HTMLDivElement>;
+  renderCorner?: (props: { timeZone: string }) => ReactNode;
   eventGap?: number;
   eventLayout?: EventLayout;
   stackOffset?: number;

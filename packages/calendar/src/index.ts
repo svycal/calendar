@@ -3,8 +3,10 @@ export { Temporal } from 'temporal-polyfill';
 
 // Components
 export { ResourceGridView } from './components/resource-grid-view';
+export { DayGridView } from './components/day-grid-view';
 // Defaults
 export { resourceGridViewDefaults } from './components/resource-grid-view';
+export { dayGridViewDefaults } from './components/day-grid-view';
 
 // Types
 export type {
@@ -17,6 +19,10 @@ export type {
   TimeAxisConfig,
   ResourceGridViewProps,
   ResourceGridViewClassNames,
+  GridViewClassNames,
+  DayGridViewProps,
+  DayGridViewClassNames,
+  DayGridSelectedRange,
   PositionedEvent,
   SelectedRange,
   SelectionAppearance,

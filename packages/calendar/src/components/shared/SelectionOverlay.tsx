@@ -1,10 +1,8 @@
 import { memo, type Ref } from 'react';
 import type { Temporal } from 'temporal-polyfill';
 import type {
-  CalendarResource,
+  GridViewClassNames,
   PositionedEvent,
-  ResourceGridViewClassNames,
-  SelectedRange,
   SelectionAppearance,
   TimedCalendarEvent,
 } from '@/types/calendar';
@@ -13,14 +11,15 @@ import { buildSyntheticEvent } from '@/lib/selection';
 import { EventChip } from './EventChip';
 
 interface SelectionOverlayProps {
-  selectedRange: SelectedRange;
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
+  fallbackColor?: string;
   column: number;
-  resource: CalendarResource;
   viewDate: Temporal.PlainDate;
   timeZone: string;
   startHour: number;
   hourHeight: number;
-  cls: (key: keyof ResourceGridViewClassNames) => string;
+  cls: (key: keyof GridViewClassNames) => string;
   appearance?: SelectionAppearance;
   selectionRef?: Ref<HTMLDivElement>;
   renderEvent?: (props: {
@@ -30,9 +29,10 @@ interface SelectionOverlayProps {
 }
 
 export const SelectionOverlay = memo(function SelectionOverlay({
-  selectedRange,
+  startTime,
+  endTime,
+  fallbackColor,
   column,
-  resource,
   viewDate,
   timeZone,
   startHour,
@@ -45,12 +45,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   const pixelsPerMinute = hourHeight / 60;
   const axisStartMin = startHour * 60;
 
-  const range = getMinuteRange(
-    selectedRange.startTime,
-    selectedRange.endTime,
-    viewDate,
-    timeZone
-  );
+  const range = getMinuteRange(startTime, endTime, viewDate, timeZone);
   if (!range) return null;
 
   const top = (range.startMin - axisStartMin) * pixelsPerMinute;
@@ -87,9 +82,9 @@ export const SelectionOverlay = memo(function SelectionOverlay({
               isSelected
               positioned={{
                 event: buildSyntheticEvent(
-                  selectedRange.resourceId,
-                  selectedRange.startTime,
-                  selectedRange.endTime,
+                  '',
+                  startTime,
+                  endTime,
                   appearance.eventData
                 ),
                 top: 0,
@@ -97,7 +92,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
                 subColumn: 0,
                 totalSubColumns: 1,
               }}
-              resource={resource}
+              fallbackColor={fallbackColor}
               timeZone={timeZone}
               cls={cls}
               renderEvent={renderEvent}
