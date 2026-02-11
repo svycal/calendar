@@ -59,23 +59,7 @@ export const AllDayEventChip = memo(function AllDayEventChip({
           style={{ backgroundColor: event.color, borderRadius: 'inherit' }}
         />
       )}
-      {continuesBefore && (
-        <span
-          className="text-cal-text-muted text-[10px] leading-none shrink-0"
-          aria-hidden
-        >
-          {'◂'}
-        </span>
-      )}
       <span className={cls('allDayEventTitle')}>{event.title}</span>
-      {continuesAfter && (
-        <span
-          className="text-cal-text-muted text-[10px] leading-none shrink-0 ml-auto"
-          aria-hidden
-        >
-          {'▸'}
-        </span>
-      )}
     </>
   );
 
