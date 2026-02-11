@@ -348,7 +348,7 @@ const weekEvents: CalendarEvent[] = [
     resourceId: '',
     color: '#f97316',
   },
-  // All-day event
+  // All-day events
   {
     id: 'w10',
     title: 'Company Offsite',
@@ -357,6 +357,36 @@ const weekEvents: CalendarEvent[] = [
     resourceId: '',
     allDay: true,
     color: '#7c3aed',
+  },
+  // Multi-day spanning event (Tue–Thu)
+  {
+    id: 'w11',
+    title: 'Team Summit',
+    startDate: weekStart.add({ days: 1 }),
+    endDate: weekStart.add({ days: 3 }),
+    resourceId: '',
+    allDay: true,
+    color: '#3b82f6',
+  },
+  // Event that starts before the visible range (continues-before)
+  {
+    id: 'w12',
+    title: 'Company Retreat',
+    startDate: weekStart.subtract({ days: 2 }),
+    endDate: weekStart.add({ days: 1 }),
+    resourceId: '',
+    allDay: true,
+    color: '#10b981',
+  },
+  // Single-day all-day event overlapping multi-day (tests lane stacking)
+  {
+    id: 'w13',
+    title: 'Deadline',
+    startDate: weekStart.add({ days: 2 }),
+    endDate: weekStart.add({ days: 2 }),
+    resourceId: '',
+    allDay: true,
+    color: '#ef4444',
   },
 ];
 

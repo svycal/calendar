@@ -35,4 +35,11 @@ export const dayGridViewDefaults: Required<DayGridViewClassNames> = {
   headerDayNumber: 'text-cal-text text-sm font-medium mt-0.5',
   headerToday:
     'bg-cal-now text-white rounded-full w-7 h-7 flex items-center justify-center',
+  allDayLane: 'bg-cal-surface border-b border-cal-border',
+  allDayEvent:
+    'rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring min-w-0',
+  allDayEventSelected:
+    'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
+  allDayEventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
+  allDayEventTitle: 'text-cal-text-body text-xs/4 font-medium truncate',
 };

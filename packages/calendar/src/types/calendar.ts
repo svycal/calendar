@@ -100,6 +100,11 @@ export interface DayGridViewClassNames extends GridViewClassNames {
   headerWeekday?: string;
   headerDayNumber?: string;
   headerToday?: string;
+  allDayLane?: string;
+  allDayEvent?: string;
+  allDayEventSelected?: string;
+  allDayEventColorBar?: string;
+  allDayEventTitle?: string;
 }
 
 export type EventLayout = 'columns' | 'stacked';

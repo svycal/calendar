@@ -9,7 +9,7 @@ import {
 } from '@/lib/time';
 import {
   computePositionedEventsByDate,
-  groupAllDayByDate,
+  layoutAllDayEvents,
 } from '@/lib/overlap';
 import type {
   AllDayCalendarEvent,
@@ -26,7 +26,7 @@ import { TimeGutter } from '../shared/TimeGutter';
 import { SlotInteractionLayer } from '../shared/SlotInteractionLayer';
 import { SelectionOverlay } from '../shared/SelectionOverlay';
 import { NowIndicator } from '../shared/NowIndicator';
-import { AllDayRow } from '../shared/AllDayRow';
+import { AllDaySection } from './AllDaySection';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
 import { useAnnouncer } from '../shared/useAnnouncer';
 
@@ -125,8 +125,8 @@ export function DayGridView({
     return { allDayEvents: allDay, timedEvents: timed };
   }, [events]);
 
-  const allDayByDate = useMemo(
-    () => groupAllDayByDate(allDayEvents, dates),
+  const positionedAllDayEvents = useMemo(
+    () => layoutAllDayEvents(allDayEvents, dates),
     [allDayEvents, dates]
   );
 
@@ -274,27 +274,16 @@ export function DayGridView({
           }}
         />
 
-        {/* All-day cells */}
-        {dates.map((date, i) => (
-          <div
-            key={`allday-${date.toString()}`}
-            className={cls('allDayCell')}
-            style={{
-              gridRow: 2,
-              gridColumn: i + 2,
-              top: headerHeight,
-              ...(i === dates.length - 1 ? { borderRightWidth: 0 } : {}),
-            }}
-          >
-            <AllDayRow
-              events={allDayByDate.get(date.toString()) ?? []}
-              cls={cls}
-              onEventClick={handleEventClick}
-              selectedEventId={selectedEventId}
-              selectedEventRef={selectedEventRef}
-            />
-          </div>
-        ))}
+        {/* All-day section (subgrid spanning all date columns) */}
+        <AllDaySection
+          positioned={positionedAllDayEvents}
+          dates={dates}
+          headerHeight={headerHeight}
+          cls={cls}
+          onEventClick={handleEventClick}
+          selectedEventId={selectedEventId}
+          selectedEventRef={selectedEventRef}
+        />
 
         {/* Gutter cells */}
         {timeSlots.map((slot) => (
