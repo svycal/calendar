@@ -124,6 +124,7 @@ export interface ResourceGridViewProps {
   events: CalendarEvent[];
   availability?: Record<string, AvailabilityRange[]>;
   unavailability?: Record<string, AvailabilityRange[]>;
+  defaultUnavailable?: boolean;
   timeAxis?: TimeAxisConfig;
   onEventClick?: (event: CalendarEvent) => void;
   snapDuration?: number;
@@ -174,6 +175,7 @@ export interface DayGridViewProps {
   events: CalendarEvent[];
   availability?: AvailabilityRange[];
   unavailability?: AvailabilityRange[];
+  defaultUnavailable?: boolean;
   timeAxis?: TimeAxisConfig;
   onEventClick?: (event: CalendarEvent) => void;
   snapDuration?: number;

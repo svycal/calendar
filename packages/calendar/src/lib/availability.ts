@@ -92,7 +92,7 @@ export function computeUnavailableBlocks(
   const unavailableIntervals: Interval[] = [];
 
   // Invert available ranges to get unavailable gaps
-  if (availableRanges && availableRanges.length > 0) {
+  if (availableRanges !== undefined) {
     const available = toIntervals(
       availableRanges,
       timeZone,

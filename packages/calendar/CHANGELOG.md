@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.6.0
+
+### Minor Changes
+
+- Add defaultUnavailable prop to DayGridView and ResourceGridView
+
 ## 0.5.0
 
 ### Minor Changes

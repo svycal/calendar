@@ -41,6 +41,7 @@ export function DayGridView({
   events,
   availability,
   unavailability,
+  defaultUnavailable,
   timeAxis,
   onEventClick,
   snapDuration,
@@ -150,14 +151,19 @@ export function DayGridView({
     [timedEvents, timeZone, dates, startHour, endHour, effectiveHourHeight]
   );
 
+  const effectiveAvailability = useMemo(
+    () => (defaultUnavailable ? (availability ?? []) : availability),
+    [defaultUnavailable, availability]
+  );
+
   const unavailableByDate = useMemo(() => {
-    if (!availability && !unavailability)
+    if (effectiveAvailability === undefined && !unavailability)
       return new Map<string, UnavailableBlock[]>();
 
     const map = new Map<string, UnavailableBlock[]>();
     for (const date of dates) {
       const blocks = computeUnavailableBlocks(
-        availability,
+        effectiveAvailability,
         unavailability,
         timeZone,
         date,
@@ -171,7 +177,7 @@ export function DayGridView({
     }
     return map;
   }, [
-    availability,
+    effectiveAvailability,
     unavailability,
     timeZone,
     dates,

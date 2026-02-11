@@ -38,6 +38,7 @@ export function ResourceGridView({
   events,
   availability,
   unavailability,
+  defaultUnavailable,
   timeAxis,
   onEventClick,
   snapDuration,
@@ -141,19 +142,26 @@ export function ResourceGridView({
   );
 
   const unavailableByResource = useMemo(() => {
-    if (!availability && !unavailability)
+    if (!defaultUnavailable && !availability && !unavailability)
       return new Map<string, UnavailableBlock[]>();
 
-    // Collect all resource IDs referenced by either prop
+    // Collect all resource IDs that need evaluation
     const resourceIds = new Set([
       ...Object.keys(availability ?? {}),
       ...Object.keys(unavailability ?? {}),
+      ...(defaultUnavailable ? resources.map((r) => r.id) : []),
     ]);
 
     const map = new Map<string, UnavailableBlock[]>();
     for (const resourceId of resourceIds) {
+      const availableRanges = availability?.[resourceId];
+      const effectiveAvailable =
+        defaultUnavailable && availableRanges === undefined
+          ? []
+          : availableRanges;
+
       const blocks = computeUnavailableBlocks(
-        availability?.[resourceId],
+        effectiveAvailable,
         unavailability?.[resourceId],
         timeZone,
         date,
@@ -167,6 +175,8 @@ export function ResourceGridView({
     }
     return map;
   }, [
+    defaultUnavailable,
+    resources,
     availability,
     unavailability,
     timeZone,

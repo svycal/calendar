@@ -113,10 +113,11 @@ function App() {
 
 ### Availability
 
-| Prop             | Type                                  | Default | Description                                                                                       |
-| ---------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------- |
-| `availability`   | `Record<string, AvailabilityRange[]>` | —       | Map of resource ID to available time ranges. Times outside these ranges are shown as unavailable. |
-| `unavailability` | `Record<string, AvailabilityRange[]>` | —       | Map of resource ID to explicitly unavailable time ranges. Applied on top of availability.         |
+| Prop                 | Type                                  | Default | Description                                                                                       |
+| -------------------- | ------------------------------------- | ------- | ------------------------------------------------------------------------------------------------- |
+| `availability`       | `Record<string, AvailabilityRange[]>` | —       | Map of resource ID to available time ranges. Times outside these ranges are shown as unavailable. |
+| `unavailability`     | `Record<string, AvailabilityRange[]>` | —       | Map of resource ID to explicitly unavailable time ranges. Applied on top of availability.         |
+| `defaultUnavailable` | `boolean`                             | —       | When `true`, resources without an entry in `availability` are shown as entirely unavailable.      |
 
 ### Render props
 
@@ -174,10 +175,11 @@ function App() {
 
 #### Availability
 
-| Prop            | Type                  | Default | Description                                                                                      |
-| --------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `availability`  | `AvailabilityRange[]` | —       | Time ranges that are available. Times outside these ranges are shown as unavailable.              |
-| `unavailability`| `AvailabilityRange[]` | —       | Time ranges explicitly marked unavailable. Applied on top of availability.                        |
+| Prop                  | Type                  | Default | Description                                                                                      |
+| --------------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| `availability`        | `AvailabilityRange[]` | —       | Time ranges that are available. Times outside these ranges are shown as unavailable.              |
+| `unavailability`      | `AvailabilityRange[]` | —       | Time ranges explicitly marked unavailable. Applied on top of availability.                        |
+| `defaultUnavailable`  | `boolean`             | —       | When `true` and no `availability` ranges are provided, the entire grid is shown as unavailable.   |
 
 #### Layout, events & interaction
 
