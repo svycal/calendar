@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.5.0
+
+### Minor Changes
+
+- Add DayGridView
+
 ## 0.4.0
 
 ### Minor Changes
