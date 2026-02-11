@@ -34,9 +34,9 @@ export const AllDayEventChip = memo(function AllDayEventChip({
   const labelParts = [event.title, 'all day'];
   if (event.clientName) labelParts.push(event.clientName);
 
-  // Horizontal margin: inset from column borders, but flush on truncated edges
-  const marginLeft = continuesBefore ? 0 : 4;
-  const marginRight = continuesAfter ? 0 : 4;
+  // Horizontal margin: inset from column borders (smaller on truncated edges)
+  const marginLeft = continuesBefore ? 2 : 4;
+  const marginRight = continuesAfter ? 2 : 4;
 
   const chipStyle = {
     ...(continuesBefore
