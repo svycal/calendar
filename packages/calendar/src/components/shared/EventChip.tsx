@@ -76,22 +76,26 @@ export const EventChip = memo(function EventChip({
   const isCanceled = event.status === 'canceled';
 
   if (renderEvent) {
-    return (
-      <div
-        ref={selectedEventRef}
-        style={{
-          position: 'absolute',
-          top,
-          height,
-          left,
-          width,
-          zIndex,
-          pointerEvents: interactive ? 'auto' : 'none',
-        }}
-      >
-        {renderEvent({ event, position: positioned })}
-      </div>
-    );
+    const customContent = renderEvent({ event, position: positioned });
+
+    if (customContent) {
+      return (
+        <div
+          ref={selectedEventRef}
+          style={{
+            position: 'absolute',
+            top,
+            height,
+            left,
+            width,
+            zIndex,
+            pointerEvents: interactive ? 'auto' : 'none',
+          }}
+        >
+          {customContent}
+        </div>
+      );
+    }
   }
 
   const startTimeStr = formatEventStartTime(event.startTime, timeZone);

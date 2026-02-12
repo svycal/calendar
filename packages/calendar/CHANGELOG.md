@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.7.0
+
+### Minor Changes
+
+- Allow `renderEvent` to return `null` (or `undefined`) to fall back to default rendering
+
 ## 0.6.0
 
 ### Minor Changes
