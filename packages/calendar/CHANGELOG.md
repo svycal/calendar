@@ -5,6 +5,7 @@
 ### Minor Changes
 
 - Allow `renderEvent` to return `null` (or `undefined`) to fall back to default rendering
+- Fix header height inconsistency when today is out of range
 
 ## 0.6.0
 

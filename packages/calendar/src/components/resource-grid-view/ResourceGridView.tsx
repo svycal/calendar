@@ -67,8 +67,14 @@ export function ResourceGridView({
   const endHour = timeAxis?.endHour ?? 24;
   const intervalMinutes = timeAxis?.intervalMinutes ?? 60;
 
-  const { effectiveHourHeight, rootRef, headerRef, allDayRef, headerHeight } =
-    useEffectiveHourHeight(hourHeight, endHour - startHour);
+  const {
+    effectiveHourHeight,
+    rootRef,
+    headerRef,
+    allDayRef,
+    gridRef,
+    headerHeight,
+  } = useEffectiveHourHeight(hourHeight, endHour - startHour);
 
   const cls = useCallback(
     (key: keyof ResourceGridViewClassNames) =>
@@ -277,6 +283,7 @@ export function ResourceGridView({
   return (
     <div ref={rootRef} className={cn(cls('root'), className)}>
       <div
+        ref={gridRef}
         className={cls('grid')}
         role="region"
         aria-roledescription="calendar"

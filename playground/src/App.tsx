@@ -261,6 +261,9 @@ const availability: Record<string, AvailabilityRange[]> = {
 
 // Week range for DayGridView demo (Mon-Sun containing today)
 const weekStart = today.subtract({ days: today.dayOfWeek - 1 }); // Monday
+// const weekStart = today
+//   .subtract({ days: today.dayOfWeek - 1 })
+//   .add({ days: 7 }); // Monday
 const weekEnd = weekStart.add({ days: 6 }); // Sunday
 
 function makeDayTime(

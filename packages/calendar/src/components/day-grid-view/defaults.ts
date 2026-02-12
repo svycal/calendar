@@ -32,7 +32,8 @@ export const dayGridViewDefaults: Required<DayGridViewClassNames> = {
     'border-r sticky z-20 bg-cal-surface border-b border-cal-border px-1 py-1 flex gap-1',
   unavailableOverlay: 'cal-unavailable-overlay',
   headerWeekday: 'text-cal-text-muted text-xs font-medium uppercase',
-  headerDayNumber: 'text-cal-text text-sm font-medium mt-0.5',
+  headerDayNumber:
+    'text-cal-text text-sm font-medium mt-0.5 min-h-7 inline-flex items-center justify-center',
   headerToday:
     'bg-cal-now text-white rounded-full w-7 h-7 flex items-center justify-center',
   allDayLane: 'bg-cal-surface border-b border-cal-border',
