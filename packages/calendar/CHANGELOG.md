@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.8.0
+
+### Minor Changes
+
+- [`08fe8b3`](https://github.com/svycal/calendar/commit/08fe8b39947b3023c920ec6445897d5a3cea4a16) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Add optional `ariaLabel` field to `CalendarEvent` for accessible labels when `title` or `clientName` are React elements. Previously, passing a ReactNode for these fields would produce `[object Object]` in `aria-label` attributes and screen reader announcements. When `ariaLabel` is set, it is used as the plain-text label; otherwise, the existing behavior of coercing `title` to a string is preserved.
+
 ## 0.7.0
 
 ### Minor Changes
