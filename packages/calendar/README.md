@@ -256,6 +256,7 @@ interface TimedCalendarEvent {
   color?: string;
   clientName?: string;
   status?: 'confirmed' | 'canceled' | 'tentative';
+  ariaLabel?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -269,9 +270,12 @@ interface AllDayCalendarEvent {
   color?: string;
   clientName?: string;
   status?: 'confirmed' | 'canceled' | 'tentative';
+  ariaLabel?: string;
   metadata?: Record<string, unknown>;
 }
 ```
+
+The optional `ariaLabel` field provides a plain-text label used for `aria-label` attributes and screen reader announcements. When `title` or `clientName` are React elements (not plain strings), set `ariaLabel` to avoid `"[object Object]"` in accessible labels.
 
 ### AvailabilityRange
 

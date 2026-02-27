@@ -1,5 +1,6 @@
 import { memo, type Ref } from 'react';
 import { cn } from '@/lib/utils';
+import { getEventLabel, getClientNameLabel } from '@/lib/accessibility';
 import type { CalendarEvent, DayGridViewClassNames } from '@/types/calendar';
 import type { PositionedAllDayEvent } from '@/lib/overlap';
 
@@ -31,8 +32,9 @@ export const AllDayEventChip = memo(function AllDayEventChip({
   const isSelected = event.id === selectedEventId;
   const gridRow = lane + 1 + laneOffset;
 
-  const labelParts = [event.title, 'all day'];
-  if (event.clientName) labelParts.push(event.clientName);
+  const labelParts: string[] = [getEventLabel(event), 'all day'];
+  const clientLabel = getClientNameLabel(event);
+  if (clientLabel) labelParts.push(clientLabel);
 
   // Horizontal margin: inset from column borders (smaller on truncated edges)
   const marginLeft = continuesBefore ? 2 : 4;

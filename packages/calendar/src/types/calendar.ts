@@ -15,6 +15,9 @@ interface BaseCalendarEvent {
   color?: string;
   clientName?: ReactNode;
   status?: 'confirmed' | 'canceled' | 'tentative';
+  /** Plain-text label used for aria-label attributes and screen reader announcements.
+   *  When title or clientName are ReactNode elements, set this to avoid "[object Object]" in accessible labels. */
+  ariaLabel?: string;
 }
 
 export interface TimedCalendarEvent extends BaseCalendarEvent {

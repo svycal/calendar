@@ -8,6 +8,7 @@ import type {
   TimedCalendarEvent,
 } from '@/types/calendar';
 import { formatEventStartTime, formatTimeRange } from '@/lib/time';
+import { getEventLabel, getClientNameLabel } from '@/lib/accessibility';
 
 interface EventChipProps {
   positioned: PositionedEvent;
@@ -102,11 +103,12 @@ export const EventChip = memo(function EventChip({
 
   const ariaLabel = interactive
     ? (() => {
-        const parts = [
-          event.title,
+        const parts: string[] = [
+          getEventLabel(event),
           formatTimeRange(event.startTime, event.endTime, timeZone),
         ];
-        if (event.clientName) parts.push(event.clientName);
+        const clientLabel = getClientNameLabel(event);
+        if (clientLabel) parts.push(clientLabel);
         if (event.status === 'canceled') parts.push('canceled');
         else if (event.status === 'tentative') parts.push('tentative');
         return parts.join(', ');

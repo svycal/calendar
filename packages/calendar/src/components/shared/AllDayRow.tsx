@@ -1,5 +1,6 @@
 import { memo, type Ref } from 'react';
 import { cn } from '@/lib/utils';
+import { getEventLabel, getClientNameLabel } from '@/lib/accessibility';
 import type {
   AllDayCalendarEvent,
   CalendarEvent,
@@ -27,8 +28,9 @@ export const AllDayRow = memo(function AllDayRow({
     <>
       {events.map((event) => {
         const isSelected = event.id === selectedEventId;
-        const labelParts = [event.title, 'all day'];
-        if (event.clientName) labelParts.push(event.clientName);
+        const labelParts: string[] = [getEventLabel(event), 'all day'];
+        const clientLabel = getClientNameLabel(event);
+        if (clientLabel) labelParts.push(clientLabel);
         const button = (
           <button
             key={event.id}

@@ -34,6 +34,7 @@ import { NowIndicator } from '../shared/NowIndicator';
 import { AllDaySection } from './AllDaySection';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
 import { useAnnouncer } from '../shared/useAnnouncer';
+import { getEventLabel, getClientNameLabel } from '@/lib/accessibility';
 
 export function DayGridView({
   activeRange,
@@ -206,15 +207,17 @@ export function DayGridView({
       onEventClick?.(event);
 
       if (!event.allDay) {
-        const parts = [
-          event.title,
+        const parts: string[] = [
+          getEventLabel(event),
           formatTimeRange(event.startTime, event.endTime, timeZone),
         ];
-        if (event.clientName) parts.push(event.clientName);
+        const clientLabel = getClientNameLabel(event);
+        if (clientLabel) parts.push(clientLabel);
         announce(`Selected: ${parts.join(', ')}`);
       } else {
-        const parts = [event.title, 'all day'];
-        if (event.clientName) parts.push(event.clientName);
+        const parts: string[] = [getEventLabel(event), 'all day'];
+        const clientLabel = getClientNameLabel(event);
+        if (clientLabel) parts.push(clientLabel);
         announce(`Selected: ${parts.join(', ')}`);
       }
     },
