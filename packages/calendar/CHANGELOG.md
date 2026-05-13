@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.8.1
+
+### Patch Changes
+
+- [#3](https://github.com/svycal/calendar/pull/3) [`4411d4f`](https://github.com/svycal/calendar/commit/4411d4fb39a428b29bbe33542f1ecca6ca965f24) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Bump transitive dependencies to clear Dependabot security alerts (postcss, vite, rollup, flatted, ajv, minimatch, picomatch). No runtime API changes.
+
 ## 0.8.0
 
 ### Minor Changes
