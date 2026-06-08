@@ -14,6 +14,10 @@ export function useEffectiveHourHeight(hourHeight: number, totalHours: number) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [effectiveHourHeight, setEffectiveHourHeight] = useState(hourHeight);
   const [headerHeight, setHeaderHeight] = useState(0);
+  // Measured height of the scroll container. Stays 0 until the element is laid
+  // out (a hidden/zero-height container reports 0), so consumers can tell when
+  // the grid has actually been measured.
+  const [containerHeight, setContainerHeight] = useState(0);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -23,6 +27,7 @@ export function useEffectiveHourHeight(hourHeight: number, totalHours: number) {
 
     function measure() {
       const containerHeight = root!.clientHeight;
+      setContainerHeight(containerHeight);
 
       // Prefer reading the resolved first-row height from the grid's computed
       // style. The corner cell (headerRef) may not stretch to the full grid
@@ -57,5 +62,6 @@ export function useEffectiveHourHeight(hourHeight: number, totalHours: number) {
     allDayRef,
     gridRef,
     headerHeight,
+    containerHeight,
   };
 }

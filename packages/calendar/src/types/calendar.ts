@@ -129,6 +129,17 @@ export interface ResourceGridViewProps {
   unavailability?: Record<string, AvailabilityRange[]>;
   defaultUnavailable?: boolean;
   timeAxis?: TimeAxisConfig;
+  /**
+   * Hour of day (in the grid's time zone) to scroll into view on initial mount,
+   * and whenever the active date changes. Fractional hours are allowed
+   * (e.g. 6.5 = 6:30 AM). Clamped to the timeAxis range. When omitted, the grid
+   * keeps its current default (scrolled to the top of the timeAxis).
+   *
+   * This only sets the *initial* scroll for a given date — it does not fight the
+   * user's manual scrolling, and it does not re-scroll on data/prop updates
+   * other than a date change.
+   */
+  initialScrollHour?: number;
   onEventClick?: (event: CalendarEvent) => void;
   snapDuration?: number;
   placeholderDuration?: number;
@@ -180,6 +191,17 @@ export interface DayGridViewProps {
   unavailability?: AvailabilityRange[];
   defaultUnavailable?: boolean;
   timeAxis?: TimeAxisConfig;
+  /**
+   * Hour of day (in the grid's time zone) to scroll into view on initial mount,
+   * and whenever the active range changes. Fractional hours are allowed
+   * (e.g. 6.5 = 6:30 AM). Clamped to the timeAxis range. When omitted, the grid
+   * keeps its current default (scrolled to the top of the timeAxis).
+   *
+   * This only sets the *initial* scroll for a given range — it does not fight
+   * the user's manual scrolling, and it does not re-scroll on data/prop updates
+   * other than a range change.
+   */
+  initialScrollHour?: number;
   onEventClick?: (event: CalendarEvent) => void;
   snapDuration?: number;
   placeholderDuration?: number;
