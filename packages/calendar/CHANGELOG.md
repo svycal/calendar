@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.9.0
+
+### Minor Changes
+
+- [#6](https://github.com/svycal/calendar/pull/6) [`22c504f`](https://github.com/svycal/calendar/commit/22c504fbd8ef6cfadb68a3d933b1ee48cd4c9b06) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Add `initialScrollHour` prop to `DayGridView` and `ResourceGridView`. When set, the grid mounts scrolled so that hour sits at the top of the visible timed area (and re-applies on date/range navigation), without changing which hours are rendered. Fractional hours are supported and the value is clamped to the `timeAxis` range. It does not fight the user's manual scrolling or re-scroll on unrelated re-renders, and it defers the scroll until the grid is actually laid out so it works when the calendar first mounts inside a hidden container (an inactive tab, a collapsed panel, a `display: none` modal).
+
 ## 0.8.1
 
 ### Patch Changes
