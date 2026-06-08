@@ -33,6 +33,7 @@ import { SelectionOverlay } from '../shared/SelectionOverlay';
 import { NowIndicator } from '../shared/NowIndicator';
 import { AllDaySection } from './AllDaySection';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
+import { useInitialScroll } from '../shared/useInitialScroll';
 import { useAnnouncer } from '../shared/useAnnouncer';
 import { getEventLabel, getClientNameLabel } from '@/lib/accessibility';
 
@@ -44,6 +45,7 @@ export function DayGridView({
   unavailability,
   defaultUnavailable,
   timeAxis,
+  initialScrollHour,
   onEventClick,
   snapDuration,
   placeholderDuration,
@@ -87,7 +89,18 @@ export function DayGridView({
     allDayRef,
     gridRef,
     headerHeight,
+    containerHeight,
   } = useEffectiveHourHeight(hourHeight, endHour - startHour);
+
+  useInitialScroll({
+    rootRef,
+    initialScrollHour,
+    startHour,
+    endHour,
+    effectiveHourHeight,
+    containerHeight,
+    scrollKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}`,
+  });
 
   const cls = useCallback(
     (key: keyof DayGridViewClassNames) =>

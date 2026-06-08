@@ -74,9 +74,10 @@ function App() {
 
 ### Time axis
 
-| Prop       | Type             | Default                                              | Description                                          |
-| ---------- | ---------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| `timeAxis` | `TimeAxisConfig` | `{ startHour: 0, endHour: 24, intervalMinutes: 60 }` | Controls the visible hour range and gutter interval. |
+| Prop                | Type             | Default                                              | Description                                                                                                                                                                                                                                                                                                                                               |
+| ------------------- | ---------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `timeAxis`          | `TimeAxisConfig` | `{ startHour: 0, endHour: 24, intervalMinutes: 60 }` | Controls the visible hour range and gutter interval.                                                                                                                                                                                                                                                                                                      |
+| `initialScrollHour` | `number`         | —                                                    | Hour of day (in the grid's time zone) to scroll into view on initial mount and whenever the active date/range changes. Fractional hours are allowed (e.g. `6.5` = 6:30 AM) and the value is clamped to the `timeAxis` range. Omit to keep the default (scrolled to top). Does not fight the user's manual scrolling or re-scroll on unrelated re-renders. |
 
 ### Layout
 
@@ -167,37 +168,37 @@ function App() {
 
 #### Required
 
-| Prop          | Type                                              | Description                                            |
-| ------------- | ------------------------------------------------- | ------------------------------------------------------ |
-| `activeRange` | `{ startDate: PlainDate; endDate: PlainDate }`    | The date range to display (inclusive).                  |
-| `timeZone`    | `string`                                          | IANA time zone identifier (e.g. `"America/Chicago"`).  |
-| `events`      | `CalendarEvent[]`                                 | Array of timed and/or all-day events.                  |
+| Prop          | Type                                           | Description                                           |
+| ------------- | ---------------------------------------------- | ----------------------------------------------------- |
+| `activeRange` | `{ startDate: PlainDate; endDate: PlainDate }` | The date range to display (inclusive).                |
+| `timeZone`    | `string`                                       | IANA time zone identifier (e.g. `"America/Chicago"`). |
+| `events`      | `CalendarEvent[]`                              | Array of timed and/or all-day events.                 |
 
 #### Availability
 
-| Prop                  | Type                  | Default | Description                                                                                      |
-| --------------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------ |
-| `availability`        | `AvailabilityRange[]` | —       | Time ranges that are available. Times outside these ranges are shown as unavailable.              |
-| `unavailability`      | `AvailabilityRange[]` | —       | Time ranges explicitly marked unavailable. Applied on top of availability.                        |
-| `defaultUnavailable`  | `boolean`             | —       | When `true` and no `availability` ranges are provided, the entire grid is shown as unavailable.   |
+| Prop                 | Type                  | Default | Description                                                                                     |
+| -------------------- | --------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `availability`       | `AvailabilityRange[]` | —       | Time ranges that are available. Times outside these ranges are shown as unavailable.            |
+| `unavailability`     | `AvailabilityRange[]` | —       | Time ranges explicitly marked unavailable. Applied on top of availability.                      |
+| `defaultUnavailable` | `boolean`             | —       | When `true` and no `availability` ranges are provided, the entire grid is shown as unavailable. |
 
 #### Layout, events & interaction
 
-The following props work identically to `ResourceGridView`: `timeAxis`, `hourHeight`, `columnMinWidth`, `eventLayout`, `eventGap`, `stackOffset`, `className`, `classNames` (uses `DayGridViewClassNames`), `onEventClick`, `snapDuration`, `placeholderDuration`, `selectionAppearance`, `dragPreviewAppearance`, `selectedEventId`, `selectedEventRef`.
+The following props work identically to `ResourceGridView`: `timeAxis`, `initialScrollHour`, `hourHeight`, `columnMinWidth`, `eventLayout`, `eventGap`, `stackOffset`, `className`, `classNames` (uses `DayGridViewClassNames`), `onEventClick`, `snapDuration`, `placeholderDuration`, `selectionAppearance`, `dragPreviewAppearance`, `selectedEventId`, `selectedEventRef`.
 
 #### Selection
 
-| Prop            | Type                                              | Description                                     |
-| --------------- | ------------------------------------------------- | ----------------------------------------------- |
-| `selectedRange` | `DayGridSelectedRange \| null`                    | The currently selected time range (controlled).  |
-| `onSelect`      | `(range: DayGridSelectedRange \| null) => void`   | Called when the user selects or clears a range.  |
-| `selectionRef`  | `Ref<HTMLDivElement>`                             | Ref attached to the selection overlay element.   |
+| Prop            | Type                                            | Description                                     |
+| --------------- | ----------------------------------------------- | ----------------------------------------------- |
+| `selectedRange` | `DayGridSelectedRange \| null`                  | The currently selected time range (controlled). |
+| `onSelect`      | `(range: DayGridSelectedRange \| null) => void` | Called when the user selects or clears a range. |
+| `selectionRef`  | `Ref<HTMLDivElement>`                           | Ref attached to the selection overlay element.  |
 
 #### Slot click
 
-| Prop          | Type                                                       | Description                             |
-| ------------- | ---------------------------------------------------------- | --------------------------------------- |
-| `onSlotClick` | `(info: { date, startTime, endTime }) => void`             | Called when an empty time slot is clicked. Receives the `date` (PlainDate) and time range. |
+| Prop          | Type                                           | Description                                                                                |
+| ------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `onSlotClick` | `(info: { date, startTime, endTime }) => void` | Called when an empty time slot is clicked. Receives the `date` (PlainDate) and time range. |
 
 #### Render props
 
@@ -220,11 +221,11 @@ interface DayGridSelectedRange {
 
 Extends `GridViewClassNames` with day-specific keys:
 
-| Key                | Description                                 |
-| ------------------ | ------------------------------------------- |
-| `headerWeekday`    | Weekday abbreviation text (e.g. "Mon").     |
-| `headerDayNumber`  | Day number text.                            |
-| `headerToday`      | Additional classes for today's day number.  |
+| Key               | Description                                |
+| ----------------- | ------------------------------------------ |
+| `headerWeekday`   | Weekday abbreviation text (e.g. "Mon").    |
+| `headerDayNumber` | Day number text.                           |
+| `headerToday`     | Additional classes for today's day number. |
 
 All shared keys from `GridViewClassNames` (root, grid, event, etc.) also apply.
 

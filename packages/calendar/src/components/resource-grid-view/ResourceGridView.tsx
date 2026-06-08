@@ -29,6 +29,7 @@ import { UnavailabilityOverlay } from '../shared/UnavailabilityOverlay';
 import { NowIndicator } from '../shared/NowIndicator';
 import { AllDayRow } from '../shared/AllDayRow';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
+import { useInitialScroll } from '../shared/useInitialScroll';
 import { useAnnouncer } from '../shared/useAnnouncer';
 import { getEventLabel, getClientNameLabel } from '@/lib/accessibility';
 
@@ -41,6 +42,7 @@ export function ResourceGridView({
   unavailability,
   defaultUnavailable,
   timeAxis,
+  initialScrollHour,
   onEventClick,
   snapDuration,
   placeholderDuration,
@@ -75,7 +77,18 @@ export function ResourceGridView({
     allDayRef,
     gridRef,
     headerHeight,
+    containerHeight,
   } = useEffectiveHourHeight(hourHeight, endHour - startHour);
+
+  useInitialScroll({
+    rootRef,
+    initialScrollHour,
+    startHour,
+    endHour,
+    effectiveHourHeight,
+    containerHeight,
+    scrollKey: date.toString(),
+  });
 
   const cls = useCallback(
     (key: keyof ResourceGridViewClassNames) =>
