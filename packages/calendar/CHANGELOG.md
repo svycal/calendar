@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.10.0
+
+### Minor Changes
+
+- [#11](https://github.com/svycal/calendar/pull/11) [`bb74e4b`](https://github.com/svycal/calendar/commit/bb74e4b7fa4ded92ac8cb678d639acaef20ead6b) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Improve overlapping event layout: columns expand into unused space, dense stacks collapse into a "+N more" popover, and an optional event `priority` keeps higher-priority events visible when the stack is capped.
+
 ## 0.9.1
 
 ### Patch Changes
