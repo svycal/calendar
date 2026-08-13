@@ -35,6 +35,7 @@ export const UnavailabilityOverlay = memo(function UnavailabilityOverlay({
             left: 0,
             right: 0,
             height: block.height,
+            backgroundPosition: `0 ${-block.top}px`,
           }}
         />
       ))}
