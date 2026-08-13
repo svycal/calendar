@@ -65,6 +65,10 @@ export function ResourceGridView({
   eventGap,
   eventLayout = 'columns',
   stackOffset = 8,
+  eventMinWidth,
+  eventMaxStack,
+  onOverflowClick,
+  renderOverflowPopover,
 }: ResourceGridViewProps) {
   const startHour = timeAxis?.startHour ?? 0;
   const endHour = timeAxis?.endHour ?? 24;
@@ -236,6 +240,16 @@ export function ResourceGridView({
       }
     },
     [onSelect, onEventClick, timeZone, resources, announce]
+  );
+
+  const handleOverflowClick = useCallback(
+    (
+      info: Parameters<NonNullable<ResourceGridViewProps['onOverflowClick']>>[0]
+    ) => {
+      onSelect?.(null);
+      onOverflowClick?.(info);
+    },
+    [onSelect, onOverflowClick]
   );
 
   const handleSlotInteractionSelect = useCallback(
@@ -449,6 +463,10 @@ export function ResourceGridView({
             stackOffset={stackOffset}
             selectedEventId={selectedEventId}
             selectedEventRef={selectedEventRef}
+            eventMinWidth={eventMinWidth}
+            eventMaxStack={eventMaxStack}
+            onOverflowClick={handleOverflowClick}
+            renderOverflowPopover={renderOverflowPopover}
           />
         ))}
 

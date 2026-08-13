@@ -24,6 +24,8 @@ export type {
   DayGridViewClassNames,
   DayGridSelectedRange,
   PositionedEvent,
+  OverflowClickInfo,
+  OverflowPopoverRenderProps,
   SelectedRange,
   SelectionAppearance,
   SelectionEventData,

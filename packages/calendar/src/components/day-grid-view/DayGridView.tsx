@@ -68,6 +68,10 @@ export function DayGridView({
   eventGap,
   eventLayout = 'columns',
   stackOffset = 8,
+  eventMinWidth,
+  eventMaxStack,
+  onOverflowClick,
+  renderOverflowPopover,
 }: DayGridViewProps) {
   const startHour = timeAxis?.startHour ?? 0;
   const endHour = timeAxis?.endHour ?? 24;
@@ -235,6 +239,14 @@ export function DayGridView({
       }
     },
     [onSelect, onEventClick, timeZone, announce]
+  );
+
+  const handleOverflowClick = useCallback(
+    (info: Parameters<NonNullable<DayGridViewProps['onOverflowClick']>>[0]) => {
+      onSelect?.(null);
+      onOverflowClick?.(info);
+    },
+    [onSelect, onOverflowClick]
   );
 
   const handleSlotInteractionSelect = useCallback(
@@ -433,6 +445,10 @@ export function DayGridView({
             stackOffset={stackOffset}
             selectedEventId={selectedEventId}
             selectedEventRef={selectedEventRef}
+            eventMinWidth={eventMinWidth}
+            eventMaxStack={eventMaxStack}
+            onOverflowClick={handleOverflowClick}
+            renderOverflowPopover={renderOverflowPopover}
           />
         ))}
 
