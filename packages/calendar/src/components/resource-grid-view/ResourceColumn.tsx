@@ -4,10 +4,12 @@ import type {
   CalendarResource,
   EventLayout,
   GridViewClassNames,
+  OverflowClickInfo,
+  OverflowPopoverRenderProps,
   PositionedEvent,
   TimedCalendarEvent,
 } from '@/types/calendar';
-import { EventChip } from '../shared/EventChip';
+import { TimedEventLayer } from '../shared/TimedEventLayer';
 
 interface ResourceColumnProps {
   resource: CalendarResource;
@@ -25,51 +27,17 @@ interface ResourceColumnProps {
   stackOffset?: number;
   selectedEventId?: string | null;
   selectedEventRef?: Ref<HTMLDivElement>;
+  eventMinWidth?: number;
+  eventMaxStack?: number;
+  onOverflowClick?: (info: OverflowClickInfo) => void;
+  renderOverflowPopover?: (
+    props: OverflowPopoverRenderProps
+  ) => React.ReactNode;
 }
 
 export const ResourceColumn = memo(function ResourceColumn({
   resource,
-  positionedEvents,
-  column,
-  timeZone,
-  cls,
-  onEventClick,
-  renderEvent,
-  eventGap,
-  eventLayout,
-  stackOffset,
-  selectedEventId,
-  selectedEventRef,
+  ...rest
 }: ResourceColumnProps) {
-  return (
-    <div
-      className={cls('eventColumn')}
-      style={{
-        gridRow: '3 / -1',
-        gridColumn: column,
-        pointerEvents: 'none',
-        isolation: 'isolate',
-      }}
-    >
-      {positionedEvents.map((positioned) => {
-        const isSelected = positioned.event.id === selectedEventId;
-        return (
-          <EventChip
-            key={positioned.event.id}
-            positioned={positioned}
-            fallbackColor={resource.color}
-            timeZone={timeZone}
-            cls={cls}
-            onClick={onEventClick}
-            renderEvent={renderEvent}
-            eventGap={eventGap}
-            eventLayout={eventLayout}
-            stackOffset={stackOffset}
-            isSelected={isSelected}
-            selectedEventRef={isSelected ? selectedEventRef : undefined}
-          />
-        );
-      })}
-    </div>
-  );
+  return <TimedEventLayer {...rest} fallbackColor={resource.color} />;
 });

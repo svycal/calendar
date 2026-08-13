@@ -43,6 +43,7 @@ export const EventChip = memo(function EventChip({
   selectedEventRef,
 }: EventChipProps) {
   const { event, top, height, subColumn, totalSubColumns } = positioned;
+  const colSpan = positioned.colSpan ?? 1;
   const color = event.color ?? fallbackColor;
 
   let left: string;
@@ -56,18 +57,22 @@ export const EventChip = memo(function EventChip({
     zIndex = subColumn + 1;
   } else {
     const leftPct = (subColumn / totalSubColumns) * 100;
-    const widthPct = (1 / totalSubColumns) * 100;
+    const widthPct = (colSpan / totalSubColumns) * 100;
     const gap = eventGap;
     const leftOffset = (subColumn * gap) / totalSubColumns;
-    const widthShrink = ((totalSubColumns - 1) * gap) / totalSubColumns;
+    const widthShrink = ((totalSubColumns - colSpan) * gap) / totalSubColumns;
     left = widthShrink ? `calc(${leftPct}% + ${leftOffset}px)` : `${leftPct}%`;
     width = widthShrink
       ? `calc(${widthPct}% - ${widthShrink}px)`
       : `${widthPct}%`;
   }
 
+  if (positioned.overlay) {
+    zIndex = 8;
+  }
+
   if (isSelected) {
-    zIndex = 10;
+    zIndex = 20;
   }
 
   // 2 lines (~36px): title + collapsed time/client

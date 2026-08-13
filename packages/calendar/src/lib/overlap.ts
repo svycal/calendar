@@ -12,6 +12,55 @@ interface LayoutEntry {
   endMin: number;
   subColumn: number;
   totalSubColumns: number;
+  colSpan: number;
+}
+
+export interface OverflowGroup {
+  id: string;
+  events: TimedCalendarEvent[];
+  top: number;
+  height: number;
+}
+
+export const DEFAULT_EVENT_MIN_WIDTH = 80;
+
+function compareEventId(a: string, b: string): number {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
+
+function eventPriority(event: { priority?: number }): number {
+  return event.priority ?? 0;
+}
+
+function eventsOverlap(
+  a: { startMin: number; endMin: number },
+  b: { startMin: number; endMin: number }
+): boolean {
+  return a.startMin < b.endMin && b.startMin < a.endMin;
+}
+
+function positionedOverlap(
+  a: { top: number; height: number },
+  b: { top: number; height: number }
+): boolean {
+  return a.top < b.top + b.height && b.top < a.top + a.height;
+}
+
+function assignColSpans(entries: LayoutEntry[], totalCols: number): void {
+  for (const entry of entries) {
+    entry.totalSubColumns = totalCols;
+    let span = 1;
+    for (let col = entry.subColumn + 1; col < totalCols; col++) {
+      const blocked = entries.some(
+        (other) => other.subColumn === col && eventsOverlap(entry, other)
+      );
+      if (blocked) break;
+      span++;
+    }
+    entry.colSpan = span;
+  }
 }
 
 export function groupByResource<T extends { resourceId: string }>(
@@ -49,7 +98,12 @@ export function computeOverlapLayout(
       return { event, startMin: range.startMin, endMin: range.endMin };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null)
-    .sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
+    .sort(
+      (a, b) =>
+        a.startMin - b.startMin ||
+        a.endMin - b.endMin ||
+        compareEventId(a.event.id, b.event.id)
+    );
 
   if (items.length === 0) return [];
 
@@ -74,8 +128,17 @@ export function computeOverlapLayout(
 
   for (const group of groups) {
     const columns: { endMin: number }[] = [];
+    const packOrder = [...group].sort((a, b) => {
+      const priorityDelta = eventPriority(b.event) - eventPriority(a.event);
+      if (priorityDelta !== 0) return priorityDelta;
+      return (
+        a.startMin - b.startMin ||
+        a.endMin - b.endMin ||
+        compareEventId(a.event.id, b.event.id)
+      );
+    });
 
-    for (const item of group) {
+    for (const item of packOrder) {
       // Find lowest available column
       let placed = false;
       for (let col = 0; col < columns.length; col++) {
@@ -84,7 +147,8 @@ export function computeOverlapLayout(
           results.push({
             ...item,
             subColumn: col,
-            totalSubColumns: 0, // filled in below
+            totalSubColumns: 0,
+            colSpan: 1,
           });
           placed = true;
           break;
@@ -95,18 +159,14 @@ export function computeOverlapLayout(
           ...item,
           subColumn: columns.length,
           totalSubColumns: 0,
+          colSpan: 1,
         });
         columns.push({ endMin: item.endMin });
       }
     }
 
-    // Set totalSubColumns for all items in this group
-    const totalCols = columns.length;
-    for (const result of results) {
-      if (group.some((g) => g.event.id === result.event.id)) {
-        result.totalSubColumns = totalCols;
-      }
-    }
+    const groupResults = results.slice(results.length - group.length);
+    assignColSpans(groupResults, columns.length);
   }
 
   return results;
@@ -149,6 +209,7 @@ export function computePositionedEvents(
         height,
         subColumn: entry.subColumn,
         totalSubColumns: entry.totalSubColumns,
+        colSpan: entry.colSpan,
       });
     }
 
@@ -346,6 +407,7 @@ export function computePositionedEventsByDate(
         height,
         subColumn: entry.subColumn,
         totalSubColumns: entry.totalSubColumns,
+        colSpan: entry.colSpan,
       });
     }
 
@@ -353,4 +415,133 @@ export function computePositionedEventsByDate(
   }
 
   return result;
+}
+
+export function computeMaxVisibleColumns(
+  columnWidth: number,
+  eventMinWidth: number,
+  eventMaxStack?: number
+): number {
+  let byWidth = Number.POSITIVE_INFINITY;
+  if (columnWidth > 0 && eventMinWidth > 0) {
+    byWidth = Math.max(1, Math.floor(columnWidth / eventMinWidth));
+  }
+
+  if (eventMaxStack == null || eventMaxStack < 1) {
+    return byWidth;
+  }
+
+  if (!Number.isFinite(byWidth)) {
+    return Math.max(1, eventMaxStack);
+  }
+
+  return Math.max(1, Math.min(eventMaxStack, byWidth));
+}
+
+function reexpandVisible(
+  events: PositionedEvent[],
+  columnCount: number
+): PositionedEvent[] {
+  return events.map((event) => {
+    let span = 1;
+    for (let col = event.subColumn + 1; col < columnCount; col++) {
+      const blocked = events.some(
+        (other) => other.subColumn === col && positionedOverlap(event, other)
+      );
+      if (blocked) break;
+      span++;
+    }
+    return {
+      ...event,
+      colSpan: span,
+      totalSubColumns: columnCount,
+    };
+  });
+}
+
+function groupHiddenEvents(hidden: PositionedEvent[]): OverflowGroup[] {
+  if (hidden.length === 0) return [];
+
+  const sorted = [...hidden].sort(
+    (a, b) => a.top - b.top || a.subColumn - b.subColumn
+  );
+
+  const groups: PositionedEvent[][] = [];
+  let current = [sorted[0]];
+  let currentEnd = sorted[0].top + sorted[0].height;
+
+  for (let i = 1; i < sorted.length; i++) {
+    const item = sorted[i];
+    if (item.top < currentEnd) {
+      current.push(item);
+      currentEnd = Math.max(currentEnd, item.top + item.height);
+    } else {
+      groups.push(current);
+      current = [item];
+      currentEnd = item.top + item.height;
+    }
+  }
+  groups.push(current);
+
+  return groups.map((group) => {
+    const top = Math.min(...group.map((e) => e.top));
+    const bottom = Math.max(...group.map((e) => e.top + e.height));
+    return {
+      id: `overflow-${group[0].event.id}`,
+      events: group.map((e) => e.event),
+      top,
+      height: bottom - top,
+    };
+  });
+}
+
+export function applyEventOverflow(
+  positioned: PositionedEvent[],
+  maxVisible: number
+): { visible: PositionedEvent[]; overflows: OverflowGroup[] } {
+  if (positioned.length === 0) {
+    return { visible: [], overflows: [] };
+  }
+
+  let usedColumns = 0;
+  for (const event of positioned) {
+    usedColumns = Math.max(usedColumns, event.subColumn + 1);
+  }
+
+  if (!Number.isFinite(maxVisible) || maxVisible >= usedColumns) {
+    return { visible: positioned, overflows: [] };
+  }
+
+  const visibleLimit = Math.max(1, maxVisible);
+  const visible = positioned.filter((event) => event.subColumn < visibleLimit);
+  const hidden = positioned.filter((event) => event.subColumn >= visibleLimit);
+  const reexpanded = reexpandVisible(visible, visibleLimit);
+
+  // A "+1 more" chip is worse than showing the event. Promote singleton
+  // overflow groups back onto the grid as full-width overlays.
+  const promoted: PositionedEvent[] = [];
+  const overflows: OverflowGroup[] = [];
+  const hiddenById = new Map(hidden.map((event) => [event.event.id, event]));
+
+  for (const group of groupHiddenEvents(hidden)) {
+    if (group.events.length === 1) {
+      const original = hiddenById.get(group.events[0].id);
+      if (original) {
+        promoted.push({
+          ...original,
+          subColumn: 0,
+          totalSubColumns: 1,
+          colSpan: 1,
+          overlay: true,
+        });
+      }
+    } else {
+      overflows.push(group);
+    }
+  }
+
+  return {
+    visible: [...reexpanded, ...promoted],
+    overflows,
+  };
 }

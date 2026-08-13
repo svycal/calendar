@@ -81,24 +81,28 @@ function App() {
 
 ### Layout
 
-| Prop             | Type                         | Default                                        | Description                                                                                          |
-| ---------------- | ---------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `hourHeight`     | `number`                     | `60`                                           | Height in pixels for one hour.                                                                       |
-| `columnMinWidth` | `number`                     | `120`                                          | Minimum width in pixels for each resource column.                                                    |
-| `eventLayout`    | `'columns' \| 'stacked'`     | `'columns'`                                    | How overlapping events are laid out. `'columns'` places them side-by-side; `'stacked'` offsets them. |
-| `eventGap`       | `number`                     | —                                              | Vertical gap in pixels between the edge of events and column borders.                                |
-| `stackOffset`    | `number`                     | `8`                                            | Horizontal pixel offset for each stacked event (only applies when `eventLayout` is `'stacked'`).     |
-| `className`      | `string`                     | —                                              | Class name applied to the root element.                                                              |
-| `classNames`     | `ResourceGridViewClassNames` | See [Customizing styles](#customizing-styles). | Override default class names for internal elements.                                                  |
+| Prop             | Type                         | Default                                        | Description                                                                                                                                                 |
+| ---------------- | ---------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hourHeight`     | `number`                     | `60`                                           | Height in pixels for one hour.                                                                                                                              |
+| `columnMinWidth` | `number`                     | `120`                                          | Minimum width in pixels for each resource column.                                                                                                           |
+| `eventLayout`    | `'columns' \| 'stacked'`     | `'columns'`                                    | How overlapping events are laid out. `'columns'` packs them side-by-side and expands each event into unused columns to its right. `'stacked'` offsets them. |
+| `eventGap`       | `number`                     | —                                              | Vertical gap in pixels between the edge of events and column borders.                                                                                       |
+| `stackOffset`    | `number`                     | `8`                                            | Horizontal pixel offset for each stacked event (only applies when `eventLayout` is `'stacked'`).                                                            |
+| `eventMinWidth`  | `number`                     | `80`                                           | Minimum width in pixels for a side-by-side event. Extra overlapping events collapse into a "+N more" chip. Set to `0` to disable the width-based cap.       |
+| `eventMaxStack`  | `number`                     | —                                              | Optional hard cap on visible overlapping events. Combined with `eventMinWidth` as `min(eventMaxStack, floor(columnWidth / eventMinWidth))`.                 |
+| `className`      | `string`                     | —                                              | Class name applied to the root element.                                                                                                                     |
+| `classNames`     | `ResourceGridViewClassNames` | See [Customizing styles](#customizing-styles). | Override default class names for internal elements.                                                                                                         |
 
 ### Events & interaction
 
-| Prop                  | Type                                               | Default | Description                                                          |
-| --------------------- | -------------------------------------------------- | ------- | -------------------------------------------------------------------- |
-| `onEventClick`        | `(event: CalendarEvent) => void`                   | —       | Called when an event is clicked.                                     |
-| `onSlotClick`         | `(info: { resource, startTime, endTime }) => void` | —       | Called when an empty time slot is clicked.                           |
-| `snapDuration`        | `number`                                           | —       | Snap interval in minutes for drag selection.                         |
-| `placeholderDuration` | `number`                                           | `15`    | Duration in minutes for the hover placeholder shown before dragging. |
+| Prop                    | Type                                               | Default | Description                                                                                                           |
+| ----------------------- | -------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| `onEventClick`          | `(event: CalendarEvent) => void`                   | —       | Called when an event is clicked.                                                                                      |
+| `onOverflowClick`       | `(info: OverflowClickInfo) => void`                | —       | Called when a "+N more" chip is opened. `info.events` is the hidden overlap group; `info.anchor` is the chip element. |
+| `renderOverflowPopover` | `(props: OverflowPopoverRenderProps) => ReactNode` | —       | Replace the built-in overflow popover content. The chip still handles open/close and positioning.                     |
+| `onSlotClick`           | `(info: { resource, startTime, endTime }) => void` | —       | Called when an empty time slot is clicked.                                                                            |
+| `snapDuration`          | `number`                                           | —       | Snap interval in minutes for drag selection.                                                                          |
+| `placeholderDuration`   | `number`                                           | `15`    | Duration in minutes for the hover placeholder shown before dragging.                                                  |
 
 ### Selection
 
@@ -184,7 +188,7 @@ function App() {
 
 #### Layout, events & interaction
 
-The following props work identically to `ResourceGridView`: `timeAxis`, `initialScrollHour`, `hourHeight`, `columnMinWidth`, `eventLayout`, `eventGap`, `stackOffset`, `className`, `classNames` (uses `DayGridViewClassNames`), `onEventClick`, `snapDuration`, `placeholderDuration`, `selectionAppearance`, `dragPreviewAppearance`, `selectedEventId`, `selectedEventRef`.
+The following props work identically to `ResourceGridView`: `timeAxis`, `initialScrollHour`, `hourHeight`, `columnMinWidth`, `eventLayout`, `eventGap`, `stackOffset`, `eventMinWidth`, `eventMaxStack`, `onOverflowClick`, `renderOverflowPopover`, `className`, `classNames` (uses `DayGridViewClassNames`), `onEventClick`, `snapDuration`, `placeholderDuration`, `selectionAppearance`, `dragPreviewAppearance`, `selectedEventId`, `selectedEventRef`.
 
 #### Selection
 
@@ -258,6 +262,7 @@ interface TimedCalendarEvent {
   clientName?: string;
   status?: 'confirmed' | 'canceled' | 'tentative';
   ariaLabel?: string;
+  priority?: number;
   metadata?: Record<string, unknown>;
 }
 
@@ -272,11 +277,14 @@ interface AllDayCalendarEvent {
   clientName?: string;
   status?: 'confirmed' | 'canceled' | 'tentative';
   ariaLabel?: string;
+  priority?: number;
   metadata?: Record<string, unknown>;
 }
 ```
 
 The optional `ariaLabel` field provides a plain-text label used for `aria-label` attributes and screen reader announcements. When `title` or `clientName` are React elements (not plain strings), set `ariaLabel` to avoid `"[object Object]"` in accessible labels.
+
+`priority` controls overlap packing. Higher values are placed in earlier columns, so they stay visible when `eventMaxStack` or `eventMinWidth` caps how many overlapping events are shown. Omit it (or use `0`) for the default. Use this to keep product appointments on the grid ahead of connected-calendar events.
 
 ### AvailabilityRange
 
@@ -367,31 +375,37 @@ The preset uses a `.dark` class convention (matching Tailwind's `@custom-variant
 
 Every internal element can be restyled via the `classNames` prop. Each key maps to a specific part of the calendar:
 
-| Key                  | Description                                      |
-| -------------------- | ------------------------------------------------ |
-| `root`               | Outermost wrapper (scroll container).            |
-| `grid`               | The CSS grid element.                            |
-| `cornerCell`         | Top-left corner cell (sticky).                   |
-| `headerCell`         | Resource column header cell (sticky).            |
-| `headerName`         | Resource name text inside the header.            |
-| `headerAvatar`       | Avatar image inside the header.                  |
-| `gutterCell`         | Time gutter cell for hour labels (sticky).       |
-| `gutterCellMinor`    | Time gutter cell for sub-hour intervals.         |
-| `gutterLabel`        | Text label inside gutter cells.                  |
-| `bodyCell`           | Hour-start body cell in the grid.                |
-| `bodyCellMinor`      | Sub-hour body cell in the grid.                  |
-| `eventColumn`        | Container for events within a resource column.   |
-| `event`              | Individual event element.                        |
-| `eventSelected`      | Additional classes applied to a selected event.  |
-| `eventColorBar`      | Vertical color bar on the left edge of an event. |
-| `eventTitle`         | Event title text.                                |
-| `eventTime`          | Event time text.                                 |
-| `eventClientName`    | Client name text on the event.                   |
-| `nowIndicator`       | Horizontal "now" indicator line.                 |
-| `slotHighlight`      | Hover highlight on time slots.                   |
-| `selectionHighlight` | Drag selection highlight overlay.                |
-| `allDayCell`         | All-day event row cell.                          |
-| `unavailableOverlay` | Unavailable time cross-hatch overlay.            |
+| Key                    | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| `root`                 | Outermost wrapper (scroll container).                        |
+| `grid`                 | The CSS grid element.                                        |
+| `cornerCell`           | Top-left corner cell (sticky).                               |
+| `headerCell`           | Resource column header cell (sticky).                        |
+| `headerName`           | Resource name text inside the header.                        |
+| `headerAvatar`         | Avatar image inside the header.                              |
+| `gutterCell`           | Time gutter cell for hour labels (sticky).                   |
+| `gutterCellMinor`      | Time gutter cell for sub-hour intervals.                     |
+| `gutterLabel`          | Text label inside gutter cells.                              |
+| `bodyCell`             | Hour-start body cell in the grid.                            |
+| `bodyCellMinor`        | Sub-hour body cell in the grid.                              |
+| `eventColumn`          | Container for events within a resource column.               |
+| `event`                | Individual event element.                                    |
+| `eventSelected`        | Additional classes applied to a selected event.              |
+| `eventColorBar`        | Vertical color bar on the left edge of an event.             |
+| `eventTitle`           | Event title text.                                            |
+| `eventTime`            | Event time text.                                             |
+| `eventClientName`      | Client name text on the event.                               |
+| `nowIndicator`         | Horizontal "now" indicator line.                             |
+| `slotHighlight`        | Hover highlight on time slots.                               |
+| `selectionHighlight`   | Drag selection highlight overlay.                            |
+| `allDayCell`           | All-day event row cell.                                      |
+| `unavailableOverlay`   | Unavailable time cross-hatch overlay.                        |
+| `overflowChip`         | "+N more" chip shown when overlapping events exceed the cap. |
+| `overflowChipLabel`    | Label text inside the overflow chip.                         |
+| `overflowPopover`      | Built-in overflow popover panel.                             |
+| `overflowPopoverEvent` | A single event row inside the overflow popover.              |
+| `overflowPopoverTitle` | Event title inside an overflow popover row.                  |
+| `overflowPopoverTime`  | Event time range inside an overflow popover row.             |
 
 ### `resourceGridViewDefaults`
 
@@ -408,6 +422,11 @@ import {
   classNames={{
     event: cn(resourceGridViewDefaults.event, 'rounded-lg'),
     headerCell: cn(resourceGridViewDefaults.headerCell, 'border-b'),
+    overflowChipLabel: cn(
+      resourceGridViewDefaults.overflowChipLabel,
+      'max-sm:text-sm'
+    ),
+    overflowChip: cn(resourceGridViewDefaults.overflowChip, 'max-sm:h-6'),
   }}
   // ...other props
 />;

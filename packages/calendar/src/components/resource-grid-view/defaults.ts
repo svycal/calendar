@@ -32,4 +32,14 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   allDayCell:
     'border-r sticky z-20 bg-cal-surface border-b border-cal-border px-1 py-1 flex gap-1',
   unavailableOverlay: 'cal-unavailable-overlay',
+  overflowChip:
+    'absolute right-0.5 min-w-9 h-[22px] p-0 border-0 cursor-pointer select-none text-center rounded-md bg-cal-surface ring-1 ring-cal-event-ring shadow-lg shadow-cal-event-shadow hover:ring-cal-event-ring-selected',
+  overflowChipLabel:
+    'block px-1 py-0.5 text-cal-text-body text-xs/4 font-medium',
+  overflowPopover:
+    'w-64 rounded-lg bg-cal-surface p-1 shadow-lg shadow-cal-event-shadow ring-1 ring-cal-event-ring max-h-80 overflow-auto',
+  overflowPopoverEvent:
+    'block w-full rounded-md px-2 py-1.5 text-left cursor-pointer hover:bg-cal-event-bg',
+  overflowPopoverTitle: 'text-cal-text-body text-xs/4 font-medium truncate',
+  overflowPopoverTime: 'text-cal-text-muted text-xs/4',
 };

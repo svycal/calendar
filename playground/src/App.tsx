@@ -23,8 +23,9 @@ import {
   type EventLayout,
 } from '@savvycal/calendar';
 import StressTestPage from './StressTestPage';
+import OverlapPage from './OverlapPage';
 
-type Page = 'demo' | 'stress-test';
+type Page = 'demo' | 'overlap' | 'stress-test';
 
 const tz = 'America/Chicago';
 
@@ -433,7 +434,10 @@ const dayGridUnavailability: AvailabilityRange[] = [
 
 function App() {
   const [dark, setDark] = useState(false);
-  const [page, setPage] = useState<Page>('demo');
+  const [page, setPage] = useState<Page>(() => {
+    const param = new URLSearchParams(window.location.search).get('page');
+    return param === 'overlap' || param === 'stress-test' ? param : 'demo';
+  });
   const [eventLayout, setEventLayout] = useState<EventLayout>('columns');
   const [selectedRange, setSelectedRange] = useState<SelectedRange | null>(
     null
@@ -548,6 +552,7 @@ function App() {
           {(
             [
               ['demo', 'Demo'],
+              ['overlap', 'Overlap'],
               ['stress-test', 'Stress Test'],
             ] as const
           ).map(([key, label]) => (
@@ -592,7 +597,9 @@ function App() {
         </button>
       </div>
 
-      {page === 'demo' ? (
+      {page === 'overlap' ? (
+        <OverlapPage eventLayout={eventLayout} />
+      ) : page === 'demo' ? (
         <div className="space-y-8">
           <section>
             <h2 className="text-zinc-950 dark:text-zinc-50 mb-4 text-xl font-semibold">

@@ -18,6 +18,11 @@ interface BaseCalendarEvent {
   /** Plain-text label used for aria-label attributes and screen reader announcements.
    *  When title or clientName are ReactNode elements, set this to avoid "[object Object]" in accessible labels. */
   ariaLabel?: string;
+  /**
+   * Higher values are packed into earlier columns, so they stay visible
+   * when overlapping events are capped. Default: 0.
+   */
+  priority?: number;
 }
 
 export interface TimedCalendarEvent extends BaseCalendarEvent {
@@ -93,6 +98,12 @@ export interface GridViewClassNames {
   selectionHighlight?: string;
   allDayCell?: string;
   unavailableOverlay?: string;
+  overflowChip?: string;
+  overflowChipLabel?: string;
+  overflowPopover?: string;
+  overflowPopoverEvent?: string;
+  overflowPopoverTitle?: string;
+  overflowPopoverTime?: string;
 }
 
 export interface ResourceGridViewClassNames extends GridViewClassNames {
@@ -118,6 +129,21 @@ export interface PositionedEvent {
   height: number;
   subColumn: number;
   totalSubColumns: number;
+  /** How many sub-columns this event spans. Defaults to 1 when omitted. */
+  colSpan?: number;
+  /** Full-width overlay drawn above packed neighbors (promoted overflow events). */
+  overlay?: boolean;
+}
+
+export interface OverflowClickInfo {
+  events: TimedCalendarEvent[];
+  anchor: HTMLElement;
+}
+
+export interface OverflowPopoverRenderProps {
+  events: TimedCalendarEvent[];
+  onClose: () => void;
+  onEventClick?: (event: CalendarEvent) => void;
 }
 
 export interface ResourceGridViewProps {
@@ -173,6 +199,22 @@ export interface ResourceGridViewProps {
   eventGap?: number;
   eventLayout?: EventLayout;
   stackOffset?: number;
+  /**
+   * Minimum width in pixels for a side-by-side event column. Used to derive
+   * how many overlapping events can stay visible before collapsing extras
+   * into a "+N more" chip. Set to `0` to disable the width-based cap.
+   * Default: 80.
+   */
+  eventMinWidth?: number;
+  /**
+   * Hard cap on how many overlapping events are shown side-by-side (or
+   * stacked). Combined with `eventMinWidth` as
+   * `min(eventMaxStack, floor(columnWidth / eventMinWidth))`. Omit for no
+   * hard cap.
+   */
+  eventMaxStack?: number;
+  onOverflowClick?: (info: OverflowClickInfo) => void;
+  renderOverflowPopover?: (props: OverflowPopoverRenderProps) => ReactNode;
 }
 
 export interface DayGridSelectedRange {
@@ -234,4 +276,20 @@ export interface DayGridViewProps {
   eventGap?: number;
   eventLayout?: EventLayout;
   stackOffset?: number;
+  /**
+   * Minimum width in pixels for a side-by-side event column. Used to derive
+   * how many overlapping events can stay visible before collapsing extras
+   * into a "+N more" chip. Set to `0` to disable the width-based cap.
+   * Default: 80.
+   */
+  eventMinWidth?: number;
+  /**
+   * Hard cap on how many overlapping events are shown side-by-side (or
+   * stacked). Combined with `eventMinWidth` as
+   * `min(eventMaxStack, floor(columnWidth / eventMinWidth))`. Omit for no
+   * hard cap.
+   */
+  eventMaxStack?: number;
+  onOverflowClick?: (info: OverflowClickInfo) => void;
+  renderOverflowPopover?: (props: OverflowPopoverRenderProps) => ReactNode;
 }
