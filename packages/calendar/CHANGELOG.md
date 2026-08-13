@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.9.1
+
+### Patch Changes
+
+- [#9](https://github.com/svycal/calendar/pull/9) [`1e1cf44`](https://github.com/svycal/calendar/commit/1e1cf441659ddfabc7f1bac8a7b6eca0c7df927c) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Scroll the unavailable-time hatch with the grid instead of pinning it to the viewport. `background-attachment: fixed` does not paint reliably inside overflow scrollers on iOS Safari and Chrome Android, so the pattern clipped to the first screen and disappeared on scroll. Stripes still line up across disjoint overlay blocks by offsetting `background-position` from each block's grid top.
+
 ## 0.9.0
 
 ### Minor Changes
