@@ -13,6 +13,12 @@ import type {
   SelectionAppearance,
   TimedCalendarEvent,
 } from '@/types/calendar';
+import {
+  computeAutoScrollIntensity,
+  createVerticalAutoScroller,
+  findVerticalScrollParent,
+  type VerticalAutoScroller,
+} from '@/lib/autoScroll';
 import { buildSyntheticEvent } from '@/lib/selection';
 import { EventChip } from './EventChip';
 
@@ -95,6 +101,10 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const didDragRef = useRef(false);
+  const lastClientYRef = useRef(0);
+  const scrollParentRef = useRef<HTMLElement | null>(null);
+  const autoScrollerRef = useRef<VerticalAutoScroller | null>(null);
+  const applyDragFromClientYRef = useRef<(clientY: number) => void>(() => {});
 
   // Stable refs for document-level handlers
   const onSelectRef = useRef(onSelect);
@@ -142,18 +152,14 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     return { startMin: rangeStart, endMin: rangeEnd };
   }, []);
 
-  const handleDocMouseMove = useCallback(
-    (e: MouseEvent) => {
+  const applyDragFromClientY = useCallback(
+    (clientY: number) => {
       const drag = dragRef.current;
       const container = containerRef.current;
       if (!drag || !container) return;
 
       const rect = container.getBoundingClientRect();
-      const containerHeight = rect.height;
-      const yOffset = Math.max(
-        0,
-        Math.min(e.clientY - rect.top, containerHeight)
-      );
+      const yOffset = Math.max(0, Math.min(clientY - rect.top, rect.height));
 
       let currentSlot = snapToSlotRef.current(yOffset);
       if (currentSlot == null) {
@@ -162,17 +168,40 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       }
 
       const range = computeRange(drag.anchorSlotStart, currentSlot);
+      const unchanged =
+        drag.moved &&
+        drag.currentStartMin === range.startMin &&
+        drag.currentEndMin === range.endMin;
       drag.currentStartMin = range.startMin;
       drag.currentEndMin = range.endMin;
       drag.moved = true;
-      setDragPreview(range);
+      if (!unchanged) setDragPreview(range);
     },
     [computeRange]
+  );
+
+  const handleDocMouseMove = useCallback(
+    (e: MouseEvent) => {
+      lastClientYRef.current = e.clientY;
+      applyDragFromClientY(e.clientY);
+
+      const scrollParent = scrollParentRef.current;
+      if (!scrollParent) return;
+      const rect = scrollParent.getBoundingClientRect();
+      if (computeAutoScrollIntensity(e.clientY, rect.top, rect.bottom) !== 0) {
+        autoScrollerRef.current?.ensure();
+      }
+    },
+    [applyDragFromClientY]
   );
 
   const handleDocMouseUpRef = useRef<() => void>(() => {});
 
   const handleDocMouseUp = useCallback(() => {
+    autoScrollerRef.current?.stop();
+    autoScrollerRef.current = null;
+    scrollParentRef.current = null;
+
     const drag = dragRef.current;
     if (drag) {
       if (drag.moved) {
@@ -210,11 +239,13 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     snapDurationRef.current = snapDuration;
     placeholderDurationRef.current = placeholderDuration;
     handleDocMouseUpRef.current = handleDocMouseUp;
+    applyDragFromClientYRef.current = applyDragFromClientY;
   });
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      autoScrollerRef.current?.stop();
       document.removeEventListener('mousemove', handleDocMouseMove);
       document.removeEventListener('mouseup', handleDocMouseUpRef.current);
     };
@@ -242,6 +273,14 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
         currentEndMin: slotEnd,
         moved: false,
       };
+      lastClientYRef.current = e.clientY;
+      scrollParentRef.current = findVerticalScrollParent(container);
+      autoScrollerRef.current?.stop();
+      autoScrollerRef.current = createVerticalAutoScroller({
+        getPointerY: () => lastClientYRef.current,
+        getScrollParent: () => scrollParentRef.current,
+        onScroll: () => applyDragFromClientYRef.current(lastClientYRef.current),
+      });
 
       setDragPreview({ startMin: slotStart, endMin: slotEnd });
 
