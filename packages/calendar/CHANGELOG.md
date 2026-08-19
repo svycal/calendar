@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.10.1
+
+### Patch Changes
+
+- [#13](https://github.com/svycal/calendar/pull/13) [`ed5ea8e`](https://github.com/svycal/calendar/commit/ed5ea8e9f95e124f3db63090478625293f421c07) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Auto-scroll the grid when dragging a time-range selection near the top or bottom edge, so the growing range stays in view instead of clamping to the visible hours.
+
 ## 0.10.0
 
 ### Minor Changes
