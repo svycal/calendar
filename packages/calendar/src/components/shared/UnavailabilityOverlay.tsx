@@ -23,6 +23,12 @@ export const UnavailabilityOverlay = memo(function UnavailabilityOverlay({
         gridColumn: column,
         position: 'relative',
         pointerEvents: 'none',
+        // One compositor layer for the row-spanning grid item. Safari
+        // otherwise fragments that item and paints semi-transparent
+        // backgrounds once per row.
+        isolation: 'isolate',
+        transform: 'translateZ(0)',
+        overflow: 'hidden',
       }}
     >
       {blocks.map((block, i) => (
@@ -35,7 +41,7 @@ export const UnavailabilityOverlay = memo(function UnavailabilityOverlay({
             left: 0,
             right: 0,
             height: block.height,
-            backgroundPosition: `0 ${-block.top}px`,
+            backgroundPosition: `0 ${-Math.round(block.top)}px`,
           }}
         />
       ))}
