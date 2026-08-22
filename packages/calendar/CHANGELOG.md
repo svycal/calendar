@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.10.2
+
+### Patch Changes
+
+- [#15](https://github.com/svycal/calendar/pull/15) [`a6687f2`](https://github.com/svycal/calendar/commit/a6687f2841a4ccb47027847133336067e360cc82) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Paint unavailable-time stripes with a tiled SVG instead of an angled repeating-linear-gradient, and isolate the overlay on one compositor layer, so Safari no longer stacks semi-transparent hatch bands on tall (especially full-day) ranges.
+
 ## 0.10.1
 
 ### Patch Changes
