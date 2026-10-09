@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.10.3
+
+### Patch Changes
+
+- [#18](https://github.com/svycal/calendar/pull/18) [`6d1ecd2`](https://github.com/svycal/calendar/commit/6d1ecd29f8e91af3e3fa28ddbc96851dc5479e75) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Update dependencies to pick up security fixes.
+
 ## 0.10.2
 
 ### Patch Changes
