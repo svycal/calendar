@@ -66,8 +66,7 @@ export type SelectionEventData = Partial<
 
 /** Discriminated union: simple string for highlight, object for event style */
 export type SelectionAppearance =
-  | 'highlight'
-  | { style: 'event'; eventData?: SelectionEventData };
+  'highlight' | { style: 'event'; eventData?: SelectionEventData };
 
 export interface TimeAxisConfig {
   startHour?: number;

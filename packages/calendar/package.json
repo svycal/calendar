@@ -43,19 +43,19 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "tailwind-merge": "^3.6.0",
+    "tailwind-merge": "^3.7.0",
     "temporal-polyfill": "^0.3.2"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.2.0",
     "jsdom": "^27.4.0",
-    "tailwindcss": "^4.3.0",
+    "tailwindcss": "^4.3.3",
     "typescript": "~5.9.3",
-    "vite": "^7.3.5",
+    "vite": "^7.3.7",
     "vite-plugin-dts": "^4.5.4",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.11"
   }
 }
