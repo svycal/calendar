@@ -9,6 +9,29 @@ import {
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
+/**
+ * Marks empty grid surfaces (time slots, day cells). While a popover is
+ * open, a press on one only dismisses the popover; it doesn't also start
+ * a selection or fire a slot click underneath.
+ */
+export const DISMISS_ONLY_ATTR = 'data-popover-dismiss-only';
+
+/** Swallows the click that follows a dismiss-only press. */
+function swallowNextClick() {
+  const swallow = (e: MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    cleanup();
+  };
+  // If the press never becomes a click (e.g. a drag), stop waiting at the next press
+  const cleanup = () => {
+    window.removeEventListener('click', swallow, true);
+    window.removeEventListener('pointerdown', cleanup, true);
+  };
+  window.addEventListener('click', swallow, true);
+  window.addEventListener('pointerdown', cleanup, true);
+}
+
 interface PopoverPosition {
   top: number;
   left: number;
@@ -23,8 +46,6 @@ interface AnchoredPopoverProps {
     width: number;
     height: number;
   }) => PopoverPosition | null;
-  /** Outside presses on elements matching this selector only dismiss the popover; the press itself is canceled. */
-  dismissOnlySelector?: string;
   ariaLabel: string;
   className?: string;
   children: ReactNode;
@@ -41,7 +62,6 @@ export function AnchoredPopover({
   triggerRef,
   onClose,
   getPosition,
-  dismissOnlySelector,
   ariaLabel,
   className,
   children,
@@ -107,10 +127,11 @@ export function AnchoredPopover({
       ) {
         return;
       }
-      // Canceling pointerdown suppresses the mousedown that follows, so
-      // the press can't also start a selection underneath.
-      if (dismissOnlySelector && target.closest?.(dismissOnlySelector)) {
+      if (target.closest?.(`[${DISMISS_ONLY_ATTR}]`)) {
+        // Canceling pointerdown suppresses the mousedown that would start
+        // a selection; the click that follows is swallowed separately.
         e.preventDefault();
+        swallowNextClick();
       }
       onCloseRef.current();
     };
@@ -120,7 +141,7 @@ export function AnchoredPopover({
       window.removeEventListener('keydown', onKey, true);
       document.removeEventListener('pointerdown', onPointer);
     };
-  }, [triggerRef, dismissOnlySelector]);
+  }, [triggerRef]);
 
   if (!isReady) return null;
 

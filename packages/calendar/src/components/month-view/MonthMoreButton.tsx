@@ -175,8 +175,6 @@ export function MonthMoreButton({
           triggerRef={buttonRef}
           onClose={close}
           getPosition={getPosition}
-          // A press on a day cell only dismisses, without starting a selection
-          dismissOnlySelector="[data-month-day-cell]"
           ariaLabel={dateLabel}
           className={cls('morePopover')}
         >

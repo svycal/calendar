@@ -21,6 +21,7 @@ import {
 } from '@/lib/autoScroll';
 import { buildSyntheticEvent } from '@/lib/selection';
 import { EventChip } from './EventChip';
+import { DISMISS_ONLY_ATTR } from './AnchoredPopover';
 
 interface SlotInteractionLayerProps {
   columnId: string;
@@ -354,6 +355,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   return (
     <div
       ref={containerRef}
+      {...{ [DISMISS_ONLY_ATTR]: '' }}
       style={{
         gridRow: '3 / -1',
         gridColumn: column,

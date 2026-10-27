@@ -10,6 +10,7 @@ import type {
 } from '@/types/calendar';
 import { MonthEventItem } from './MonthEventItem';
 import { MonthMoreButton } from './MonthMoreButton';
+import { DISMISS_ONLY_ATTR } from '../shared/AnchoredPopover';
 
 export const DAY_HEADER_HEIGHT = 28;
 export const LANE_GAP = 2;
@@ -89,7 +90,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
           return (
             <div
               key={date.toString()}
-              data-month-day-cell=""
+              {...{ [DISMISS_ONLY_ATTR]: '' }}
               className={cn(cls('dayCell'), isOutside && cls('dayCellOutside'))}
               style={{
                 gridRow: '1 / -1',
