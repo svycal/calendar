@@ -24,8 +24,9 @@ import {
 } from '@savvycal/calendar';
 import StressTestPage from './StressTestPage';
 import OverlapPage from './OverlapPage';
+import MonthPage from './MonthPage';
 
-type Page = 'demo' | 'overlap' | 'stress-test';
+type Page = 'demo' | 'month' | 'overlap' | 'stress-test';
 
 const tz = 'America/Chicago';
 
@@ -436,7 +437,9 @@ function App() {
   const [dark, setDark] = useState(false);
   const [page, setPage] = useState<Page>(() => {
     const param = new URLSearchParams(window.location.search).get('page');
-    return param === 'overlap' || param === 'stress-test' ? param : 'demo';
+    return param === 'month' || param === 'overlap' || param === 'stress-test'
+      ? param
+      : 'demo';
   });
   const [eventLayout, setEventLayout] = useState<EventLayout>('columns');
   const [selectedRange, setSelectedRange] = useState<SelectedRange | null>(
@@ -552,6 +555,7 @@ function App() {
           {(
             [
               ['demo', 'Demo'],
+              ['month', 'Month'],
               ['overlap', 'Overlap'],
               ['stress-test', 'Stress Test'],
             ] as const
@@ -597,7 +601,9 @@ function App() {
         </button>
       </div>
 
-      {page === 'overlap' ? (
+      {page === 'month' ? (
+        <MonthPage />
+      ) : page === 'overlap' ? (
         <OverlapPage eventLayout={eventLayout} />
       ) : page === 'demo' ? (
         <div className="space-y-8">
