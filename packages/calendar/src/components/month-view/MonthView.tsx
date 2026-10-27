@@ -344,7 +344,7 @@ export function MonthView({
   );
 
   return (
-    <div data-month-view="" className={cn(cls('root'), className)}>
+    <div className={cn(cls('root'), className)}>
       <div
         ref={gridRef}
         className={cls('grid')}

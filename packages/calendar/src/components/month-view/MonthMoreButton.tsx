@@ -1,7 +1,5 @@
 import {
   useCallback,
-  useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -9,7 +7,6 @@ import {
   type Ref,
   type RefObject,
 } from 'react';
-import { createPortal } from 'react-dom';
 import { Temporal } from 'temporal-polyfill';
 import { formatDayOfWeek } from '@/lib/time';
 import { DAYS_PER_WEEK, getMonthEventSpan } from '@/lib/month';
@@ -19,6 +16,7 @@ import type {
   MonthOverflowPopoverRenderProps,
   MonthViewClassNames,
 } from '@/types/calendar';
+import { AnchoredPopover } from '../shared/AnchoredPopover';
 import { MonthEventItem } from './MonthEventItem';
 
 const VIEWPORT_MARGIN = 8;
@@ -61,10 +59,7 @@ export function MonthMoreButton({
   style,
 }: MonthMoreButtonProps) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
 
   const setButtonRef = useCallback(
     (el: HTMLButtonElement | null) => {
@@ -74,95 +69,35 @@ export function MonthMoreButton({
     [anchorRef]
   );
 
-  const close = useCallback(() => {
-    setOpen(false);
-    setPos(null);
-  }, []);
+  const close = useCallback(() => setOpen(false), []);
 
   // Center the popover over the day cell, clamped to the viewport
-  useLayoutEffect(() => {
-    if (!open) return;
-
-    const updatePos = () => {
-      const week = weekRef.current?.getBoundingClientRect();
-      const popover = popoverRef.current;
-      if (!week || !popover) return;
-      const cellWidth = week.width / DAYS_PER_WEEK;
-      const cellCenter = week.left + cellWidth * (col + 0.5);
-      const { offsetWidth: width, offsetHeight: height } = popover;
-
-      const left = Math.min(
-        Math.max(VIEWPORT_MARGIN, cellCenter - width / 2),
-        window.innerWidth - width - VIEWPORT_MARGIN
-      );
-      const top = Math.max(
-        VIEWPORT_MARGIN,
-        Math.min(week.top, window.innerHeight - height - VIEWPORT_MARGIN)
-      );
-      setPos({ top, left });
-    };
-
-    updatePos();
-    window.addEventListener('scroll', updatePos, true);
-    window.addEventListener('resize', updatePos);
-    return () => {
-      window.removeEventListener('scroll', updatePos, true);
-      window.removeEventListener('resize', updatePos);
-    };
-  }, [open, col, weekRef]);
-
-  // Move focus in once positioned; a visibility: hidden element can't take focus
-  const isPositioned = pos !== null;
-  useEffect(() => {
-    if (open && isPositioned)
-      popoverRef.current?.focus({ preventScroll: true });
-  }, [open, isPositioned]);
-
-  useEffect(() => {
-    if (!open) return;
-    // Capture on window so Escape closes only this popover, before it
-    // reaches the view's (or the app's) own Escape handlers.
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        close();
-        buttonRef.current?.focus();
-      }
-    };
-    const onPointer = (e: PointerEvent) => {
-      const target = e.target as Element;
-      if (
-        buttonRef.current?.contains(target) ||
-        popoverRef.current?.contains(target)
-      ) {
-        return;
-      }
-      // A press on a day cell only dismisses the popover. Canceling
-      // pointerdown suppresses the mousedown that would start a selection.
-      if (target.closest?.('[data-month-day-cell]')) e.preventDefault();
-      close();
-    };
-    window.addEventListener('keydown', onKey, true);
-    document.addEventListener('pointerdown', onPointer);
-    return () => {
-      window.removeEventListener('keydown', onKey, true);
-      document.removeEventListener('pointerdown', onPointer);
-    };
-  }, [open, close]);
+  const getPosition = ({
+    width,
+    height,
+  }: {
+    width: number;
+    height: number;
+  }) => {
+    const week = weekRef.current?.getBoundingClientRect();
+    if (!week) return null;
+    const cellWidth = week.width / DAYS_PER_WEEK;
+    const cellCenter = week.left + cellWidth * (col + 0.5);
+    const left = Math.min(
+      Math.max(VIEWPORT_MARGIN, cellCenter - width / 2),
+      window.innerWidth - width - VIEWPORT_MARGIN
+    );
+    const top = Math.max(
+      VIEWPORT_MARGIN,
+      Math.min(week.top, window.innerHeight - height - VIEWPORT_MARGIN)
+    );
+    return { top, left };
+  };
 
   const handleToggle = () => {
-    if (open) {
-      close();
-      return;
-    }
-    // Portal into the calendar root so the popover inherits theme classes
-    // (e.g. a `.dark` ancestor) while still escaping the cell's clipping.
-    setPortalTarget(
-      buttonRef.current?.closest<HTMLElement>('[data-month-view]') ??
-        document.body
-    );
-    setOpen(true);
-    if (buttonRef.current) {
+    const next = !open;
+    setOpen(next);
+    if (next && buttonRef.current) {
       onOverflowClick?.({ date, events, anchor: buttonRef.current });
     }
   };
@@ -235,28 +170,19 @@ export function MonthMoreButton({
       >
         +{count} more
       </button>
-      {open &&
-        popoverContent &&
-        portalTarget &&
-        createPortal(
-          <div
-            ref={popoverRef}
-            role="dialog"
-            aria-label={dateLabel}
-            tabIndex={-1}
-            className={cls('morePopover')}
-            style={{
-              position: 'fixed',
-              top: pos?.top ?? 0,
-              left: pos?.left ?? 0,
-              visibility: pos ? undefined : 'hidden',
-              zIndex: 50,
-            }}
-          >
-            {popoverContent}
-          </div>,
-          portalTarget
-        )}
+      {open && popoverContent && (
+        <AnchoredPopover
+          triggerRef={buttonRef}
+          onClose={close}
+          getPosition={getPosition}
+          // A press on a day cell only dismisses, without starting a selection
+          dismissOnlySelector="[data-month-day-cell]"
+          ariaLabel={dateLabel}
+          className={cls('morePopover')}
+        >
+          {popoverContent}
+        </AnchoredPopover>
+      )}
     </>
   );
 }

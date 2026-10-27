@@ -1,5 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useRef, useState } from 'react';
 import type {
   CalendarEvent,
   GridViewClassNames,
@@ -10,6 +9,7 @@ import type {
 import type { OverflowGroup } from '@/lib/overlap';
 import { formatTimeRange } from '@/lib/time';
 import { getEventLabel } from '@/lib/accessibility';
+import { AnchoredPopover } from './AnchoredPopover';
 
 interface OverflowChipProps {
   group: OverflowGroup;
@@ -22,7 +22,8 @@ interface OverflowChipProps {
   ) => React.ReactNode;
 }
 
-const POPOVER_WIDTH = 256;
+const VIEWPORT_MARGIN = 8;
+const ANCHOR_GAP = 8;
 
 export function OverflowChip({
   group,
@@ -34,8 +35,6 @@ export function OverflowChip({
 }: OverflowChipProps) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
 
   const count = group.events.length;
   const label = `+${count}`;
@@ -43,58 +42,29 @@ export function OverflowChip({
 
   const close = () => setOpen(false);
 
-  useLayoutEffect(() => {
-    if (!open) return;
-
-    const updatePos = () => {
-      const rect = buttonRef.current?.getBoundingClientRect();
-      if (!rect) return;
-
-      let left = rect.right + 8;
-      if (left + POPOVER_WIDTH > window.innerWidth - 8) {
-        left = Math.max(8, rect.left - POPOVER_WIDTH - 8);
-      }
-
-      const estimatedHeight = Math.min(320, 16 + count * 52);
-      let top = rect.top;
-      if (top + estimatedHeight > window.innerHeight - 8) {
-        top = Math.max(8, window.innerHeight - estimatedHeight - 8);
-      }
-
-      setPos({ top, left });
-    };
-
-    updatePos();
-    window.addEventListener('scroll', updatePos, true);
-    window.addEventListener('resize', updatePos);
-    return () => {
-      window.removeEventListener('scroll', updatePos, true);
-      window.removeEventListener('resize', updatePos);
-    };
-  }, [open, count]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') close();
-    };
-    const onPointer = (e: PointerEvent) => {
-      const target = e.target as Node;
-      if (
-        buttonRef.current?.contains(target) ||
-        popoverRef.current?.contains(target)
-      ) {
-        return;
-      }
-      close();
-    };
-    document.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onPointer);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.removeEventListener('pointerdown', onPointer);
-    };
-  }, [open]);
+  // Beside the chip, flipping to the left when it would overflow the viewport
+  const getPosition = ({
+    width,
+    height,
+  }: {
+    width: number;
+    height: number;
+  }) => {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    let left = rect.right + ANCHOR_GAP;
+    if (left + width > window.innerWidth - VIEWPORT_MARGIN) {
+      left = Math.max(VIEWPORT_MARGIN, rect.left - width - ANCHOR_GAP);
+    }
+    let top = rect.top;
+    if (top + height > window.innerHeight - VIEWPORT_MARGIN) {
+      top = Math.max(
+        VIEWPORT_MARGIN,
+        window.innerHeight - height - VIEWPORT_MARGIN
+      );
+    }
+    return { top, left };
+  };
 
   const handleToggle = () => {
     const next = !open;
@@ -143,25 +113,17 @@ export function OverflowChip({
       >
         <span className={cls('overflowChipLabel')}>{label}</span>
       </button>
-      {open &&
-        popoverContent &&
-        createPortal(
-          <div
-            ref={popoverRef}
-            role="dialog"
-            aria-label={ariaLabel}
-            className={cls('overflowPopover')}
-            style={{
-              position: 'fixed',
-              top: pos.top,
-              left: pos.left,
-              zIndex: 50,
-            }}
-          >
-            {popoverContent}
-          </div>,
-          document.body
-        )}
+      {open && popoverContent && (
+        <AnchoredPopover
+          triggerRef={buttonRef}
+          onClose={close}
+          getPosition={getPosition}
+          ariaLabel={ariaLabel}
+          className={cls('overflowPopover')}
+        >
+          {popoverContent}
+        </AnchoredPopover>
+      )}
     </>
   );
 }
