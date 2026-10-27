@@ -1,5 +1,6 @@
 import { Temporal } from 'temporal-polyfill';
 import type { CalendarEvent } from '@/types/calendar';
+import { assignLanes, clipDateSpan } from './lanes';
 
 export const DAYS_PER_WEEK = 7;
 
@@ -144,57 +145,24 @@ export function layoutMonthWeek(
   spans: MonthEventSpan[],
   dates: Temporal.PlainDate[]
 ): MonthEventSegment[] {
-  const weekStart = dates[0];
-  const weekEnd = dates[dates.length - 1];
-
   const segments: SortableSegment[] = [];
   for (const s of spans) {
-    if (
-      Temporal.PlainDate.compare(s.startDate, weekEnd) > 0 ||
-      Temporal.PlainDate.compare(s.endDate, weekStart) < 0
-    ) {
-      continue;
-    }
-    const continuesBefore =
-      Temporal.PlainDate.compare(s.startDate, weekStart) < 0;
-    const continuesAfter = Temporal.PlainDate.compare(s.endDate, weekEnd) > 0;
-    const startCol = continuesBefore
-      ? 0
-      : s.startDate.since(weekStart, { largestUnit: 'days' }).days;
-    const endCol = continuesAfter
-      ? dates.length - 1
-      : s.endDate.since(weekStart, { largestUnit: 'days' }).days;
+    const clip = clipDateSpan(s.startDate, s.endDate, dates);
+    if (!clip) continue;
     segments.push({
       event: s.event,
-      startCol,
-      span: endCol - startCol + 1,
+      ...clip,
       lane: 0,
       isBar: s.isBar,
-      continuesBefore,
-      continuesAfter,
       sortStart: s.sortStart,
       pinned: s.pinned,
     });
   }
 
   segments.sort(compareSegments);
-
-  const lanes: boolean[][] = [];
-  for (const seg of segments) {
-    const endCol = seg.startCol + seg.span - 1;
-    let lane = lanes.findIndex((occupied) => {
-      for (let c = seg.startCol; c <= endCol; c++) {
-        if (occupied[c]) return false;
-      }
-      return true;
-    });
-    if (lane === -1) {
-      lane = lanes.length;
-      lanes.push(new Array(dates.length).fill(false));
-    }
-    for (let c = seg.startCol; c <= endCol; c++) lanes[lane][c] = true;
-    seg.lane = lane;
-  }
+  assignLanes(segments, dates.length).forEach((lane, i) => {
+    segments[i].lane = lane;
+  });
 
   return segments.map((seg) => ({
     event: seg.event,

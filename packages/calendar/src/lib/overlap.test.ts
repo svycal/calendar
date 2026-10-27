@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { Temporal } from 'temporal-polyfill';
-import type { PositionedEvent, TimedCalendarEvent } from '@/types/calendar';
+import type {
+  AllDayCalendarEvent,
+  PositionedEvent,
+  TimedCalendarEvent,
+} from '@/types/calendar';
 import {
   applyEventOverflow,
   computeMaxVisibleColumns,
   computeOverlapLayout,
+  layoutAllDayEvents,
 } from './overlap';
 
 const TZ = 'America/Chicago';
@@ -242,5 +247,98 @@ describe('applyEventOverflow', () => {
     const result = applyEventOverflow(events, 1);
     expect(result.overflows).toHaveLength(0);
     expect(result.visible.map((e) => e.event.id)).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('layoutAllDayEvents', () => {
+  // Mon 2026-03-16 .. Sun 2026-03-22
+  const week = Array.from({ length: 7 }, (_, i) =>
+    Temporal.PlainDate.from('2026-03-16').add({ days: i })
+  );
+
+  function allDay(id: string, start: string, end = start): AllDayCalendarEvent {
+    return {
+      id,
+      title: id,
+      resourceId: 'r1',
+      allDay: true,
+      startDate: Temporal.PlainDate.from(start),
+      endDate: Temporal.PlainDate.from(end),
+    };
+  }
+
+  it('drops events outside the range', () => {
+    const result = layoutAllDayEvents(
+      [
+        allDay('before', '2026-03-10', '2026-03-15'),
+        allDay('after', '2026-03-23'),
+      ],
+      week
+    );
+    expect(result).toEqual([]);
+  });
+
+  it('clips to the range and flags continuation', () => {
+    const result = byId(
+      layoutAllDayEvents(
+        [
+          allDay('before', '2026-03-12', '2026-03-17'),
+          allDay('after', '2026-03-21', '2026-03-25'),
+          allDay('inside', '2026-03-18', '2026-03-19'),
+        ],
+        week
+      )
+    );
+    expect(result.before).toMatchObject({
+      gridColumnStart: 1,
+      gridColumnSpan: 2,
+      continuesBefore: true,
+      continuesAfter: false,
+    });
+    expect(result.after).toMatchObject({
+      gridColumnStart: 6,
+      gridColumnSpan: 2,
+      continuesBefore: false,
+      continuesAfter: true,
+    });
+    expect(result.inside).toMatchObject({
+      gridColumnStart: 3,
+      gridColumnSpan: 2,
+      continuesBefore: false,
+      continuesAfter: false,
+    });
+  });
+
+  it('packs the longest events (by full length) into the top lanes', () => {
+    const result = byId(
+      layoutAllDayEvents(
+        [
+          allDay('short', '2026-03-17'),
+          // Only 2 days visible, but 8 days long, so it sorts first
+          allDay('long-clipped', '2026-03-10', '2026-03-17'),
+          allDay('mid', '2026-03-17', '2026-03-19'),
+        ],
+        week
+      )
+    );
+    expect(result['long-clipped'].lane).toBe(0);
+    expect(result.mid.lane).toBe(1);
+    expect(result.short.lane).toBe(2);
+  });
+
+  it('reuses lanes for non-overlapping events and breaks ties by start then id', () => {
+    const result = layoutAllDayEvents(
+      [
+        allDay('b', '2026-03-16'),
+        allDay('a', '2026-03-16'),
+        allDay('c', '2026-03-18'),
+      ],
+      week
+    );
+    expect(result.map((r) => [r.event.id, r.lane])).toEqual([
+      ['a', 0],
+      ['b', 1],
+      ['c', 0],
+    ]);
   });
 });

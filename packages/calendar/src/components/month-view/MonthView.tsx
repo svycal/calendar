@@ -18,6 +18,7 @@ import {
   type MonthEventSpan,
 } from '@/lib/month';
 import { describeEvent } from '@/lib/accessibility';
+import { clipDateSpan } from '@/lib/lanes';
 import type {
   CalendarEvent,
   MonthSelectedRange,
@@ -52,24 +53,10 @@ function weekHighlight(
   range: MonthSelectedRange | null | undefined,
   dates: Temporal.PlainDate[]
 ) {
-  if (!range) return null;
-  const weekStart = dates[0];
-  const weekEnd = dates[dates.length - 1];
-  if (
-    Temporal.PlainDate.compare(range.startDate, weekEnd) > 0 ||
-    Temporal.PlainDate.compare(range.endDate, weekStart) < 0
-  ) {
-    return null;
-  }
-  const startCol =
-    Temporal.PlainDate.compare(range.startDate, weekStart) < 0
-      ? 0
-      : range.startDate.since(weekStart, { largestUnit: 'days' }).days;
-  const endCol =
-    Temporal.PlainDate.compare(range.endDate, weekEnd) > 0
-      ? dates.length - 1
-      : range.endDate.since(weekStart, { largestUnit: 'days' }).days;
-  return { startCol, endCol };
+  const clip = range && clipDateSpan(range.startDate, range.endDate, dates);
+  return clip
+    ? { startCol: clip.startCol, endCol: clip.startCol + clip.span - 1 }
+    : null;
 }
 
 export function MonthView({
