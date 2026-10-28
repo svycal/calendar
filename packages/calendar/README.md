@@ -1,6 +1,6 @@
 # @savvycal/calendar
 
-A fully-featured calendar component library built with React, Tailwind CSS v4, and the Temporal API. Includes a resource grid view (resources as columns) and a day grid view (days as columns).
+A fully-featured calendar component library built with React, Tailwind CSS v4, and the Temporal API. Includes a resource grid view (resources as columns), a day grid view (days as columns), and a month view.
 
 ## Installation
 
@@ -232,6 +232,126 @@ Extends `GridViewClassNames` with day-specific keys:
 | `headerToday`     | Additional classes for today's day number. |
 
 All shared keys from `GridViewClassNames` (root, grid, event, etc.) also apply.
+
+## MonthView
+
+A month grid that works like Google Calendar's month view:
+
+- All-day events and events spanning more than one day (including overnight timed events) render as bars that wrap across week rows.
+- Single-day timed events render as a colored dot, start time, and title.
+- Each day shows as many event rows as its cell height allows. When a day needs more, its last row becomes a "+N more" button that opens a popover listing every event on that day. A multi-day bar is hidden in a week if it doesn't fit on every day it covers, and it's counted in "+N more" on each of those days.
+- Leading and trailing days from adjacent months are shown (muted) along with their events.
+
+### Quick start
+
+```tsx
+import { MonthView, Temporal } from '@savvycal/calendar';
+
+const month = Temporal.Now.plainDateISO().toPlainYearMonth();
+
+function App() {
+  return (
+    <div style={{ height: 720 }}>
+      <MonthView
+        month={month}
+        timeZone="America/Chicago"
+        events={events}
+        className="h-full"
+      />
+    </div>
+  );
+}
+```
+
+Week rows stretch to fill the root element's height, so give it a height (e.g. `className="h-full"` inside a sized container). Without one, rows render at `minWeekHeight`.
+
+### MonthView props
+
+#### Required
+
+| Prop       | Type                      | Description                                           |
+| ---------- | ------------------------- | ----------------------------------------------------- |
+| `month`    | `Temporal.PlainYearMonth` | The month to display.                                 |
+| `timeZone` | `string`                  | IANA time zone identifier (e.g. `"America/Chicago"`). |
+| `events`   | `CalendarEvent[]`         | Array of timed and/or all-day events.                 |
+
+#### Layout
+
+| Prop             | Type                  | Default | Description                                                                                                  |
+| ---------------- | --------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| `weekStartsOn`   | `number`              | `7`     | First day of the week, using Temporal's numbering (`1` = Monday … `7` = Sunday).                             |
+| `fixedWeekCount` | `boolean`             | `false` | Always render six week rows, so the grid height doesn't change between months.                               |
+| `minWeekHeight`  | `number`              | `100`   | Minimum height in pixels for each week row. When the container is shorter, the grid scrolls.                 |
+| `eventHeight`    | `number`              | `20`    | Height in pixels of each event row inside a day cell.                                                        |
+| `maxEventRows`   | `number`              | —       | Hard cap on event rows per day (including the "+N more" row). Omit to fit as many as the cell height allows. |
+| `className`      | `string`              | —       | Class name applied to the root element.                                                                      |
+| `classNames`     | `MonthViewClassNames` | —       | Override default class names for internal elements. See [MonthViewClassNames](#monthviewclassnames).         |
+
+#### Events & interaction
+
+| Prop                    | Type                                                    | Description                                                                                                                      |
+| ----------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `onEventClick`          | `(event: CalendarEvent) => void`                        | Called when an event is clicked (in a cell or in the "+N more" popover).                                                         |
+| `onDayNumberClick`      | `(date: Temporal.PlainDate) => void`                    | Called when a day number is clicked (e.g. to navigate to a day view). Day numbers render as buttons only when this is set.       |
+| `selectedEventId`       | `string \| null`                                        | ID of the currently selected event (controlled).                                                                                 |
+| `selectedEventRef`      | `Ref<HTMLElement>`                                      | Ref attached to the selected event's first visible segment. If the event is hidden, it attaches to the "+N more" button instead. |
+| `onOverflowClick`       | `(info: MonthOverflowClickInfo) => void`                | Called when a "+N more" button opens. `info.events` is every event on `info.date`; `info.anchor` is the button.                  |
+| `renderOverflowPopover` | `(props: MonthOverflowPopoverRenderProps) => ReactNode` | Replace the built-in "+N more" popover content. The button still handles open/close and positioning.                             |
+| `renderHeader`          | `(props: { dayOfWeek, date }) => ReactNode`             | Custom renderer for weekday header cells. `date` is the first displayed date for that column.                                    |
+
+#### Selection
+
+Clicking empty space in a day selects that day; dragging across days selects a range. Press Escape to clear. By default the selection renders like Google Calendar's quick-create chip: a placeholder bar titled "(No title)" pinned to the top of each selected day, so `selectionRef` can anchor a create popover beside it.
+
+| Prop                  | Type                                          | Description                                                                                                                                                 |
+| --------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selectedRange`       | `MonthSelectedRange \| null`                  | The currently selected date range (controlled).                                                                                                             |
+| `onSelect`            | `(range: MonthSelectedRange \| null) => void` | Called when the user selects or clears a range. Selection is disabled when omitted.                                                                         |
+| `selectionRef`        | `Ref<HTMLDivElement>`                         | Ref attached to the selection (placeholder bar or highlight) in the last selected week.                                                                     |
+| `selectionAppearance` | `SelectionAppearance`                         | Default `{ style: 'event' }` renders the placeholder bar; set `eventData` to change its title or color. `'highlight'` tints the selected day cells instead. |
+
+### MonthSelectedRange
+
+```ts
+interface MonthSelectedRange {
+  startDate: Temporal.PlainDate;
+  endDate: Temporal.PlainDate; // inclusive
+}
+```
+
+### MonthViewClassNames
+
+| Key                    | Description                                              |
+| ---------------------- | -------------------------------------------------------- |
+| `root`                 | Outermost wrapper (scroll container).                    |
+| `grid`                 | The CSS grid element.                                    |
+| `headerCell`           | Weekday header cell (sticky).                            |
+| `week`                 | A week row.                                              |
+| `dayCell`              | Day cell background (borders).                           |
+| `dayCellOutside`       | Additional classes for days outside the displayed month. |
+| `dayNumber`            | Day number label.                                        |
+| `dayNumberToday`       | Additional classes for today's day number.               |
+| `dayNumberOutside`     | Additional classes for day numbers outside the month.    |
+| `dayNumberButton`      | Additional classes when the day number is clickable.     |
+| `event`                | All-day / multi-day event bar.                           |
+| `eventSelected`        | Additional classes for a selected bar.                   |
+| `eventColorBar`        | Color bar on the left edge of a bar.                     |
+| `eventTitle`           | Bar title text.                                          |
+| `eventTime`            | Start time shown on multi-day timed bars.                |
+| `timedEvent`           | Single-day timed event item.                             |
+| `timedEventSelected`   | Additional classes for a selected timed item.            |
+| `timedEventDot`        | Colored dot on a timed item.                             |
+| `timedEventTime`       | Start time on a timed item.                              |
+| `timedEventTitle`      | Title on a timed item.                                   |
+| `moreButton`           | "+N more" button.                                        |
+| `selectionHighlight`   | Selected day range highlight.                            |
+| `morePopover`          | "+N more" popover panel.                                 |
+| `morePopoverHeader`    | Popover date header.                                     |
+| `morePopoverWeekday`   | Weekday label in the popover header.                     |
+| `morePopoverDayNumber` | Day number in the popover header.                        |
+| `morePopoverEvents`    | Event list inside the popover.                           |
+
+The library exports `monthViewDefaults` with the default classes for every key, for use with `cn()` (see [`resourceGridViewDefaults`](#resourcegridviewdefaults)).
 
 ## Data types
 
@@ -548,11 +668,12 @@ const { refs, floatingStyles } = useFloating({
 
 ```ts
 // Components
-export { ResourceGridView, DayGridView } from '@savvycal/calendar';
+export { ResourceGridView, DayGridView, MonthView } from '@savvycal/calendar';
 // Defaults
 export {
   resourceGridViewDefaults,
   dayGridViewDefaults,
+  monthViewDefaults,
 } from '@savvycal/calendar';
 
 // Temporal polyfill
@@ -581,6 +702,11 @@ export type {
   SelectionAppearance,
   SelectionEventData,
   EventLayout,
+  MonthViewProps,
+  MonthViewClassNames,
+  MonthSelectedRange,
+  MonthOverflowClickInfo,
+  MonthOverflowPopoverRenderProps,
 } from '@savvycal/calendar';
 ```
 
