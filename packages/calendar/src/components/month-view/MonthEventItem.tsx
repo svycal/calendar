@@ -133,7 +133,10 @@ export const MonthEventItem = memo(function MonthEventItem({
     <button
       ref={itemRef as Ref<HTMLButtonElement>}
       type="button"
-      aria-label={describeEvent(event, timeZone, { includeStatus: true })}
+      aria-label={describeEvent(event, timeZone, {
+        includeStatus: true,
+        includeDate: true,
+      })}
       aria-pressed={isSelected || undefined}
       className={className}
       style={{ ...shellStyle, gridRow, gridColumn, ...style }}

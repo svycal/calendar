@@ -135,7 +135,9 @@ export function MonthView({
     (event: CalendarEvent) => {
       onSelect?.(null);
       onEventClick?.(event);
-      announce(`Selected: ${describeEvent(event, timeZone)}`);
+      announce(
+        `Selected: ${describeEvent(event, timeZone, { includeDate: true })}`
+      );
     },
     [onSelect, onEventClick, timeZone, announce]
   );

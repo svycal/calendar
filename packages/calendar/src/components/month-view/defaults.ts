@@ -31,7 +31,7 @@ export const monthViewDefaults: Required<MonthViewClassNames> = {
     'h-full rounded-md px-1.5 text-left text-cal-text-body text-xs/4 font-medium truncate cursor-pointer select-none hover:bg-cal-event-bg',
   selectionHighlight: 'bg-cal-selection',
   morePopover:
-    'w-60 rounded-lg bg-cal-surface p-2 shadow-lg shadow-cal-event-shadow ring-1 ring-cal-event-ring max-h-96 overflow-auto outline-none',
+    'w-60 rounded-lg bg-cal-surface p-2 shadow-lg shadow-cal-event-shadow ring-1 ring-cal-event-ring max-h-[min(24rem,calc(100dvh-1rem))] overflow-auto outline-none',
   morePopoverHeader: 'flex flex-col items-center pb-2',
   morePopoverWeekday: 'text-cal-text-muted text-xs font-medium uppercase',
   morePopoverDayNumber: 'text-cal-text text-2xl font-medium',

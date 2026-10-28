@@ -1,4 +1,6 @@
+import type { Temporal } from 'temporal-polyfill';
 import type { CalendarEvent } from '@/types/calendar';
+import { getMonthEventSpan } from './month';
 import { formatTimeRange } from './time';
 
 /** Returns a plain-text label for the event, suitable for aria-label and announcer messages. */
@@ -14,21 +16,41 @@ export function getClientNameLabel(event: CalendarEvent): string | undefined {
     : String(event.clientName);
 }
 
+function formatDay(date: Temporal.PlainDate): string {
+  return date.toLocaleString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
 /**
- * Plain-text description of an event: title, time range (or "all day"),
- * client name, and optionally its status.
+ * Plain-text description of an event: title, optionally the date(s) it
+ * covers, time range (or "all day"), client name, and optionally its status.
  */
 export function describeEvent(
   event: CalendarEvent,
   timeZone: string,
-  { includeStatus = false }: { includeStatus?: boolean } = {}
+  {
+    includeStatus = false,
+    includeDate = false,
+  }: { includeStatus?: boolean; includeDate?: boolean } = {}
 ): string {
-  const parts: string[] = [
-    getEventLabel(event),
+  const parts: string[] = [getEventLabel(event)];
+  if (includeDate) {
+    // For views without a day column header to give the date (month view)
+    const { startDate, endDate } = getMonthEventSpan(event, timeZone);
+    parts.push(
+      startDate.equals(endDate)
+        ? formatDay(startDate)
+        : `${formatDay(startDate)} to ${formatDay(endDate)}`
+    );
+  }
+  parts.push(
     event.allDay
       ? 'all day'
-      : formatTimeRange(event.startTime, event.endTime, timeZone),
-  ];
+      : formatTimeRange(event.startTime, event.endTime, timeZone)
+  );
   const clientLabel = getClientNameLabel(event);
   if (clientLabel) parts.push(clientLabel);
   if (includeStatus) {
