@@ -16,6 +16,9 @@ interface MonthEventItemProps {
   /** When false, renders an inert placeholder that passes pointer events through. Default: true. */
   interactive?: boolean;
   itemRef?: Ref<HTMLElement>;
+  /** Grid placement, as primitives so memo can skip unchanged items */
+  gridRow?: number;
+  gridColumn?: string;
   style?: CSSProperties;
 }
 
@@ -34,6 +37,8 @@ export const MonthEventItem = memo(function MonthEventItem({
   isSelected,
   interactive = true,
   itemRef,
+  gridRow,
+  gridColumn,
   style,
 }: MonthEventItemProps) {
   const isCanceled = event.status === 'canceled';
@@ -111,7 +116,13 @@ export const MonthEventItem = memo(function MonthEventItem({
         ref={itemRef as Ref<HTMLDivElement>}
         aria-hidden="true"
         className={className}
-        style={{ ...shellStyle, pointerEvents: 'none', ...style }}
+        style={{
+          ...shellStyle,
+          gridRow,
+          gridColumn,
+          pointerEvents: 'none',
+          ...style,
+        }}
       >
         {content}
       </div>
@@ -125,7 +136,7 @@ export const MonthEventItem = memo(function MonthEventItem({
       aria-label={describeEvent(event, timeZone, { includeStatus: true })}
       aria-pressed={isSelected || undefined}
       className={className}
-      style={{ ...shellStyle, ...style }}
+      style={{ ...shellStyle, gridRow, gridColumn, ...style }}
       onClick={() => onClick?.(event)}
       // Keep presses on events from starting a day-range selection
       onMouseDown={(e) => e.stopPropagation()}

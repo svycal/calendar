@@ -83,9 +83,13 @@ export function MonthMoreButton({
     if (!week) return null;
     const cellWidth = week.width / DAYS_PER_WEEK;
     const cellCenter = week.left + cellWidth * (col + 0.5);
-    const left = Math.min(
-      Math.max(VIEWPORT_MARGIN, cellCenter - width / 2),
-      window.innerWidth - width - VIEWPORT_MARGIN
+    // Clamp the left margin last so a too-narrow viewport cuts off the right
+    const left = Math.max(
+      VIEWPORT_MARGIN,
+      Math.min(
+        cellCenter - width / 2,
+        window.innerWidth - width - VIEWPORT_MARGIN
+      )
     );
     const top = Math.max(
       VIEWPORT_MARGIN,

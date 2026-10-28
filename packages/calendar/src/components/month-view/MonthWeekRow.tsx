@@ -2,6 +2,7 @@ import { memo, useRef, type ReactNode, type Ref } from 'react';
 import type { Temporal } from 'temporal-polyfill';
 import { cn } from '@/lib/utils';
 import { DAYS_PER_WEEK, type MonthWeekLayout } from '@/lib/month';
+import { formatDateLabel } from '@/lib/time';
 import type {
   CalendarEvent,
   MonthOverflowClickInfo,
@@ -63,6 +64,11 @@ export const MonthWeekRow = memo(function MonthWeekRow({
 }: MonthWeekRowProps) {
   const weekRef = useRef<HTMLDivElement>(null);
   let segmentRefAssigned = false;
+  // A pinned placeholder in the only lane pushes "+N more" into an extra one
+  const rowLanes = layout.days.reduce(
+    (n, day) => (day.moreCount > 0 ? Math.max(n, day.moreLane + 1) : n),
+    lanes
+  );
 
   return (
     <div
@@ -77,7 +83,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
           inset: 0,
           display: 'grid',
           gridTemplateColumns: `repeat(${DAYS_PER_WEEK}, minmax(0, 1fr))`,
-          gridTemplateRows: `${DAY_HEADER_HEIGHT}px repeat(${lanes}, ${eventHeight}px) 1fr`,
+          gridTemplateRows: `${DAY_HEADER_HEIGHT}px repeat(${rowLanes}, ${eventHeight}px) 1fr`,
           rowGap: LANE_GAP,
           // Very short rows can't fit even one lane; don't paint into the next week
           overflow: 'hidden',
@@ -148,12 +154,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
               type="button"
               className={className}
               style={placement}
-              aria-label={date.toLocaleString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
+              aria-label={formatDateLabel(date)}
               aria-current={isToday ? 'date' : undefined}
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => onDayNumberClick(date)}
@@ -187,10 +188,8 @@ export const MonthWeekRow = memo(function MonthWeekRow({
                 interactive={false}
                 isSelected
                 itemRef={selectionRef}
-                style={{
-                  gridRow: seg.lane + 2,
-                  gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
-                }}
+                gridRow={seg.lane + 2}
+                gridColumn={`${seg.startCol + 1} / span ${seg.span}`}
               />
             );
           }
@@ -212,17 +211,15 @@ export const MonthWeekRow = memo(function MonthWeekRow({
               onClick={onEventClick}
               isSelected={isSelected}
               itemRef={attachRef ? selectedEventRef : undefined}
-              style={{
-                gridRow: seg.lane + 2,
-                gridColumn: `${seg.startCol + 1} / span ${seg.span}`,
-              }}
+              gridRow={seg.lane + 2}
+              gridColumn={`${seg.startCol + 1} / span ${seg.span}`}
             />
           );
         })}
 
         {/* "+N more" buttons */}
         {layout.days.map((day, col) =>
-          day.moreCount > 0 && day.moreLane < lanes ? (
+          day.moreCount > 0 ? (
             <MonthMoreButton
               key={`more-${day.date.toString()}`}
               date={day.date}

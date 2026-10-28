@@ -23,13 +23,16 @@ function swallowNextClick() {
     e.preventDefault();
     cleanup();
   };
-  // If the press never becomes a click (e.g. a drag), stop waiting at the next press
+  // If the press never becomes a click (e.g. a drag), stop waiting at the
+  // next press or key, so a keyboard-triggered click isn't eaten
   const cleanup = () => {
     window.removeEventListener('click', swallow, true);
     window.removeEventListener('pointerdown', cleanup, true);
+    window.removeEventListener('keydown', cleanup, true);
   };
   window.addEventListener('click', swallow, true);
   window.addEventListener('pointerdown', cleanup, true);
+  window.addEventListener('keydown', cleanup, true);
 }
 
 interface PopoverPosition {
@@ -56,7 +59,8 @@ interface AnchoredPopoverProps {
  * portals to document.body so no ancestor's clipping, stacking, or
  * transform can trap it, and copies the `.dark` class when the trigger
  * is inside a dark-mode scope. Escape closes only this popover; focus
- * moves in on open and back to the trigger on Escape.
+ * moves in on open and back to the trigger on Escape or when the popover
+ * unmounts with focus inside.
  */
 export function AnchoredPopover({
   triggerRef,
@@ -98,11 +102,28 @@ export function AnchoredPopover({
     updatePos();
     window.addEventListener('scroll', updatePos, true);
     window.addEventListener('resize', updatePos);
+    // Content can grow after mount (async render, live updates)
+    const observer = new ResizeObserver(updatePos);
+    if (popoverRef.current) observer.observe(popoverRef.current);
     return () => {
       window.removeEventListener('scroll', updatePos, true);
       window.removeEventListener('resize', updatePos);
+      observer.disconnect();
     };
   }, [isReady]);
+
+  // Unmounting with focus inside (e.g. after a dismiss-only press or an
+  // event click) would drop focus to <body>; hand it back to the trigger.
+  useLayoutEffect(() => {
+    if (!isReady) return;
+    const popover = popoverRef.current;
+    const trigger = triggerRef.current;
+    return () => {
+      if (popover?.contains(document.activeElement)) {
+        trigger?.focus({ preventScroll: true });
+      }
+    };
+  }, [isReady, triggerRef]);
 
   // A visibility: hidden element can't take focus, so wait until positioned
   const isPositioned = pos !== null;
@@ -131,7 +152,8 @@ export function AnchoredPopover({
         // Canceling pointerdown suppresses the mousedown that would start
         // a selection; the click that follows is swallowed separately.
         e.preventDefault();
-        swallowNextClick();
+        // Only a primary-button press is followed by a click
+        if (e.button === 0) swallowNextClick();
       }
       onCloseRef.current();
     };

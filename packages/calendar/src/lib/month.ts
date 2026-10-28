@@ -74,15 +74,9 @@ export function getMonthWeeks(
   return weeks;
 }
 
-function isMidnight(dt: Temporal.ZonedDateTime): boolean {
-  return (
-    dt.hour === 0 &&
-    dt.minute === 0 &&
-    dt.second === 0 &&
-    dt.millisecond === 0 &&
-    dt.microsecond === 0 &&
-    dt.nanosecond === 0
-  );
+// Days don't always start at 00:00 (e.g. a DST change that skips midnight)
+function isStartOfDay(dt: Temporal.ZonedDateTime): boolean {
+  return dt.equals(dt.startOfDay());
 }
 
 /** Resolves the inclusive dates an event covers in the display time zone. */
@@ -107,9 +101,9 @@ export function getMonthEventSpan(
   const start = event.startTime.withTimeZone(timeZone);
   const end = event.endTime.withTimeZone(timeZone);
   const startDate = start.toPlainDate();
-  // An event ending exactly at midnight doesn't occupy the following day
+  // An event ending exactly at the start of a day doesn't occupy that day
   let endDate = end.toPlainDate();
-  if (isMidnight(end) && Temporal.ZonedDateTime.compare(end, start) > 0) {
+  if (isStartOfDay(end) && Temporal.ZonedDateTime.compare(end, start) > 0) {
     endDate = endDate.subtract({ days: 1 });
   }
   if (Temporal.PlainDate.compare(endDate, startDate) < 0) endDate = startDate;

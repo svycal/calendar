@@ -192,6 +192,26 @@ describe('layoutMonthWeek', () => {
   });
 });
 
+describe('getMonthEventSpan across DST', () => {
+  it('treats an end at a start of day without a midnight as single-day', () => {
+    // Chile springs forward at 00:00, so 2026-09-06 starts at 01:00
+    const tz = 'America/Santiago';
+    const dayStart = d('2026-09-06').toZonedDateTime(tz);
+    expect(dayStart.hour).toBe(1);
+    const event: TimedCalendarEvent = {
+      id: 'late',
+      title: 'late',
+      resourceId: '',
+      startTime:
+        Temporal.PlainDateTime.from('2026-09-05T22:00').toZonedDateTime(tz),
+      endTime: dayStart,
+    };
+    const span = getMonthEventSpan(event, tz);
+    expect(span.endDate.toString()).toBe('2026-09-05');
+    expect(span.isBar).toBe(false);
+  });
+});
+
 describe('pinned spans', () => {
   it('take the top lane even when starting later in the week', () => {
     const spans = [
