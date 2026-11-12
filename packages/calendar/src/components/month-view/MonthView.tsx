@@ -179,16 +179,13 @@ export function MonthView({
     setDragRange(orderRange(anchor, date));
   }, []);
 
-  const handleDocMouseUpRef = useRef<() => void>(() => {});
+  // Ends the drag in progress (if any) without selecting
+  const stopDragRef = useRef<() => void>(() => {});
 
   const handleDocMouseUp = useCallback(() => {
     const anchor = dragAnchorRef.current;
     const current = dragCurrentRef.current;
-    dragAnchorRef.current = null;
-    dragCurrentRef.current = null;
-    setDragRange(null);
-    document.removeEventListener('mousemove', handleDocMouseMove);
-    document.removeEventListener('mouseup', handleDocMouseUpRef.current);
+    stopDragRef.current();
     if (!anchor || !current) return;
     const range = orderRange(anchor, current);
     onSelectRef.current?.(range);
@@ -205,32 +202,42 @@ export function MonthView({
         ? `Selected ${startLabel}`
         : `Selected ${startLabel} to ${endLabel}`
     );
-  }, [handleDocMouseMove]);
+  }, []);
 
   useLayoutEffect(() => {
     weeksRef.current = weeks;
     onSelectRef.current = onSelect;
     announceRef.current = announce;
-    handleDocMouseUpRef.current = handleDocMouseUp;
   });
 
-  useEffect(() => {
-    return () => {
-      document.removeEventListener('mousemove', handleDocMouseMove);
-      document.removeEventListener('mouseup', handleDocMouseUpRef.current);
-    };
-  }, [handleDocMouseMove]);
+  useEffect(() => () => stopDragRef.current(), []);
 
   const handleCellMouseDown = useCallback(
     (date: Temporal.PlainDate, e: React.MouseEvent) => {
-      if (!onSelect || e.button !== 0) return;
+      // Ctrl-click opens the context menu on macOS, and the mouseup that
+      // would end the drag may never arrive
+      if (!onSelect || e.button !== 0 || e.ctrlKey) return;
       e.preventDefault(); // Prevent text selection
       onSelect(null);
       dragAnchorRef.current = date;
       dragCurrentRef.current = date;
       setDragRange({ startDate: date, endDate: date });
+
+      const handleDocKeyDown = (ke: KeyboardEvent) => {
+        if (ke.key === 'Escape') stopDragRef.current();
+      };
+      stopDragRef.current = () => {
+        dragAnchorRef.current = null;
+        dragCurrentRef.current = null;
+        setDragRange(null);
+        document.removeEventListener('mousemove', handleDocMouseMove);
+        document.removeEventListener('mouseup', handleDocMouseUp);
+        document.removeEventListener('keydown', handleDocKeyDown);
+        stopDragRef.current = () => {};
+      };
       document.addEventListener('mousemove', handleDocMouseMove);
       document.addEventListener('mouseup', handleDocMouseUp);
+      document.addEventListener('keydown', handleDocKeyDown);
     },
     [onSelect, handleDocMouseMove, handleDocMouseUp]
   );
