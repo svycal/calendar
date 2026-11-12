@@ -292,3 +292,103 @@ export interface DayGridViewProps {
   onOverflowClick?: (info: OverflowClickInfo) => void;
   renderOverflowPopover?: (props: OverflowPopoverRenderProps) => ReactNode;
 }
+
+export interface MonthSelectedRange {
+  startDate: Temporal.PlainDate;
+  /** Inclusive */
+  endDate: Temporal.PlainDate;
+}
+
+export interface MonthOverflowClickInfo {
+  date: Temporal.PlainDate;
+  /** Every event on the day, in display order (including the visible ones). */
+  events: CalendarEvent[];
+  anchor: HTMLElement;
+}
+
+export interface MonthOverflowPopoverRenderProps {
+  date: Temporal.PlainDate;
+  events: CalendarEvent[];
+  onClose: () => void;
+  onEventClick?: (event: CalendarEvent) => void;
+}
+
+export interface MonthViewClassNames {
+  root?: string;
+  grid?: string;
+  headerCell?: string;
+  week?: string;
+  dayCell?: string;
+  dayCellOutside?: string;
+  dayNumber?: string;
+  dayNumberToday?: string;
+  dayNumberOutside?: string;
+  dayNumberButton?: string;
+  event?: string;
+  eventSelected?: string;
+  eventColorBar?: string;
+  eventTitle?: string;
+  eventTime?: string;
+  timedEvent?: string;
+  timedEventSelected?: string;
+  timedEventDot?: string;
+  timedEventTime?: string;
+  timedEventTitle?: string;
+  moreButton?: string;
+  selectionHighlight?: string;
+  morePopover?: string;
+  morePopoverHeader?: string;
+  morePopoverWeekday?: string;
+  morePopoverDayNumber?: string;
+  morePopoverEvents?: string;
+}
+
+export interface MonthViewProps {
+  /** The month to display. */
+  month: Temporal.PlainYearMonth;
+  timeZone: string;
+  events: CalendarEvent[];
+  /** First day of the week, using Temporal's numbering (1 = Monday … 7 = Sunday). Default: 7. */
+  weekStartsOn?: number;
+  /** Always render six week rows, so the grid height doesn't change between months. Default: false. */
+  fixedWeekCount?: boolean;
+  /**
+   * Minimum height in pixels for each week row. Rows grow to fill the
+   * container; when the container is shorter than this, the grid scrolls.
+   * Default: 100.
+   */
+  minWeekHeight?: number;
+  /** Height in pixels of each event row inside a day cell. Default: 20. */
+  eventHeight?: number;
+  /** Hard cap on event rows per day (including the "+N more" row). Omit to fit as many as the cell height allows. */
+  maxEventRows?: number;
+  onEventClick?: (event: CalendarEvent) => void;
+  /** Called when the day number is clicked (e.g. to navigate to a day view). */
+  onDayNumberClick?: (date: Temporal.PlainDate) => void;
+  /** Controlled day-range selection. */
+  selectedRange?: MonthSelectedRange | null;
+  /** Called when the user clicks or drags across empty day space, or clears the selection. */
+  onSelect?: (range: MonthSelectedRange | null) => void;
+  /** Ref attached to the selection in the last selected week, for positioning popovers. */
+  selectionRef?: Ref<HTMLDivElement>;
+  /**
+   * How the selection renders. Default `{ style: 'event' }`: a placeholder bar
+   * (titled "(No title)" unless `eventData.title` is set) pinned to the top of
+   * each selected day. `'highlight'` tints the selected day cells instead.
+   */
+  selectionAppearance?: SelectionAppearance;
+  selectedEventId?: string | null;
+  /**
+   * Ref attached to the selected event. When the event is hidden behind a
+   * "+N more" button, the ref attaches to that button instead.
+   */
+  selectedEventRef?: Ref<HTMLElement>;
+  onOverflowClick?: (info: MonthOverflowClickInfo) => void;
+  renderOverflowPopover?: (props: MonthOverflowPopoverRenderProps) => ReactNode;
+  renderHeader?: (props: {
+    dayOfWeek: number;
+    date: Temporal.PlainDate;
+  }) => ReactNode;
+  className?: string;
+  classNames?: MonthViewClassNames;
+}

@@ -37,7 +37,7 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
   overflowChipLabel:
     'block px-1 py-0.5 text-cal-text-body text-xs/4 font-medium',
   overflowPopover:
-    'w-64 rounded-lg bg-cal-surface p-1 shadow-lg shadow-cal-event-shadow ring-1 ring-cal-event-ring max-h-80 overflow-auto',
+    'w-64 rounded-lg bg-cal-surface p-1 shadow-lg shadow-cal-event-shadow ring-1 ring-cal-event-ring max-h-[min(20rem,calc(100dvh-1rem))] overflow-auto',
   overflowPopoverEvent:
     'block w-full rounded-md px-2 py-1.5 text-left cursor-pointer hover:bg-cal-event-bg',
   overflowPopoverTitle: 'text-cal-text-body text-xs/4 font-medium truncate',

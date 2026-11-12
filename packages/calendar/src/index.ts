@@ -4,9 +4,11 @@ export { Temporal } from 'temporal-polyfill';
 // Components
 export { ResourceGridView } from './components/resource-grid-view';
 export { DayGridView } from './components/day-grid-view';
+export { MonthView } from './components/month-view';
 // Defaults
 export { resourceGridViewDefaults } from './components/resource-grid-view';
 export { dayGridViewDefaults } from './components/day-grid-view';
+export { monthViewDefaults } from './components/month-view';
 
 // Types
 export type {
@@ -30,6 +32,11 @@ export type {
   SelectionAppearance,
   SelectionEventData,
   EventLayout,
+  MonthViewProps,
+  MonthViewClassNames,
+  MonthSelectedRange,
+  MonthOverflowClickInfo,
+  MonthOverflowPopoverRenderProps,
 } from './types/calendar';
 
 // Utilities

@@ -5,6 +5,7 @@ import type {
   PositionedEvent,
 } from '@/types/calendar';
 import { getMinuteRange } from './time';
+import { assignLanes, clipDateSpan } from './lanes';
 
 interface LayoutEntry {
   event: TimedCalendarEvent;
@@ -283,20 +284,13 @@ export function layoutAllDayEvents(
   events: AllDayCalendarEvent[],
   dates: Temporal.PlainDate[]
 ): PositionedAllDayEvent[] {
-  if (events.length === 0 || dates.length === 0) return [];
-
-  const rangeStart = dates[0];
-  const rangeEnd = dates[dates.length - 1];
-
-  // Filter events overlapping the visible range
-  const overlapping = events.filter(
-    (e) =>
-      Temporal.PlainDate.compare(e.startDate, rangeEnd) <= 0 &&
-      Temporal.PlainDate.compare(e.endDate, rangeStart) >= 0
-  );
+  const clipped = events.flatMap((event) => {
+    const clip = clipDateSpan(event.startDate, event.endDate, dates);
+    return clip ? [{ event, ...clip }] : [];
+  });
 
   // Sort: longest span first, then earliest start, then id for stability
-  overlapping.sort((a, b) => {
+  clipped.sort(({ event: a }, { event: b }) => {
     const spanA =
       a.endDate.since(a.startDate, { largestUnit: 'days' }).days + 1;
     const spanB =
@@ -307,67 +301,15 @@ export function layoutAllDayEvents(
     return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   });
 
-  // Build a date-to-column index map
-  const dateToCol = new Map<string, number>();
-  for (let i = 0; i < dates.length; i++) {
-    dateToCol.set(dates[i].toString(), i);
-  }
-
-  // Greedy lane assignment
-  // Each lane tracks which columns are occupied
-  const lanes: boolean[][] = [];
-  const result: PositionedAllDayEvent[] = [];
-
-  for (const event of overlapping) {
-    const continuesBefore =
-      Temporal.PlainDate.compare(event.startDate, rangeStart) < 0;
-    const continuesAfter =
-      Temporal.PlainDate.compare(event.endDate, rangeEnd) > 0;
-
-    const clampedStart = continuesBefore ? rangeStart : event.startDate;
-    const clampedEnd = continuesAfter ? rangeEnd : event.endDate;
-
-    const startCol = dateToCol.get(clampedStart.toString())!;
-    const endCol = dateToCol.get(clampedEnd.toString())!;
-    const span = endCol - startCol + 1;
-
-    // Find first lane where columns startCol..endCol are all free
-    let assignedLane = -1;
-    for (let l = 0; l < lanes.length; l++) {
-      let fits = true;
-      for (let c = startCol; c <= endCol; c++) {
-        if (lanes[l][c]) {
-          fits = false;
-          break;
-        }
-      }
-      if (fits) {
-        assignedLane = l;
-        break;
-      }
-    }
-
-    if (assignedLane === -1) {
-      assignedLane = lanes.length;
-      lanes.push(new Array(dates.length).fill(false));
-    }
-
-    // Mark columns as occupied
-    for (let c = startCol; c <= endCol; c++) {
-      lanes[assignedLane][c] = true;
-    }
-
-    result.push({
-      event,
-      gridColumnStart: startCol + 1, // 1-based
-      gridColumnSpan: span,
-      lane: assignedLane,
-      continuesBefore,
-      continuesAfter,
-    });
-  }
-
-  return result;
+  const lanes = assignLanes(clipped, dates.length);
+  return clipped.map((c, i) => ({
+    event: c.event,
+    gridColumnStart: c.startCol + 1, // 1-based
+    gridColumnSpan: c.span,
+    lane: lanes[i],
+    continuesBefore: c.continuesBefore,
+    continuesAfter: c.continuesAfter,
+  }));
 }
 
 export function computePositionedEventsByDate(
