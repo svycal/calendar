@@ -1,0 +1,7 @@
+services:
+  playground:
+    command: pnpm dev --host 0.0.0.0 --port "$PORT" --strictPort
+    cwd: playground
+    portal:
+      title: Playground
+      description: Calendar component playground (Vite dev server, loads the library from source).

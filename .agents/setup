@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Prepares a fresh Amp orb: installs the pinned toolchain (Node from mise.toml,
+# pnpm 11 to match CI) and workspace dependencies. Must stay idempotent.
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+step() {
+  local name="$1"
+  shift
+  local start=$SECONDS
+  echo "==> $name"
+  "$@"
+  echo "<== $name ($((SECONDS - start))s)"
+}
+
+mise_bin="$HOME/.local/bin/mise"
+mise_shims="$HOME/.local/share/mise/shims"
+pnpm_version=11
+
+install_mise() {
+  if [[ ! -x "$mise_bin" ]]; then
+    curl -fsSL https://mise.run | MISE_QUIET=1 sh
+  fi
+  "$mise_bin" --version
+}
+
+install_toolchain() {
+  "$mise_bin" trust --quiet "$repo_root/mise.toml"
+  # pnpm is not pinned in mise.toml; match the version CI installs.
+  "$mise_bin" use --global --quiet "pnpm@$pnpm_version"
+  "$mise_bin" install --yes
+}
+
+# Put mise shims ahead of the base image's Node and pnpm in every login shell,
+# so Amp and supervised services use the pinned versions.
+persist_path() {
+  local marker="# calendar: mise toolchain shims"
+  if ! grep -Fqx "$marker" "$HOME/.bash_profile" 2>/dev/null; then
+    cat >>"$HOME/.bash_profile" <<EOF
+
+$marker
+export PATH="$HOME/.local/bin:$mise_shims:\$PATH"
+EOF
+  fi
+}
+
+step "Install mise" install_mise
+step "Install Node and pnpm" install_toolchain
+step "Persist toolchain PATH" persist_path
+
+export PATH="$HOME/.local/bin:$mise_shims:$PATH"
+echo "node $(node --version), pnpm $(pnpm --version)"
+
+step "Install dependencies" pnpm install --frozen-lockfile
