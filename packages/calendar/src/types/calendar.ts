@@ -23,6 +23,12 @@ interface BaseCalendarEvent {
    * when overlapping events are capped. Default: 0.
    */
   priority?: number;
+  /**
+   * Set to `false` for a display-only event: it ignores clicks and the
+   * pointer, so clicks, hovers, and drags reach the time slot beneath it.
+   * Default: true.
+   */
+  interactive?: boolean;
 }
 
 export interface TimedCalendarEvent extends BaseCalendarEvent {
@@ -43,6 +49,20 @@ export interface TimeSlot {
   startTime: Temporal.ZonedDateTime;
   endTime: Temporal.ZonedDateTime;
   available: boolean;
+}
+
+/**
+ * A block of time drawn across the full width of a day column, outside the
+ * overlap layout of timed events. It ignores the pointer.
+ */
+export interface BackgroundEvent {
+  id: string;
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
+  /** Draw beneath timed events (default) or above them. */
+  layer?: 'below' | 'above';
+  /** Class name applied to the positioned block. */
+  className?: string;
 }
 
 export interface AvailabilityRange {
@@ -195,6 +215,11 @@ export interface ResourceGridViewProps {
     timeZone: string;
     date: Temporal.PlainDate;
   }) => ReactNode;
+  /**
+   * Formats the time gutter labels. Return an empty string to hide a label.
+   * Default: 12-hour labels such as "9 am".
+   */
+  formatGutterLabel?: (time: Temporal.PlainTime) => string;
   eventGap?: number;
   eventLayout?: EventLayout;
   stackOffset?: number;
@@ -219,6 +244,12 @@ export interface ResourceGridViewProps {
 export interface DayGridSelectedRange {
   startTime: Temporal.ZonedDateTime;
   endTime: Temporal.ZonedDateTime;
+  /**
+   * The last selected day (inclusive) when the selection repeats the
+   * `startTime`–`endTime` window on each day through this date. Omitted for a
+   * single-day selection. Only set when `multiDaySelection` is enabled.
+   */
+  endDate?: Temporal.PlainDate;
 }
 
 export interface DayGridViewProps {
@@ -243,6 +274,11 @@ export interface DayGridViewProps {
    * other than a range change.
    */
   initialScrollHour?: number;
+  /**
+   * Re-applies `initialScrollHour` when this value changes, as a change of
+   * the active range does.
+   */
+  scrollKey?: string;
   onEventClick?: (event: CalendarEvent) => void;
   snapDuration?: number;
   placeholderDuration?: number;
@@ -272,6 +308,36 @@ export interface DayGridViewProps {
   selectedEventId?: string | null;
   selectedEventRef?: Ref<HTMLDivElement>;
   renderCorner?: (props: { timeZone: string }) => ReactNode;
+  /**
+   * Formats the time gutter labels. Return an empty string to hide a label.
+   * Default: 12-hour labels such as "9 am".
+   */
+  formatGutterLabel?: (time: Temporal.PlainTime) => string;
+  /** Blocks of time drawn across the full width of their day columns. */
+  backgroundEvents?: BackgroundEvent[];
+  /** Renders the content of a background event inside its positioned block. */
+  renderBackgroundEvent?: (props: {
+    event: BackgroundEvent;
+    height: number;
+  }) => ReactNode;
+  /**
+   * Called when the hovered time slot changes, and with `null` when the
+   * pointer leaves the grid. Requires `snapDuration`.
+   */
+  onSlotHover?: (
+    info: {
+      date: Temporal.PlainDate;
+      startTime: Temporal.ZonedDateTime;
+      endTime: Temporal.ZonedDateTime;
+    } | null
+  ) => void;
+  /**
+   * Let a drag selection span several days: dragging across day columns
+   * repeats the selected time window on each day, and dragging across the
+   * all-day row selects whole days. The range reports the last day in
+   * `endDate`. Default: false.
+   */
+  multiDaySelection?: boolean;
   eventGap?: number;
   eventLayout?: EventLayout;
   stackOffset?: number;

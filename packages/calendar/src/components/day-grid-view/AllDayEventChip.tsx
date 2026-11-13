@@ -65,6 +65,24 @@ export const AllDayEventChip = memo(function AllDayEventChip({
     </>
   );
 
+  const placement = {
+    gridColumn: `${gridColumnStart} / span ${gridColumnSpan}`,
+    gridRow,
+    marginLeft,
+    marginRight,
+  };
+
+  if (event.interactive === false) {
+    return (
+      <div
+        className={cn(cls('allDayEvent'), 'relative flex items-center gap-1')}
+        style={{ ...placement, ...chipStyle, pointerEvents: 'none' }}
+      >
+        {chipContent}
+      </div>
+    );
+  }
+
   if (isSelected) {
     return (
       <div
@@ -100,13 +118,7 @@ export const AllDayEventChip = memo(function AllDayEventChip({
       type="button"
       aria-label={labelParts.join(', ')}
       className={cn(cls('allDayEvent'), 'relative flex items-center gap-1')}
-      style={{
-        gridColumn: `${gridColumnStart} / span ${gridColumnSpan}`,
-        gridRow,
-        marginLeft,
-        marginRight,
-        ...chipStyle,
-      }}
+      style={{ ...placement, ...chipStyle }}
       onClick={() => onEventClick?.(event)}
     >
       {chipContent}

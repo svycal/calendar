@@ -130,3 +130,29 @@ export function formatTimeRange(
   const endLabel = formatTimeLabel(end.hour, end.minute);
   return `${startLabel} to ${endLabel}`;
 }
+
+/** The time `totalMinutes` after the start of `date`, in `timeZone`. */
+export function minutesToZonedDateTime(
+  date: Temporal.PlainDate,
+  totalMinutes: number,
+  timeZone: string
+): Temporal.ZonedDateTime {
+  return date
+    .toPlainDateTime()
+    .add({ minutes: totalMinutes })
+    .toZonedDateTime(timeZone);
+}
+
+/** Moves a time by whole days, keeping its wall-clock time. */
+export function shiftDays(
+  time: Temporal.ZonedDateTime,
+  days: number,
+  timeZone: string
+): Temporal.ZonedDateTime {
+  if (days === 0) return time;
+  return time
+    .withTimeZone(timeZone)
+    .toPlainDateTime()
+    .add({ days })
+    .toZonedDateTime(timeZone);
+}

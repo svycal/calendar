@@ -20,8 +20,24 @@ import {
   type VerticalAutoScroller,
 } from '@/lib/autoScroll';
 import { buildSyntheticEvent } from '@/lib/selection';
+import { minutesToZonedDateTime } from '@/lib/time';
 import { EventChip } from './EventChip';
 import { DISMISS_ONLY_ATTR } from './AnchoredPopover';
+
+export interface SlotRange {
+  columnId: string;
+  /** The column the drag ended in, when the drag can span columns. */
+  endColumnId?: string;
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
+}
+
+export interface DragPreview {
+  columnId: string;
+  endColumnId: string;
+  startMin: number;
+  endMin: number;
+}
 
 interface SlotInteractionLayerProps {
   columnId: string;
@@ -40,13 +56,15 @@ interface SlotInteractionLayerProps {
     startTime: Temporal.ZonedDateTime;
     endTime: Temporal.ZonedDateTime;
   }) => void;
-  onSelect?: (
-    range: {
-      columnId: string;
-      startTime: Temporal.ZonedDateTime;
-      endTime: Temporal.ZonedDateTime;
-    } | null
-  ) => void;
+  onSelect?: (range: SlotRange | null) => void;
+  onSlotHover?: (range: SlotRange | null) => void;
+  /**
+   * Finds the column under the pointer, letting a drag span columns. The
+   * layer then reports its drag preview through `onDragPreviewChange` instead
+   * of drawing it.
+   */
+  resolveColumnId?: (clientX: number) => string | null;
+  onDragPreviewChange?: (preview: DragPreview | null) => void;
   dragPreviewAppearance?: SelectionAppearance;
   renderEvent?: (props: {
     event: TimedCalendarEvent;
@@ -54,24 +72,9 @@ interface SlotInteractionLayerProps {
   }) => React.ReactNode;
 }
 
-function minutesToZonedDateTime(
-  date: Temporal.PlainDate,
-  totalMinutes: number,
-  timeZone: string
-): Temporal.ZonedDateTime {
-  const hour = Math.floor(totalMinutes / 60);
-  const minute = totalMinutes % 60;
-  if (hour >= 24) {
-    return date
-      .add({ days: Math.floor(hour / 24) })
-      .toPlainDateTime({ hour: hour % 24, minute })
-      .toZonedDateTime(timeZone);
-  }
-  return date.toPlainDateTime({ hour, minute }).toZonedDateTime(timeZone);
-}
-
 interface DragState {
   anchorSlotStart: number;
+  currentColumnId: string;
   currentStartMin: number;
   currentEndMin: number;
   moved: boolean;
@@ -91,6 +94,9 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   cls,
   onSlotClick,
   onSelect,
+  onSlotHover,
+  resolveColumnId,
+  onDragPreviewChange,
   dragPreviewAppearance = 'highlight',
   renderEvent,
 }: SlotInteractionLayerProps) {
@@ -103,12 +109,18 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   const dragRef = useRef<DragState | null>(null);
   const didDragRef = useRef(false);
   const lastClientYRef = useRef(0);
+  const lastClientXRef = useRef(0);
+  const hoveredSlotRef = useRef<number | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
   const autoScrollerRef = useRef<VerticalAutoScroller | null>(null);
-  const applyDragFromClientYRef = useRef<(clientY: number) => void>(() => {});
+  const applyDragFromPointerRef = useRef<
+    (clientX: number, clientY: number) => void
+  >(() => {});
 
   // Stable refs for document-level handlers
   const onSelectRef = useRef(onSelect);
+  const resolveColumnIdRef = useRef(resolveColumnId);
+  const onDragPreviewChangeRef = useRef(onDragPreviewChange);
   const columnIdRef = useRef(columnId);
   const dateRef = useRef(date);
   const timeZoneRef = useRef(timeZone);
@@ -153,8 +165,19 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     return { startMin: rangeStart, endMin: rangeEnd };
   }, []);
 
-  const applyDragFromClientY = useCallback(
-    (clientY: number) => {
+  const showDragPreview = useCallback((preview: DragPreview | null) => {
+    const report = onDragPreviewChangeRef.current;
+    if (report) {
+      report(preview);
+    } else {
+      setDragPreview(
+        preview && { startMin: preview.startMin, endMin: preview.endMin }
+      );
+    }
+  }, []);
+
+  const applyDragFromPointer = useCallback(
+    (clientX: number, clientY: number) => {
       const drag = dragRef.current;
       const container = containerRef.current;
       if (!drag || !container) return;
@@ -169,22 +192,33 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       }
 
       const range = computeRange(drag.anchorSlotStart, currentSlot);
+      const columnId =
+        resolveColumnIdRef.current?.(clientX) ?? drag.currentColumnId;
       const unchanged =
         drag.moved &&
         drag.currentStartMin === range.startMin &&
-        drag.currentEndMin === range.endMin;
+        drag.currentEndMin === range.endMin &&
+        drag.currentColumnId === columnId;
       drag.currentStartMin = range.startMin;
       drag.currentEndMin = range.endMin;
+      drag.currentColumnId = columnId;
       drag.moved = true;
-      if (!unchanged) setDragPreview(range);
+      if (!unchanged) {
+        showDragPreview({
+          columnId: columnIdRef.current,
+          endColumnId: columnId,
+          ...range,
+        });
+      }
     },
-    [computeRange]
+    [computeRange, showDragPreview]
   );
 
   const handleDocMouseMove = useCallback(
     (e: MouseEvent) => {
       lastClientYRef.current = e.clientY;
-      applyDragFromClientY(e.clientY);
+      lastClientXRef.current = e.clientX;
+      applyDragFromPointer(e.clientX, e.clientY);
 
       const scrollParent = scrollParentRef.current;
       if (!scrollParent) return;
@@ -193,7 +227,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
         autoScrollerRef.current?.ensure();
       }
     },
-    [applyDragFromClientY]
+    [applyDragFromPointer]
   );
 
   const handleDocMouseUpRef = useRef<() => void>(() => {});
@@ -211,6 +245,9 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       // Fire onSelect with the final settled range
       onSelectRef.current?.({
         columnId: columnIdRef.current,
+        ...(resolveColumnIdRef.current
+          ? { endColumnId: drag.currentColumnId }
+          : {}),
         startTime: minutesToZonedDateTime(
           dateRef.current,
           drag.currentStartMin,
@@ -224,14 +261,16 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       });
     }
     dragRef.current = null;
-    setDragPreview(null);
+    showDragPreview(null);
     document.removeEventListener('mousemove', handleDocMouseMove);
     document.removeEventListener('mouseup', handleDocMouseUpRef.current);
-  }, [handleDocMouseMove]);
+  }, [handleDocMouseMove, showDragPreview]);
 
   // Sync all latest-value refs after render, before browser events
   useLayoutEffect(() => {
     onSelectRef.current = onSelect;
+    resolveColumnIdRef.current = resolveColumnId;
+    onDragPreviewChangeRef.current = onDragPreviewChange;
     columnIdRef.current = columnId;
     dateRef.current = date;
     timeZoneRef.current = timeZone;
@@ -240,7 +279,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     snapDurationRef.current = snapDuration;
     placeholderDurationRef.current = placeholderDuration;
     handleDocMouseUpRef.current = handleDocMouseUp;
-    applyDragFromClientYRef.current = applyDragFromClientY;
+    applyDragFromPointerRef.current = applyDragFromPointer;
   });
 
   // Cleanup on unmount
@@ -270,20 +309,31 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       const slotEnd = slotStart + placeholderDuration;
       dragRef.current = {
         anchorSlotStart: slotStart,
+        currentColumnId: columnId,
         currentStartMin: slotStart,
         currentEndMin: slotEnd,
         moved: false,
       };
       lastClientYRef.current = e.clientY;
+      lastClientXRef.current = e.clientX;
       scrollParentRef.current = findVerticalScrollParent(container);
       autoScrollerRef.current?.stop();
       autoScrollerRef.current = createVerticalAutoScroller({
         getPointerY: () => lastClientYRef.current,
         getScrollParent: () => scrollParentRef.current,
-        onScroll: () => applyDragFromClientYRef.current(lastClientYRef.current),
+        onScroll: () =>
+          applyDragFromPointerRef.current(
+            lastClientXRef.current,
+            lastClientYRef.current
+          ),
       });
 
-      setDragPreview({ startMin: slotStart, endMin: slotEnd });
+      showDragPreview({
+        columnId,
+        endColumnId: columnId,
+        startMin: slotStart,
+        endMin: slotEnd,
+      });
 
       document.addEventListener('mousemove', handleDocMouseMove);
       document.addEventListener('mouseup', handleDocMouseUp);
@@ -294,7 +344,30 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       placeholderDuration,
       handleDocMouseMove,
       handleDocMouseUp,
+      columnId,
+      showDragPreview,
     ]
+  );
+
+  const reportHover = useCallback(
+    (slotStart: number | null) => {
+      if (hoveredSlotRef.current === slotStart) return;
+      hoveredSlotRef.current = slotStart;
+      onSlotHover?.(
+        slotStart == null
+          ? null
+          : {
+              columnId,
+              startTime: minutesToZonedDateTime(date, slotStart, timeZone),
+              endTime: minutesToZonedDateTime(
+                date,
+                slotStart + placeholderDuration,
+                timeZone
+              ),
+            }
+      );
+    },
+    [onSlotHover, columnId, date, timeZone, placeholderDuration]
   );
 
   const handleMouseMove = useCallback(
@@ -307,15 +380,18 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
 
       const rect = container.getBoundingClientRect();
       const yOffset = e.clientY - rect.top;
-      setHoveredSlotStart(snapToSlot(yOffset));
+      const slotStart = snapToSlot(yOffset);
+      setHoveredSlotStart(slotStart);
+      reportHover(slotStart);
     },
-    [snapToSlot]
+    [snapToSlot, reportHover]
   );
 
   const handleMouseLeave = useCallback(() => {
     if (dragRef.current) return;
     setHoveredSlotStart(null);
-  }, []);
+    reportHover(null);
+  }, [reportHover]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -356,6 +432,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     <div
       ref={containerRef}
       {...{ [DISMISS_ONLY_ATTR]: '' }}
+      data-slot-column={columnId}
       style={{
         gridRow: '3 / -1',
         gridColumn: column,
