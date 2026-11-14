@@ -126,11 +126,12 @@ function App() {
 
 ### Render props
 
-| Prop           | Type                                                                             | Description                                                          |
-| -------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `renderHeader` | `(props: { resource: CalendarResource }) => ReactNode`                           | Custom renderer for resource column headers.                         |
-| `renderEvent`  | `(props: { event: TimedCalendarEvent, position: PositionedEvent }) => ReactNode` | Custom renderer for timed events.                                    |
-| `renderCorner` | `() => ReactNode`                                                                | Custom renderer for the top-left corner cell (e.g. time zone label). |
+| Prop                | Type                                                                             | Description                                                                                          |
+| ------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `renderHeader`      | `(props: { resource: CalendarResource }) => ReactNode`                           | Custom renderer for resource column headers.                                                         |
+| `renderEvent`       | `(props: { event: TimedCalendarEvent, position: PositionedEvent }) => ReactNode` | Custom renderer for timed events.                                                                    |
+| `renderCorner`      | `() => ReactNode`                                                                | Custom renderer for the top-left corner cell (e.g. time zone label).                                 |
+| `formatGutterLabel` | `(time: Temporal.PlainTime) => string`                                           | Formats the time gutter labels. Return `""` to hide a label. Default: 12-hour labels such as "9 am". |
 
 ## DayGridView
 
@@ -192,25 +193,42 @@ The following props work identically to `ResourceGridView`: `timeAxis`, `initial
 
 #### Selection
 
-| Prop            | Type                                            | Description                                     |
-| --------------- | ----------------------------------------------- | ----------------------------------------------- |
-| `selectedRange` | `DayGridSelectedRange \| null`                  | The currently selected time range (controlled). |
-| `onSelect`      | `(range: DayGridSelectedRange \| null) => void` | Called when the user selects or clears a range. |
-| `selectionRef`  | `Ref<HTMLDivElement>`                           | Ref attached to the selection overlay element.  |
+| Prop                | Type                                            | Description                                                                                                                                                                                                                                |
+| ------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `selectedRange`     | `DayGridSelectedRange \| null`                  | The currently selected time range (controlled).                                                                                                                                                                                            |
+| `onSelect`          | `(range: DayGridSelectedRange \| null) => void` | Called when the user selects or clears a range.                                                                                                                                                                                            |
+| `selectionRef`      | `Ref<HTMLDivElement>`                           | Ref attached to the selection overlay element (the first day of a multi-day selection).                                                                                                                                                    |
+| `multiDaySelection` | `boolean`                                       | Let a drag span several days. Dragging across day columns repeats the time window on each day; dragging across the all-day row selects whole days (`allDay: true`), drawn in the all-day row. The range reports its last day in `endDate`. |
+| `selectionLingerMs` | `number`                                        | How long (ms) the selection stays in the DOM after clearing, so popover close transitions keep their reference. Default: `0`.                                                                                                              |
+
+#### Background events
+
+| Prop                    | Type                                                               | Description                                                                               |
+| ----------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `backgroundEvents`      | `BackgroundEvent[]`                                                | Blocks of time drawn across the full width of their day columns. They ignore the pointer. |
+| `renderBackgroundEvent` | `(props: { event: BackgroundEvent, height: number }) => ReactNode` | Renders the content of a background event inside its positioned block.                    |
+
+#### Scrolling
+
+| Prop        | Type     | Description                                                                           |
+| ----------- | -------- | ------------------------------------------------------------------------------------- |
+| `scrollKey` | `string` | Re-applies `initialScrollHour` when it changes, as a change of the active range does. |
 
 #### Slot click
 
-| Prop          | Type                                           | Description                                                                                |
-| ------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `onSlotClick` | `(info: { date, startTime, endTime }) => void` | Called when an empty time slot is clicked. Receives the `date` (PlainDate) and time range. |
+| Prop          | Type                                                   | Description                                                                                             |
+| ------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `onSlotClick` | `(info: { date, startTime, endTime }) => void`         | Called when an empty time slot is clicked. Receives the `date` (PlainDate) and time range.              |
+| `onSlotHover` | `(info: { date, startTime, endTime } \| null) => void` | Called when the hovered slot changes, and with `null` when the pointer leaves. Requires `snapDuration`. |
 
 #### Render props
 
-| Prop           | Type                                                                             | Description                                                          |
-| -------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `renderHeader` | `(props: { date: PlainDate, isToday: boolean }) => ReactNode`                    | Custom renderer for day column headers.                              |
-| `renderEvent`  | `(props: { event: TimedCalendarEvent, position: PositionedEvent }) => ReactNode` | Custom renderer for timed events.                                    |
-| `renderCorner` | `(props: { timeZone: string }) => ReactNode`                                     | Custom renderer for the top-left corner cell (e.g. time zone label). |
+| Prop                | Type                                                                             | Description                                                          |
+| ------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `renderHeader`      | `(props: { date: PlainDate, isToday: boolean }) => ReactNode`                    | Custom renderer for day column headers.                              |
+| `renderEvent`       | `(props: { event: TimedCalendarEvent, position: PositionedEvent }) => ReactNode` | Custom renderer for timed events.                                    |
+| `renderCorner`      | `(props: { timeZone: string }) => ReactNode`                                     | Custom renderer for the top-left corner cell (e.g. time zone label). |
+| `formatGutterLabel` | `(time: Temporal.PlainTime) => string`                                           | Formats the time gutter labels. Return `""` to hide a label.         |
 
 ### DayGridSelectedRange
 
@@ -218,6 +236,24 @@ The following props work identically to `ResourceGridView`: `timeAxis`, `initial
 interface DayGridSelectedRange {
   startTime: Temporal.ZonedDateTime;
   endTime: Temporal.ZonedDateTime;
+  // Last selected day (inclusive) of a multi-day selection, which repeats the
+  // startTime–endTime window on each day. Omitted for one day.
+  endDate?: Temporal.PlainDate;
+  // True for whole days selected along the all-day row. startTime and endTime
+  // then span the first day, midnight to midnight.
+  allDay?: boolean;
+}
+```
+
+### BackgroundEvent
+
+```ts
+interface BackgroundEvent {
+  id: string;
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime;
+  layer?: 'below' | 'above'; // Beneath timed events (default) or above them.
+  className?: string; // Applied to the positioned block.
 }
 ```
 
@@ -383,6 +419,7 @@ interface TimedCalendarEvent {
   status?: 'confirmed' | 'canceled' | 'tentative';
   ariaLabel?: string;
   priority?: number;
+  interactive?: boolean;
   metadata?: Record<string, unknown>;
 }
 
@@ -398,11 +435,14 @@ interface AllDayCalendarEvent {
   status?: 'confirmed' | 'canceled' | 'tentative';
   ariaLabel?: string;
   priority?: number;
+  interactive?: boolean;
   metadata?: Record<string, unknown>;
 }
 ```
 
 The optional `ariaLabel` field provides a plain-text label used for `aria-label` attributes and screen reader announcements. When `title` or `clientName` are React elements (not plain strings), set `ariaLabel` to avoid `"[object Object]"` in accessible labels.
+
+Set `interactive: false` for a display-only event: it ignores clicks and the pointer, so clicks, hovers, and drags reach the time slot beneath it.
 
 `priority` controls overlap packing. Higher values are placed in earlier columns, so they stay visible when `eventMaxStack` or `eventMinWidth` caps how many overlapping events are shown. Omit it (or use `0`) for the default. Use this to keep product appointments on the grid ahead of connected-calendar events.
 
@@ -690,6 +730,7 @@ export type {
   AllDayCalendarEvent,
   TimeSlot,
   AvailabilityRange,
+  BackgroundEvent,
   TimeAxisConfig,
   ResourceGridViewProps,
   ResourceGridViewClassNames,

@@ -6,6 +6,7 @@ import {
   formatTimeRange,
   generateDateRange,
   formatDayOfWeek,
+  shiftDays,
 } from '@/lib/time';
 import {
   computePositionedEventsByDate,
@@ -17,6 +18,7 @@ import {
 } from '@/lib/availability';
 import type {
   AllDayCalendarEvent,
+  BackgroundEvent,
   CalendarEvent,
   DayGridSelectedRange,
   DayGridViewClassNames,
@@ -28,7 +30,12 @@ import { dayGridViewDefaults } from './defaults';
 import { DayHeader } from './DayHeader';
 import { DayColumn } from './DayColumn';
 import { TimeGutter } from '../shared/TimeGutter';
-import { SlotInteractionLayer } from '../shared/SlotInteractionLayer';
+import {
+  SlotInteractionLayer,
+  type DragPreview,
+  type SlotRange,
+} from '../shared/SlotInteractionLayer';
+import { BackgroundEventLayer } from './BackgroundEventLayer';
 import { SelectionOverlay } from '../shared/SelectionOverlay';
 import { NowIndicator } from '../shared/NowIndicator';
 import { AllDaySection } from './AllDaySection';
@@ -46,6 +53,7 @@ export function DayGridView({
   defaultUnavailable,
   timeAxis,
   initialScrollHour,
+  scrollKey,
   onEventClick,
   snapDuration,
   placeholderDuration,
@@ -65,6 +73,11 @@ export function DayGridView({
   selectedEventId,
   selectedEventRef,
   renderCorner,
+  formatGutterLabel,
+  backgroundEvents,
+  renderBackgroundEvent,
+  onSlotHover,
+  multiDaySelection = false,
   eventGap,
   eventLayout = 'columns',
   stackOffset = 8,
@@ -103,7 +116,7 @@ export function DayGridView({
     endHour,
     effectiveHourHeight,
     containerHeight,
-    scrollKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}`,
+    scrollKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}/${scrollKey ?? ''}`,
   });
 
   const cls = useCallback(
@@ -138,6 +151,51 @@ export function DayGridView({
   }, [selectedRange, selectionLingerMs]);
 
   const effectiveSelectedRange = selectedRange ?? staleSelection;
+
+  const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
+
+  // Each selected day repeats the range's time window. A range without
+  // `endDate` covers one day.
+  const selectionSegments = useMemo(() => {
+    if (!effectiveSelectedRange || effectiveSelectedRange.allDay) return [];
+    const { startTime, endTime, endDate } = effectiveSelectedRange;
+    const startDate = startTime.withTimeZone(timeZone).toPlainDate();
+    const dayCount = endDate ? startDate.until(endDate).days + 1 : 1;
+    return Array.from({ length: Math.max(dayCount, 1) }, (_, i) => ({
+      startTime: shiftDays(startTime, i, timeZone),
+      endTime: shiftDays(endTime, i, timeZone),
+    }));
+  }, [effectiveSelectedRange, timeZone]);
+
+  // Whole days selected from the all-day row, drawn there.
+  const selectedDays = useMemo(() => {
+    if (!effectiveSelectedRange?.allDay) return null;
+    const startDate = effectiveSelectedRange.startTime
+      .withTimeZone(timeZone)
+      .toPlainDate();
+    return {
+      startDate,
+      endDate: effectiveSelectedRange.endDate ?? startDate,
+    };
+  }, [effectiveSelectedRange, timeZone]);
+
+  // Each day column's part of a multi-day drag preview, by date.
+  const previewRangeByDate = useMemo(() => {
+    const map = new Map<string, { startMin: number; endMin: number }>();
+    if (!dragPreview) return map;
+    const anchor = Temporal.PlainDate.from(dragPreview.columnId);
+    const end = Temporal.PlainDate.from(dragPreview.endColumnId);
+    const first = Temporal.PlainDate.compare(anchor, end) <= 0 ? anchor : end;
+    const dayCount = Math.abs(anchor.until(end).days) + 1;
+    const range = {
+      startMin: dragPreview.startMin,
+      endMin: dragPreview.endMin,
+    };
+    for (let i = 0; i < dayCount; i++) {
+      map.set(first.add({ days: i }).toString(), range);
+    }
+    return map;
+  }, [dragPreview]);
 
   const timeSlots = useMemo(
     () => generateTimeSlots({ startHour, endHour, intervalMinutes }),
@@ -237,13 +295,7 @@ export function DayGridView({
   );
 
   const handleSlotInteractionSelect = useCallback(
-    (
-      range: {
-        columnId: string;
-        startTime: Temporal.ZonedDateTime;
-        endTime: Temporal.ZonedDateTime;
-      } | null
-    ) => {
+    (range: SlotRange | null) => {
       if (!range) {
         onSelect?.(null);
         return;
@@ -252,12 +304,121 @@ export function DayGridView({
         startTime: range.startTime,
         endTime: range.endTime,
       };
+      if (range.endColumnId && range.endColumnId !== range.columnId) {
+        const anchor = Temporal.PlainDate.from(range.columnId);
+        const other = Temporal.PlainDate.from(range.endColumnId);
+        const offset = anchor.until(other).days;
+        if (offset < 0) {
+          dayGridRange.startTime = shiftDays(range.startTime, offset, timeZone);
+          dayGridRange.endTime = shiftDays(range.endTime, offset, timeZone);
+          dayGridRange.endDate = anchor;
+        } else {
+          dayGridRange.endDate = other;
+        }
+      }
       onSelect?.(dayGridRange);
       const parts = [formatTimeRange(range.startTime, range.endTime, timeZone)];
+      if (dayGridRange.endDate) {
+        parts.push(
+          `${formatDayOfWeek(
+            dayGridRange.startTime.withTimeZone(timeZone).toPlainDate()
+          )} to ${formatDayOfWeek(dayGridRange.endDate)}`
+        );
+      }
       announce(`Selected time: ${parts.join(', ')}`);
     },
     [onSelect, timeZone, announce]
   );
+
+  const handleSelectDays = useCallback(
+    (
+      days: {
+        startDate: Temporal.PlainDate;
+        endDate: Temporal.PlainDate;
+      } | null
+    ) => {
+      if (!days) {
+        onSelect?.(null);
+        return;
+      }
+      const { startDate, endDate } = days;
+      const range: DayGridSelectedRange = {
+        startTime: startDate.toZonedDateTime(timeZone),
+        endTime: startDate.add({ days: 1 }).toZonedDateTime(timeZone),
+        allDay: true,
+      };
+      if (Temporal.PlainDate.compare(endDate, startDate) > 0) {
+        range.endDate = endDate;
+      }
+      onSelect?.(range);
+      announce(
+        `Selected days: ${formatDayOfWeek(startDate)} to ${formatDayOfWeek(endDate)}`
+      );
+    },
+    [onSelect, timeZone, announce]
+  );
+
+  // The day column under the pointer. The pointer is first clamped to the
+  // visible part of the grid, right of the sticky gutter, so a drag past an
+  // edge picks the outermost visible column rather than a scrolled-out one.
+  const resolveColumnId = useCallback(
+    (clientX: number): string | null => {
+      const columns =
+        gridRef.current?.querySelectorAll<HTMLElement>('[data-day-column]');
+      const root = rootRef.current;
+      const gutter = allDayRef.current;
+      if (!columns || columns.length === 0 || !root || !gutter) return null;
+      const x = Math.min(
+        Math.max(clientX, gutter.getBoundingClientRect().right),
+        root.getBoundingClientRect().right - 1
+      );
+      for (const column of columns) {
+        if (x < column.getBoundingClientRect().right) {
+          return column.dataset.dayColumn ?? null;
+        }
+      }
+      return columns[columns.length - 1].dataset.dayColumn ?? null;
+    },
+    [gridRef, rootRef, allDayRef]
+  );
+
+  const handleSlotHover = useCallback(
+    (range: SlotRange | null) => {
+      onSlotHover?.(
+        range && {
+          date: Temporal.PlainDate.from(range.columnId),
+          startTime: range.startTime,
+          endTime: range.endTime,
+        }
+      );
+    },
+    [onSlotHover]
+  );
+
+  const belowEvents = useMemo(
+    () => (backgroundEvents ?? []).filter((e) => e.layer !== 'above'),
+    [backgroundEvents]
+  );
+  const aboveEvents = useMemo(
+    () => (backgroundEvents ?? []).filter((e) => e.layer === 'above'),
+    [backgroundEvents]
+  );
+
+  const renderBackgroundLayers = (events: BackgroundEvent[], layer: string) =>
+    events.length > 0 &&
+    dates.map((date, i) => (
+      <BackgroundEventLayer
+        key={`${layer}-${date.toString()}`}
+        events={events}
+        date={date}
+        column={i + 2}
+        timeZone={timeZone}
+        startHour={startHour}
+        endHour={endHour}
+        hourHeight={effectiveHourHeight}
+        renderBackgroundEvent={renderBackgroundEvent}
+      />
+    ));
 
   const handleSlotClick = useCallback(
     (info: {
@@ -348,13 +509,28 @@ export function DayGridView({
           onEventClick={handleEventClick}
           selectedEventId={selectedEventId}
           selectedEventRef={selectedEventRef}
+          onSelectDays={
+            multiDaySelection && onSelect ? handleSelectDays : undefined
+          }
+          resolveColumnId={resolveColumnId}
+          selectedDays={selectedDays}
+          selectionRef={selectionRef}
         />
 
         {/* Gutter cells */}
         {timeSlots.map((slot) => (
           <TimeGutter
             key={slot.index}
-            label={slot.label}
+            label={
+              formatGutterLabel
+                ? formatGutterLabel(
+                    Temporal.PlainTime.from({
+                      hour: slot.hour,
+                      minute: slot.minute,
+                    })
+                  )
+                : slot.label
+            }
             row={slot.index + 3}
             isHourStart={slot.isHourStart}
             isFirst={slot.index === 0}
@@ -395,6 +571,9 @@ export function DayGridView({
           );
         })}
 
+        {/* Background events beneath timed events */}
+        {renderBackgroundLayers(belowEvents, 'below')}
+
         {/* Slot interaction layers */}
         {snapDuration != null &&
           dates.map((date, i) => (
@@ -412,6 +591,14 @@ export function DayGridView({
               cls={cls}
               onSlotClick={onSlotClick ? handleSlotClick : undefined}
               onSelect={onSelect ? handleSlotInteractionSelect : undefined}
+              onSlotHover={onSlotHover ? handleSlotHover : undefined}
+              resolveColumnId={
+                multiDaySelection && onSelect ? resolveColumnId : undefined
+              }
+              onDragPreviewChange={
+                multiDaySelection && onSelect ? setDragPreview : undefined
+              }
+              previewRange={previewRangeByDate.get(date.toString()) ?? null}
               dragPreviewAppearance={dragPreviewAppearance}
               renderEvent={renderEvent}
             />
@@ -439,32 +626,42 @@ export function DayGridView({
           />
         ))}
 
+        {/* Background events above timed events */}
+        {renderBackgroundLayers(aboveEvents, 'above')}
+
         {/* Selection overlay */}
-        {effectiveSelectedRange != null &&
-          (() => {
-            const selDate = effectiveSelectedRange.startTime
+        {(() => {
+          let refAttached = false;
+          return selectionSegments.map((segment) => {
+            const selDate = segment.startTime
               .withTimeZone(timeZone)
               .toPlainDate();
             const colIdx = dates.findIndex(
               (d) => Temporal.PlainDate.compare(d, selDate) === 0
             );
             if (colIdx === -1) return null;
+            // selectionRef goes to the first visible day
+            const segmentRef = refAttached ? undefined : selectionRef;
+            refAttached = true;
             return (
               <SelectionOverlay
-                startTime={effectiveSelectedRange.startTime}
-                endTime={effectiveSelectedRange.endTime}
+                key={`selection-${selDate.toString()}`}
+                startTime={segment.startTime}
+                endTime={segment.endTime}
                 column={colIdx + 2}
                 viewDate={dates[colIdx]}
                 timeZone={timeZone}
                 startHour={startHour}
+                endHour={endHour}
                 hourHeight={effectiveHourHeight}
                 cls={cls}
                 appearance={selectionAppearance}
-                selectionRef={selectionRef}
+                selectionRef={segmentRef}
                 renderEvent={renderEvent}
               />
             );
-          })()}
+          });
+        })()}
 
         {/* Now indicator — only if today is in the active range */}
         {todayDate && (

@@ -18,6 +18,7 @@ export type {
   AllDayCalendarEvent,
   TimeSlot,
   AvailabilityRange,
+  BackgroundEvent,
   TimeAxisConfig,
   ResourceGridViewProps,
   ResourceGridViewClassNames,

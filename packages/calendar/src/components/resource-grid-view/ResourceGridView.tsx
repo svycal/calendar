@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Temporal } from 'temporal-polyfill';
+import { Temporal } from 'temporal-polyfill';
 import { cn } from '@/lib/utils';
 import {
   generateTimeSlots,
@@ -62,6 +62,7 @@ export function ResourceGridView({
   selectedEventId,
   selectedEventRef,
   renderCorner,
+  formatGutterLabel,
   eventGap,
   eventLayout = 'columns',
   stackOffset = 8,
@@ -381,7 +382,16 @@ export function ResourceGridView({
         {timeSlots.map((slot) => (
           <TimeGutter
             key={slot.index}
-            label={slot.label}
+            label={
+              formatGutterLabel
+                ? formatGutterLabel(
+                    Temporal.PlainTime.from({
+                      hour: slot.hour,
+                      minute: slot.minute,
+                    })
+                  )
+                : slot.label
+            }
             row={slot.index + 3}
             isHourStart={slot.isHourStart}
             isFirst={slot.index === 0}
@@ -486,6 +496,7 @@ export function ResourceGridView({
                 viewDate={date}
                 timeZone={timeZone}
                 startHour={startHour}
+                endHour={endHour}
                 hourHeight={effectiveHourHeight}
                 cls={cls}
                 appearance={selectionAppearance}

@@ -43,6 +43,7 @@ export const EventChip = memo(function EventChip({
   selectedEventRef,
 }: EventChipProps) {
   const { event, top, height, subColumn, totalSubColumns } = positioned;
+  const isInteractive = interactive && event.interactive !== false;
   const colSpan = positioned.colSpan ?? 1;
   const color = event.color ?? fallbackColor;
 
@@ -95,7 +96,7 @@ export const EventChip = memo(function EventChip({
             left,
             width,
             zIndex,
-            pointerEvents: interactive ? 'auto' : 'none',
+            pointerEvents: isInteractive ? 'auto' : 'none',
           }}
         >
           {customContent}
@@ -106,14 +107,14 @@ export const EventChip = memo(function EventChip({
 
   const startTimeStr = formatEventStartTime(event.startTime, timeZone);
 
-  const ariaLabel = interactive
+  const ariaLabel = isInteractive
     ? describeEvent(event, timeZone, { includeStatus: true })
     : undefined;
 
   return (
     <div
       ref={selectedEventRef}
-      {...(interactive
+      {...(isInteractive
         ? { role: 'button', tabIndex: 0, 'aria-label': ariaLabel }
         : {})}
       className={cn(cls('event'), isSelected && cls('eventSelected'))}
@@ -123,9 +124,9 @@ export const EventChip = memo(function EventChip({
         left,
         width,
         zIndex,
-        pointerEvents: interactive ? 'auto' : 'none',
+        pointerEvents: isInteractive ? 'auto' : 'none',
       }}
-      {...(interactive
+      {...(isInteractive
         ? {
             onClick: () => onClick?.(event),
             onKeyDown: (e: React.KeyboardEvent) => {
