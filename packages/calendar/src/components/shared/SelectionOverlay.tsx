@@ -18,6 +18,7 @@ interface SelectionOverlayProps {
   viewDate: Temporal.PlainDate;
   timeZone: string;
   startHour: number;
+  endHour: number;
   hourHeight: number;
   cls: (key: keyof GridViewClassNames) => string;
   appearance?: SelectionAppearance;
@@ -36,6 +37,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   viewDate,
   timeZone,
   startHour,
+  endHour,
   hourHeight,
   cls,
   appearance = 'highlight',
@@ -48,8 +50,11 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   const range = getMinuteRange(startTime, endTime, viewDate, timeZone);
   if (!range) return null;
 
-  const top = (range.startMin - axisStartMin) * pixelsPerMinute;
-  const height = (range.endMin - range.startMin) * pixelsPerMinute;
+  // Clip to the visible time axis so the overlay never extends the grid
+  const startMin = Math.max(range.startMin, axisStartMin);
+  const endMin = Math.min(range.endMin, endHour * 60);
+  const top = (startMin - axisStartMin) * pixelsPerMinute;
+  const height = (endMin - startMin) * pixelsPerMinute;
 
   if (height <= 0) return null;
 

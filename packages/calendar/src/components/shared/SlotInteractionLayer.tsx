@@ -60,11 +60,13 @@ interface SlotInteractionLayerProps {
   onSlotHover?: (range: SlotRange | null) => void;
   /**
    * Finds the column under the pointer, letting a drag span columns. The
-   * layer then reports its drag preview through `onDragPreviewChange` instead
-   * of drawing it.
+   * layer then reports its drag preview through `onDragPreviewChange` and
+   * draws `previewRange` instead of its own preview.
    */
   resolveColumnId?: (clientX: number) => string | null;
   onDragPreviewChange?: (preview: DragPreview | null) => void;
+  /** This column's part of a drag preview that spans columns. */
+  previewRange?: { startMin: number; endMin: number } | null;
   dragPreviewAppearance?: SelectionAppearance;
   renderEvent?: (props: {
     event: TimedCalendarEvent;
@@ -97,14 +99,16 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   onSlotHover,
   resolveColumnId,
   onDragPreviewChange,
+  previewRange,
   dragPreviewAppearance = 'highlight',
   renderEvent,
 }: SlotInteractionLayerProps) {
   const [hoveredSlotStart, setHoveredSlotStart] = useState<number | null>(null);
-  const [dragPreview, setDragPreview] = useState<{
+  const [ownDragPreview, setDragPreview] = useState<{
     startMin: number;
     endMin: number;
   } | null>(null);
+  const dragPreview = onDragPreviewChange ? previewRange : ownDragPreview;
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const didDragRef = useRef(false);
@@ -291,6 +295,27 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     };
   }, [handleDocMouseMove]);
 
+  const reportHover = useCallback(
+    (slotStart: number | null) => {
+      if (hoveredSlotRef.current === slotStart) return;
+      hoveredSlotRef.current = slotStart;
+      onSlotHover?.(
+        slotStart == null
+          ? null
+          : {
+              columnId,
+              startTime: minutesToZonedDateTime(date, slotStart, timeZone),
+              endTime: minutesToZonedDateTime(
+                date,
+                slotStart + placeholderDuration,
+                timeZone
+              ),
+            }
+      );
+    },
+    [onSlotHover, columnId, date, timeZone, placeholderDuration]
+  );
+
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       if (!onSelect) return;
@@ -305,6 +330,9 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
 
       e.preventDefault(); // Prevent text selection
       onSelect(null); // Clear previous selection
+      // No hover while dragging
+      setHoveredSlotStart(null);
+      reportHover(null);
 
       const slotEnd = slotStart + placeholderDuration;
       dragRef.current = {
@@ -346,34 +374,15 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
       handleDocMouseUp,
       columnId,
       showDragPreview,
+      reportHover,
     ]
-  );
-
-  const reportHover = useCallback(
-    (slotStart: number | null) => {
-      if (hoveredSlotRef.current === slotStart) return;
-      hoveredSlotRef.current = slotStart;
-      onSlotHover?.(
-        slotStart == null
-          ? null
-          : {
-              columnId,
-              startTime: minutesToZonedDateTime(date, slotStart, timeZone),
-              endTime: minutesToZonedDateTime(
-                date,
-                slotStart + placeholderDuration,
-                timeZone
-              ),
-            }
-      );
-    },
-    [onSlotHover, columnId, date, timeZone, placeholderDuration]
   );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // Suppress hover highlight during drag
-      if (dragRef.current) return;
+      // Suppress hover during a drag, including one that started in another
+      // column or the all-day row
+      if (dragRef.current || e.buttons !== 0) return;
 
       const container = containerRef.current;
       if (!container) return;

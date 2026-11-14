@@ -45,27 +45,42 @@ function render(props: Partial<DayGridViewProps> = {}): HTMLElement {
   return container;
 }
 
-// Lays the slot columns out side by side, each a day tall.
+function mockRect(el: Element, left: number, right: number) {
+  el.getBoundingClientRect = () =>
+    ({
+      top: 0,
+      bottom: 24 * HOUR_HEIGHT,
+      left,
+      right,
+      width: right - left,
+      height: 24 * HOUR_HEIGHT,
+      x: left,
+      y: 0,
+      toJSON: () => ({}),
+    }) as DOMRect;
+}
+
+// Lays the day columns out side by side, each a day tall, inside a scroller
+// that shows all of them. Returns the slot columns.
 function layOutColumns(container: HTMLElement) {
   const columns = container.querySelectorAll<HTMLElement>('[data-slot-column]');
-  columns.forEach((column, i) => {
-    column.getBoundingClientRect = () =>
-      ({
-        top: 0,
-        bottom: 24 * HOUR_HEIGHT,
-        left: i * COLUMN_WIDTH,
-        right: (i + 1) * COLUMN_WIDTH,
-        width: COLUMN_WIDTH,
-        height: 24 * HOUR_HEIGHT,
-        x: i * COLUMN_WIDTH,
-        y: 0,
-        toJSON: () => ({}),
-      }) as DOMRect;
-  });
+  const days = container.querySelectorAll<HTMLElement>('[data-day-column]');
+  [columns, days].forEach((list) =>
+    list.forEach((el, i) =>
+      mockRect(el, i * COLUMN_WIDTH, (i + 1) * COLUMN_WIDTH)
+    )
+  );
+  mockRect(container.firstElementChild!, 0, days.length * COLUMN_WIDTH);
   return columns;
 }
 
-function mouse(target: EventTarget, type: string, x: number, y: number) {
+function mouse(
+  target: EventTarget,
+  type: string,
+  x: number,
+  y: number,
+  buttons = 0
+) {
   act(() => {
     target.dispatchEvent(
       new MouseEvent(type, {
@@ -74,6 +89,7 @@ function mouse(target: EventTarget, type: string, x: number, y: number) {
         clientX: x,
         clientY: y,
         button: 0,
+        buttons,
       })
     );
   });
@@ -121,6 +137,82 @@ describe('DayGridView multi-day selection', () => {
     const range = onSelect.mock.lastCall?.[0];
     expect(range?.startTime.toString()).toBe(at(monday, 9).toString());
     expect(range?.endDate).toBeUndefined();
+  });
+
+  it('stops at the last visible column when dragging past the edge', () => {
+    const onSelect = vi.fn<(range: DayGridSelectedRange | null) => void>();
+    const container = render({
+      snapDuration: 15,
+      onSelect,
+      multiDaySelection: true,
+    });
+    const columns = layOutColumns(container);
+    // Scrolled so only Mon and Tue are visible
+    mockRect(container.firstElementChild!, 0, 2 * COLUMN_WIDTH);
+
+    mouse(columns[0], 'mousedown', 50, 9 * 60);
+    mouse(document, 'mousemove', 450, 9 * 60);
+    mouse(document, 'mouseup', 450, 9 * 60);
+
+    const range = onSelect.mock.lastCall?.[0];
+    expect(range?.endDate?.toString()).toBe(monday.add({ days: 1 }).toString());
+  });
+
+  it('selects whole days by dragging across the all-day row', () => {
+    const onSelect = vi.fn<(range: DayGridSelectedRange | null) => void>();
+    const container = render({
+      snapDuration: 15,
+      onSelect,
+      multiDaySelection: true,
+    });
+    layOutColumns(container);
+    const days = container.querySelectorAll('[data-day-column]');
+
+    mouse(days[2], 'mousedown', 250, 0);
+    expect(onSelect).toHaveBeenLastCalledWith(null);
+    mouse(document, 'mousemove', 50, 0);
+    mouse(document, 'mouseup', 50, 0);
+
+    const range = onSelect.mock.lastCall?.[0];
+    expect(range?.allDay).toBe(true);
+    expect(range?.startTime.toString()).toBe(at(monday, 0).toString());
+    expect(range?.endTime.toString()).toBe(
+      at(monday.add({ days: 1 }), 0).toString()
+    );
+    expect(range?.endDate?.toString()).toBe(wednesday.toString());
+  });
+
+  it('draws an all-day selection in the all-day row only', () => {
+    const container = render({
+      selectedRange: {
+        startTime: at(monday, 0),
+        endTime: at(monday.add({ days: 1 }), 0),
+        endDate: wednesday,
+        allDay: true,
+      },
+      classNames: { selectionHighlight: 'test-selection' },
+    });
+
+    const highlights =
+      container.querySelectorAll<HTMLElement>('.test-selection');
+    expect(highlights).toHaveLength(1);
+    expect(highlights[0].style.gridColumn).toBe('1 / 4');
+  });
+
+  it('clips a selection to the time axis', () => {
+    const container = render({
+      timeAxis: { startHour: 8, endHour: 18 },
+      selectedRange: {
+        startTime: at(monday, 0),
+        endTime: at(monday.add({ days: 1 }), 0),
+      },
+      classNames: { selectionHighlight: 'test-selection' },
+    });
+
+    const box = container.querySelector('.test-selection')!
+      .parentElement as HTMLElement;
+    expect(box.style.top).toBe('0px');
+    expect(box.style.height).toBe(`${10 * HOUR_HEIGHT}px`);
   });
 
   it('draws a selection with endDate in every selected day', () => {
@@ -180,6 +272,27 @@ describe('DayGridView onSlotHover', () => {
     expect(info.date.toString()).toBe(wednesday.toString());
     expect(info.startTime.toString()).toBe(at(wednesday, 14, 30).toString());
     expect(info.endTime.toString()).toBe(at(wednesday, 15).toString());
+  });
+
+  it('reports nothing while a drag crosses other columns', () => {
+    const onSlotHover = vi.fn();
+    const container = render({
+      snapDuration: 30,
+      onSlotHover,
+      onSelect: () => {},
+      multiDaySelection: true,
+    });
+    const columns = layOutColumns(container);
+
+    mouse(columns[0], 'mousemove', 50, 9 * 60);
+    mouse(columns[0], 'mousedown', 50, 9 * 60);
+    expect(onSlotHover).toHaveBeenLastCalledWith(null);
+    onSlotHover.mockClear();
+
+    mouse(columns[1], 'mousemove', 150, 10 * 60, 1);
+    mouse(document, 'mouseup', 150, 10 * 60);
+
+    expect(onSlotHover).not.toHaveBeenCalled();
   });
 });
 

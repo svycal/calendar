@@ -250,6 +250,12 @@ export interface DayGridSelectedRange {
    * single-day selection. Only set when `multiDaySelection` is enabled.
    */
   endDate?: Temporal.PlainDate;
+  /**
+   * True for a selection of whole days, made by dragging across the all-day
+   * row. `startTime` and `endTime` then span the first day, midnight to
+   * midnight, and the selection is drawn in the all-day row.
+   */
+  allDay?: boolean;
 }
 
 export interface DayGridViewProps {
@@ -334,8 +340,8 @@ export interface DayGridViewProps {
   /**
    * Let a drag selection span several days: dragging across day columns
    * repeats the selected time window on each day, and dragging across the
-   * all-day row selects whole days. The range reports the last day in
-   * `endDate`. Default: false.
+   * all-day row selects whole days (`allDay: true`). The range reports the
+   * last day in `endDate`. Default: false.
    */
   multiDaySelection?: boolean;
   eventGap?: number;

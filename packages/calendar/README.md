@@ -193,13 +193,13 @@ The following props work identically to `ResourceGridView`: `timeAxis`, `initial
 
 #### Selection
 
-| Prop                | Type                                            | Description                                                                                                                                                                                     |
-| ------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `selectedRange`     | `DayGridSelectedRange \| null`                  | The currently selected time range (controlled).                                                                                                                                                 |
-| `onSelect`          | `(range: DayGridSelectedRange \| null) => void` | Called when the user selects or clears a range.                                                                                                                                                 |
-| `selectionRef`      | `Ref<HTMLDivElement>`                           | Ref attached to the selection overlay element (the first day of a multi-day selection).                                                                                                         |
-| `multiDaySelection` | `boolean`                                       | Let a drag span several days. Dragging across day columns repeats the time window on each day; dragging across the all-day row selects whole days. The range reports its last day in `endDate`. |
-| `selectionLingerMs` | `number`                                        | How long (ms) the selection stays in the DOM after clearing, so popover close transitions keep their reference. Default: `0`.                                                                   |
+| Prop                | Type                                            | Description                                                                                                                                                                                                                                |
+| ------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `selectedRange`     | `DayGridSelectedRange \| null`                  | The currently selected time range (controlled).                                                                                                                                                                                            |
+| `onSelect`          | `(range: DayGridSelectedRange \| null) => void` | Called when the user selects or clears a range.                                                                                                                                                                                            |
+| `selectionRef`      | `Ref<HTMLDivElement>`                           | Ref attached to the selection overlay element (the first day of a multi-day selection).                                                                                                                                                    |
+| `multiDaySelection` | `boolean`                                       | Let a drag span several days. Dragging across day columns repeats the time window on each day; dragging across the all-day row selects whole days (`allDay: true`), drawn in the all-day row. The range reports its last day in `endDate`. |
+| `selectionLingerMs` | `number`                                        | How long (ms) the selection stays in the DOM after clearing, so popover close transitions keep their reference. Default: `0`.                                                                                                              |
 
 #### Background events
 
@@ -239,6 +239,9 @@ interface DayGridSelectedRange {
   // Last selected day (inclusive) of a multi-day selection, which repeats the
   // startTime–endTime window on each day. Omitted for one day.
   endDate?: Temporal.PlainDate;
+  // True for whole days selected along the all-day row. startTime and endTime
+  // then span the first day, midnight to midnight.
+  allDay?: boolean;
 }
 ```
 
