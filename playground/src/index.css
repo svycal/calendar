@@ -13,3 +13,8 @@
 @import "../../packages/calendar/src/preset.css";
 @import "tailwindcss";
 @import "../../packages/calendar/src/components.css";
+@import "@fontsource-variable/inter";
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+}
