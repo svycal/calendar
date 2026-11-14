@@ -1,5 +1,17 @@
 # @savvycal/calendar
 
+## 0.11.0
+
+### Minor Changes
+
+- [#25](https://github.com/svycal/calendar/pull/25) [`f23b145`](https://github.com/svycal/calendar/commit/f23b1457f701eb8d4b79e450fa4e485f13a0e847) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Add DayGridView features for replacing FullCalendar: multi-day drag selection (`multiDaySelection`, `DayGridSelectedRange.endDate` and `allDay`), background events (`backgroundEvents`, `renderBackgroundEvent`), `onSlotHover`, `formatGutterLabel` (also on ResourceGridView), `scrollKey`, and display-only events (`interactive: false`). Selections are now clipped to the time axis.
+
+- [#21](https://github.com/svycal/calendar/pull/21) [`03d9413`](https://github.com/svycal/calendar/commit/03d94132b9dc90e61a3c59c7acdd3dbfb8296de9) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Add `MonthView`, a Google Calendar–style month grid. All-day and multi-day events render as bars that wrap across week rows, single-day timed events render as dot items, and days that run out of room collapse extras into a "+N more" popover. Supports click or drag to select day ranges (shown as a Google-style placeholder bar by default), a configurable week start, and fixed six-week layouts.
+
+### Patch Changes
+
+- [#21](https://github.com/svycal/calendar/pull/21) [`03d9413`](https://github.com/svycal/calendar/commit/03d94132b9dc90e61a3c59c7acdd3dbfb8296de9) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Fix the "+N" overflow popover in `ResourceGridView` and `DayGridView`: it now picks up dark mode from a `.dark` ancestor, Escape closes only the popover (instead of also reaching the grid's and your app's Escape handlers), focus moves into the popover when it opens and back to the chip when it closes with focus inside, its position uses the popover's measured size and follows it when the content resizes, its height is capped to the viewport so a long list scrolls instead of running off-screen, and clicking an empty time slot while it's open only closes it (instead of also starting a selection or firing `onSlotClick`).
+
 ## 0.10.3
 
 ### Patch Changes
