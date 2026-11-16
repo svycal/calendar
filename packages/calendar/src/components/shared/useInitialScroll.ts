@@ -1,5 +1,8 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 
+/** Width in pixels of the top border that draws each hour line. */
+const HOUR_LINE_WIDTH = 1;
+
 interface UseInitialScrollArgs {
   /** The scroll container (`classNames.root`, `overflow-auto`). */
   rootRef: RefObject<HTMLDivElement | null>;
@@ -29,7 +32,10 @@ interface UseInitialScrollArgs {
  * container, so they stay pinned and don't factor into `scrollTop`:
  *
  *   clamped   = clamp(initialScrollHour, startHour, endHour)
- *   scrollTop = (clamped - startHour) * effectiveHourHeight
+ *   scrollTop = (clamped - startHour) * effectiveHourHeight + HOUR_LINE_WIDTH
+ *
+ * The extra `HOUR_LINE_WIDTH` tucks the hour's top border under the sticky
+ * header's bottom border, so the two don't stack into a double line.
  *
  * It only repositions on a `scrollKey` change — not on unrelated re-renders
  * (events/availability arriving, selection, hover) or a resize re-measuring
@@ -68,7 +74,8 @@ export function useInitialScroll({
     if (lastScrolledKey.current === scrollKey) return;
 
     const clamped = Math.min(Math.max(initialScrollHour, startHour), endHour);
-    root.scrollTop = (clamped - startHour) * effectiveHourHeight;
+    root.scrollTop =
+      (clamped - startHour) * effectiveHourHeight + HOUR_LINE_WIDTH;
     lastScrolledKey.current = scrollKey;
   }, [
     rootRef,

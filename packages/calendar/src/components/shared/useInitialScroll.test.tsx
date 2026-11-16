@@ -21,8 +21,11 @@ import type {
 // jsdom has no layout, so we mock the scroll container's measured height and
 // drive useEffectiveHourHeight's ResizeObserver manually. With headerHeight and
 // allDayHeight measuring 0, effectiveHourHeight resolves to the `hourHeight`
-// minimum, so scrollTop is deterministic: (clamped - startHour) * hourHeight.
+// minimum, so scrollTop is deterministic:
+// (clamped - startHour) * hourHeight + HOUR_LINE, where the extra pixel tucks
+// the hour line under the header's bottom border.
 const HOUR_HEIGHT = 60;
+const HOUR_LINE = 1;
 const TZ = 'America/New_York';
 
 // Controllable measured container height (0 simulates a hidden/zero-height
@@ -138,14 +141,14 @@ describe('DayGridView initialScrollHour', () => {
     const { rootEl } = render(
       <DayGridView {...dayProps({ initialScrollHour: 7 })} />
     );
-    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT + HOUR_LINE);
   });
 
   it('supports fractional hours', () => {
     const { rootEl } = render(
       <DayGridView {...dayProps({ initialScrollHour: 1.5 })} />
     );
-    expect(rootEl.scrollTop).toBe(1.5 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(1.5 * HOUR_HEIGHT + HOUR_LINE);
   });
 
   it('does nothing when the prop is omitted', () => {
@@ -166,7 +169,7 @@ describe('DayGridView initialScrollHour', () => {
         {...dayProps({ initialScrollHour: 7, timeAxis: { startHour: 8 } })}
       />
     );
-    expect(rootEl.scrollTop).toBe(0);
+    expect(rootEl.scrollTop).toBe(HOUR_LINE);
   });
 
   it('clamps to the bottom when past endHour', () => {
@@ -176,14 +179,14 @@ describe('DayGridView initialScrollHour', () => {
       />
     );
     // clamp(30, 0, 20) -> 20; (20 - 0) * 60
-    expect(rootEl.scrollTop).toBe(20 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(20 * HOUR_HEIGHT + HOUR_LINE);
   });
 
   it('does not re-scroll when an unrelated prop changes after the user scrolls', () => {
     const { rootEl, rerender } = render(
       <DayGridView {...dayProps({ initialScrollHour: 7 })} />
     );
-    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT + HOUR_LINE);
 
     // Simulate the user manually scrolling.
     rootEl.scrollTop = 100;
@@ -200,7 +203,7 @@ describe('DayGridView initialScrollHour', () => {
     const { rootEl } = render(
       <DayGridView {...dayProps({ initialScrollHour: 7 })} />
     );
-    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT + HOUR_LINE);
 
     rootEl.scrollTop = 100;
     // A resize re-measures effectiveHourHeight/containerHeight but must not
@@ -226,7 +229,7 @@ describe('DayGridView initialScrollHour', () => {
         })}
       />
     );
-    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT + HOUR_LINE);
   });
 
   it('defers the scroll until a hidden container is revealed', () => {
@@ -242,7 +245,7 @@ describe('DayGridView initialScrollHour', () => {
     // ResizeObserver fires a re-measure.
     mockClientHeight = 600;
     fireResize();
-    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT + HOUR_LINE);
   });
 });
 
@@ -251,7 +254,7 @@ describe('ResourceGridView initialScrollHour', () => {
     const { rootEl } = render(
       <ResourceGridView {...resourceProps({ initialScrollHour: 7 })} />
     );
-    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT + HOUR_LINE);
   });
 
   it('does nothing when the prop is omitted', () => {
@@ -284,7 +287,7 @@ describe('ResourceGridView initialScrollHour', () => {
         {...resourceProps({ initialScrollHour: 7, date: date('2026-06-09') })}
       />
     );
-    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT + HOUR_LINE);
   });
 
   it('defers the scroll until a hidden container is revealed', () => {
@@ -296,6 +299,6 @@ describe('ResourceGridView initialScrollHour', () => {
 
     mockClientHeight = 600;
     fireResize();
-    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT);
+    expect(rootEl.scrollTop).toBe(7 * HOUR_HEIGHT + HOUR_LINE);
   });
 });
