@@ -70,6 +70,9 @@ export const AllDayEventChip = memo(function AllDayEventChip({
     gridRow,
     marginLeft,
     marginRight,
+    // The grid sizes its columns to their content, so a chip must not count
+    // its title's width. Long titles truncate instead of widening columns.
+    contain: 'inline-size',
   };
 
   if (event.interactive === false) {
@@ -87,14 +90,7 @@ export const AllDayEventChip = memo(function AllDayEventChip({
     return (
       <div
         ref={selectedEventRef}
-        style={{
-          gridColumn: `${gridColumnStart} / span ${gridColumnSpan}`,
-          gridRow,
-          display: 'flex',
-          minWidth: 0,
-          marginLeft,
-          marginRight,
-        }}
+        style={{ ...placement, display: 'flex', minWidth: 0 }}
       >
         <button
           type="button"

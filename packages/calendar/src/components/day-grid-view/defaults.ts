@@ -42,7 +42,8 @@ export const dayGridViewDefaults: Required<DayGridViewClassNames> = {
   allDayEventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   allDayEventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
-  allDayEventTitle: 'text-cal-text-body text-xs/4 font-medium truncate',
+  allDayEventTitle:
+    'text-cal-text-body text-xs/4 font-medium whitespace-nowrap',
   overflowChip:
     'absolute right-0.5 min-w-9 h-[22px] p-0 border-0 cursor-pointer select-none text-center rounded-md bg-cal-surface ring-1 ring-cal-event-ring shadow-lg shadow-cal-event-shadow hover:ring-cal-event-ring-selected',
   overflowChipLabel:

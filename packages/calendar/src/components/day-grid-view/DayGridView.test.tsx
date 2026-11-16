@@ -296,6 +296,38 @@ describe('DayGridView onSlotHover', () => {
   });
 });
 
+describe('DayGridView all-day events', () => {
+  it('keeps long titles from widening the columns', () => {
+    const title = 'A very long all-day event title '.repeat(4);
+    const allDay = (id: string, interactive?: boolean) => ({
+      id,
+      title,
+      resourceId: '',
+      allDay: true as const,
+      startDate: monday,
+      endDate: monday,
+      ...(interactive === undefined ? {} : { interactive }),
+    });
+    const container = render({
+      events: [
+        allDay('plain'),
+        allDay('display-only', false),
+        allDay('picked'),
+      ],
+      selectedEventId: 'picked',
+    });
+
+    // The grid sizes its columns to their content. Every chip, including the
+    // selected one's wrapper, must contain its own width so the title
+    // truncates instead.
+    const chips = [
+      ...container.querySelectorAll<HTMLElement>('[style*="grid-row"]'),
+    ].filter((el) => el.textContent === title && el.style.gridColumn);
+    expect(chips).toHaveLength(3);
+    chips.forEach((chip) => expect(chip.style.contain).toBe('inline-size'));
+  });
+});
+
 describe('DayGridView display-only events', () => {
   it('lets clicks through an event with interactive: false', () => {
     const onEventClick = vi.fn();
