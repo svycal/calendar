@@ -70,6 +70,7 @@ export const AllDayEventChip = memo(function AllDayEventChip({
     gridRow,
     marginLeft,
     marginRight,
+    contain: 'inline-size',
   };
 
   if (event.interactive === false) {
@@ -87,14 +88,7 @@ export const AllDayEventChip = memo(function AllDayEventChip({
     return (
       <div
         ref={selectedEventRef}
-        style={{
-          gridColumn: `${gridColumnStart} / span ${gridColumnSpan}`,
-          gridRow,
-          display: 'flex',
-          minWidth: 0,
-          marginLeft,
-          marginRight,
-        }}
+        style={{ ...placement, display: 'flex', minWidth: 0 }}
       >
         <button
           type="button"
