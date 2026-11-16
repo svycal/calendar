@@ -70,8 +70,6 @@ export const AllDayEventChip = memo(function AllDayEventChip({
     gridRow,
     marginLeft,
     marginRight,
-    // The grid sizes its columns to their content, so a chip must not count
-    // its title's width. Long titles truncate instead of widening columns.
     contain: 'inline-size',
   };
 
