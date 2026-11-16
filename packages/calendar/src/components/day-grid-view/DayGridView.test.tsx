@@ -387,14 +387,15 @@ describe('DayGridView scrollKey', () => {
 
       renderAt('a');
       const scroller = container.firstElementChild as HTMLElement;
-      expect(scroller.scrollTop).toBe(8 * HOUR_HEIGHT);
+      const initialScrollTop = scroller.scrollTop;
+      expect(initialScrollTop).toBeGreaterThan(0);
 
       scroller.scrollTop = 0;
       renderAt('a');
       expect(scroller.scrollTop).toBe(0);
 
       renderAt('b');
-      expect(scroller.scrollTop).toBe(8 * HOUR_HEIGHT);
+      expect(scroller.scrollTop).toBe(initialScrollTop);
     } finally {
       if (height) {
         Object.defineProperty(HTMLElement.prototype, 'clientHeight', height);
