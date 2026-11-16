@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.11.1
+
+### Patch Changes
+
+- [#26](https://github.com/svycal/calendar/pull/26) [`86462e2`](https://github.com/svycal/calendar/commit/86462e2c3a48cb276b4360f50a03556c1535c9f7) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Long all-day event titles in `DayGridView` no longer widen the day columns.
+
 ## 0.11.0
 
 ### Minor Changes
