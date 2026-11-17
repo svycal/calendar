@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.11.2
+
+### Patch Changes
+
+- [#28](https://github.com/svycal/calendar/pull/28) [`105a626`](https://github.com/svycal/calendar/commit/105a62652588d4a4198a2390256844fb60448aff) Thanks [@derrickreimer](https://github.com/derrickreimer)! - `initialScrollHour` scrolls one pixel further, so the hour's grid line sits under the sticky header's bottom border instead of drawing a double line below it.
+
 ## 0.11.1
 
 ### Patch Changes
