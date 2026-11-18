@@ -29,6 +29,12 @@ interface BaseCalendarEvent {
    * Default: true.
    */
   interactive?: boolean;
+  /**
+   * `'outline'` draws the event as an outline in its color, with no fill or
+   * color bar, as calendar apps draw invitations awaiting a reply. Default:
+   * `'filled'`.
+   */
+  appearance?: 'filled' | 'outline';
 }
 
 export interface TimedCalendarEvent extends BaseCalendarEvent {
@@ -108,6 +114,7 @@ export interface GridViewClassNames {
   eventColumn?: string;
   event?: string;
   eventSelected?: string;
+  eventOutline?: string;
   eventColorBar?: string;
   eventTitle?: string;
   eventTime?: string;
@@ -136,6 +143,7 @@ export interface DayGridViewClassNames extends GridViewClassNames {
   allDayLane?: string;
   allDayEvent?: string;
   allDayEventSelected?: string;
+  allDayEventOutline?: string;
   allDayEventColorBar?: string;
   allDayEventTitle?: string;
 }
@@ -398,11 +406,13 @@ export interface MonthViewClassNames {
   dayNumberButton?: string;
   event?: string;
   eventSelected?: string;
+  eventOutline?: string;
   eventColorBar?: string;
   eventTitle?: string;
   eventTime?: string;
   timedEvent?: string;
   timedEventSelected?: string;
+  timedEventOutline?: string;
   timedEventDot?: string;
   timedEventTime?: string;
   timedEventTitle?: string;

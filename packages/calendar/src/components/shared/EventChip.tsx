@@ -81,6 +81,9 @@ export const EventChip = memo(function EventChip({
   const canFitTwoLines = height >= 36;
   const canFitThreeLines = height >= 52;
   const isCanceled = event.status === 'canceled';
+  const isOutline = event.appearance === 'outline';
+  // An outlined event's text takes the color its shell sets
+  const textStyle = isOutline ? { color: 'inherit' } : undefined;
 
   if (renderEvent) {
     const customContent = renderEvent({ event, position: positioned });
@@ -117,8 +120,13 @@ export const EventChip = memo(function EventChip({
       {...(isInteractive
         ? { role: 'button', tabIndex: 0, 'aria-label': ariaLabel }
         : {})}
-      className={cn(cls('event'), isSelected && cls('eventSelected'))}
+      className={cn(
+        cls('event'),
+        isSelected && cls('eventSelected'),
+        isOutline && cls('eventOutline')
+      )}
       style={{
+        ...(isOutline && { '--cal-event-color': color }),
         top,
         height,
         left,
@@ -138,7 +146,7 @@ export const EventChip = memo(function EventChip({
           }
         : {})}
     >
-      {color && (
+      {color && !isOutline && (
         <div
           className={cls('eventColorBar')}
           style={
@@ -158,24 +166,33 @@ export const EventChip = memo(function EventChip({
       )}
       <div
         className={cls('eventTitle')}
-        style={isCanceled ? { textDecoration: 'line-through' } : undefined}
+        style={{
+          ...textStyle,
+          ...(isCanceled ? { textDecoration: 'line-through' } : {}),
+        }}
       >
         {event.title}
       </div>
       {canFitTwoLines &&
         (canFitThreeLines ? (
           <>
-            <div className={cls('eventTime')}>{startTimeStr}</div>
+            <div className={cls('eventTime')} style={textStyle}>
+              {startTimeStr}
+            </div>
             {event.clientName && (
-              <div className={cls('eventClientName')}>{event.clientName}</div>
+              <div className={cls('eventClientName')} style={textStyle}>
+                {event.clientName}
+              </div>
             )}
           </>
         ) : event.clientName ? (
-          <div className={cls('eventTime')}>
+          <div className={cls('eventTime')} style={textStyle}>
             {startTimeStr}, {event.clientName}
           </div>
         ) : (
-          <div className={cls('eventTime')}>{startTimeStr}</div>
+          <div className={cls('eventTime')} style={textStyle}>
+            {startTimeStr}
+          </div>
         ))}
     </div>
   );

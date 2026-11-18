@@ -17,6 +17,8 @@ export const monthViewDefaults: Required<MonthViewClassNames> = {
     'relative flex items-center gap-1 h-full rounded-md pl-2.5 pr-1.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring min-w-0',
   eventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
+  eventOutline:
+    'bg-cal-surface text-(--cal-event-color) ring-(--cal-event-color) dark:text-[color-mix(in_oklab,var(--cal-event-color)_55%,white)] dark:ring-[color-mix(in_oklab,var(--cal-event-color)_65%,transparent)]',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
   eventTitle: 'text-cal-text-body text-xs/4 font-medium truncate',
   eventTime: 'text-cal-text-muted text-xs/4 shrink-0',
@@ -24,6 +26,8 @@ export const monthViewDefaults: Required<MonthViewClassNames> = {
     'flex items-center gap-1.5 h-full rounded-md px-1.5 overflow-hidden cursor-pointer select-none text-left min-w-0 hover:bg-cal-event-bg',
   timedEventSelected:
     'bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring-selected shadow-lg shadow-cal-event-shadow',
+  timedEventOutline:
+    'text-(--cal-event-color) dark:text-[color-mix(in_oklab,var(--cal-event-color)_55%,white)]',
   timedEventDot: 'size-2 shrink-0 rounded-full',
   timedEventTime: 'text-cal-text-muted text-xs/4 shrink-0',
   timedEventTitle: 'text-cal-text-body text-xs/4 font-medium truncate',

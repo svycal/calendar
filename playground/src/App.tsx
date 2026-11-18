@@ -318,6 +318,8 @@ const weekEvents: CalendarEvent[] = [
     endTime: makeDayTime(weekStart.add({ days: 2 }), 15, 30),
     resourceId: '',
     color: '#ef4444',
+    // An invitation awaiting a reply
+    appearance: 'outline',
   },
   {
     id: 'w6',
@@ -371,6 +373,7 @@ const weekEvents: CalendarEvent[] = [
     resourceId: '',
     allDay: true,
     color: '#7c3aed',
+    appearance: 'outline',
   },
   // Multi-day spanning event (Tue–Thu)
   {

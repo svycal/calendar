@@ -261,11 +261,12 @@ interface BackgroundEvent {
 
 Extends `GridViewClassNames` with day-specific keys:
 
-| Key               | Description                                |
-| ----------------- | ------------------------------------------ |
-| `headerWeekday`   | Weekday abbreviation text (e.g. "Mon").    |
-| `headerDayNumber` | Day number text.                           |
-| `headerToday`     | Additional classes for today's day number. |
+| Key                  | Description                                                           |
+| -------------------- | --------------------------------------------------------------------- |
+| `headerWeekday`      | Weekday abbreviation text (e.g. "Mon").                               |
+| `headerDayNumber`    | Day number text.                                                      |
+| `headerToday`        | Additional classes for today's day number.                            |
+| `allDayEventOutline` | Additional classes for an all-day event with `appearance: 'outline'`. |
 
 All shared keys from `GridViewClassNames` (root, grid, event, etc.) also apply.
 
@@ -357,35 +358,37 @@ interface MonthSelectedRange {
 
 ### MonthViewClassNames
 
-| Key                    | Description                                              |
-| ---------------------- | -------------------------------------------------------- |
-| `root`                 | Outermost wrapper (scroll container).                    |
-| `grid`                 | The CSS grid element.                                    |
-| `headerCell`           | Weekday header cell (sticky).                            |
-| `week`                 | A week row.                                              |
-| `dayCell`              | Day cell background (borders).                           |
-| `dayCellOutside`       | Additional classes for days outside the displayed month. |
-| `dayNumber`            | Day number label.                                        |
-| `dayNumberToday`       | Additional classes for today's day number.               |
-| `dayNumberOutside`     | Additional classes for day numbers outside the month.    |
-| `dayNumberButton`      | Additional classes when the day number is clickable.     |
-| `event`                | All-day / multi-day event bar.                           |
-| `eventSelected`        | Additional classes for a selected bar.                   |
-| `eventColorBar`        | Color bar on the left edge of a bar.                     |
-| `eventTitle`           | Bar title text.                                          |
-| `eventTime`            | Start time shown on multi-day timed bars.                |
-| `timedEvent`           | Single-day timed event item.                             |
-| `timedEventSelected`   | Additional classes for a selected timed item.            |
-| `timedEventDot`        | Colored dot on a timed item.                             |
-| `timedEventTime`       | Start time on a timed item.                              |
-| `timedEventTitle`      | Title on a timed item.                                   |
-| `moreButton`           | "+N more" button.                                        |
-| `selectionHighlight`   | Selected day range highlight.                            |
-| `morePopover`          | "+N more" popover panel.                                 |
-| `morePopoverHeader`    | Popover date header.                                     |
-| `morePopoverWeekday`   | Weekday label in the popover header.                     |
-| `morePopoverDayNumber` | Day number in the popover header.                        |
-| `morePopoverEvents`    | Event list inside the popover.                           |
+| Key                    | Description                                                       |
+| ---------------------- | ----------------------------------------------------------------- |
+| `root`                 | Outermost wrapper (scroll container).                             |
+| `grid`                 | The CSS grid element.                                             |
+| `headerCell`           | Weekday header cell (sticky).                                     |
+| `week`                 | A week row.                                                       |
+| `dayCell`              | Day cell background (borders).                                    |
+| `dayCellOutside`       | Additional classes for days outside the displayed month.          |
+| `dayNumber`            | Day number label.                                                 |
+| `dayNumberToday`       | Additional classes for today's day number.                        |
+| `dayNumberOutside`     | Additional classes for day numbers outside the month.             |
+| `dayNumberButton`      | Additional classes when the day number is clickable.              |
+| `event`                | All-day / multi-day event bar.                                    |
+| `eventSelected`        | Additional classes for a selected bar.                            |
+| `eventOutline`         | Additional classes for a bar with `appearance: 'outline'`.        |
+| `eventColorBar`        | Color bar on the left edge of a bar.                              |
+| `eventTitle`           | Bar title text.                                                   |
+| `eventTime`            | Start time shown on multi-day timed bars.                         |
+| `timedEvent`           | Single-day timed event item.                                      |
+| `timedEventSelected`   | Additional classes for a selected timed item.                     |
+| `timedEventOutline`    | Additional classes for a timed item with `appearance: 'outline'`. |
+| `timedEventDot`        | Colored dot on a timed item.                                      |
+| `timedEventTime`       | Start time on a timed item.                                       |
+| `timedEventTitle`      | Title on a timed item.                                            |
+| `moreButton`           | "+N more" button.                                                 |
+| `selectionHighlight`   | Selected day range highlight.                                     |
+| `morePopover`          | "+N more" popover panel.                                          |
+| `morePopoverHeader`    | Popover date header.                                              |
+| `morePopoverWeekday`   | Weekday label in the popover header.                              |
+| `morePopoverDayNumber` | Day number in the popover header.                                 |
+| `morePopoverEvents`    | Event list inside the popover.                                    |
 
 The library exports `monthViewDefaults` with the default classes for every key, for use with `cn()` (see [`resourceGridViewDefaults`](#resourcegridviewdefaults)).
 
@@ -420,6 +423,7 @@ interface TimedCalendarEvent {
   ariaLabel?: string;
   priority?: number;
   interactive?: boolean;
+  appearance?: 'filled' | 'outline';
   metadata?: Record<string, unknown>;
 }
 
@@ -436,6 +440,7 @@ interface AllDayCalendarEvent {
   ariaLabel?: string;
   priority?: number;
   interactive?: boolean;
+  appearance?: 'filled' | 'outline';
   metadata?: Record<string, unknown>;
 }
 ```
@@ -443,6 +448,8 @@ interface AllDayCalendarEvent {
 The optional `ariaLabel` field provides a plain-text label used for `aria-label` attributes and screen reader announcements. When `title` or `clientName` are React elements (not plain strings), set `ariaLabel` to avoid `"[object Object]"` in accessible labels.
 
 Set `interactive: false` for a display-only event: it ignores clicks and the pointer, so clicks, hovers, and drags reach the time slot beneath it.
+
+Set `appearance: 'outline'` to draw an event as an outline in its color, with its text in that color and no fill or color bar, the way calendar apps show invitations awaiting a reply. In month view, an outlined single-day timed event gets a hollow dot and text in its color. In dark mode, the text takes a lighter tint of the color and the outline is softer, so both stay readable. The shell exposes the color as the `--cal-event-color` CSS variable; style the outline with the `eventOutline`, `allDayEventOutline`, and `timedEventOutline` class names.
 
 `priority` controls overlap packing. Higher values are placed in earlier columns, so they stay visible when `eventMaxStack` or `eventMinWidth` caps how many overlapping events are shown. Omit it (or use `0`) for the default. Use this to keep product appointments on the grid ahead of connected-calendar events.
 
@@ -535,37 +542,38 @@ The preset uses a `.dark` class convention (matching Tailwind's `@custom-variant
 
 Every internal element can be restyled via the `classNames` prop. Each key maps to a specific part of the calendar:
 
-| Key                    | Description                                                  |
-| ---------------------- | ------------------------------------------------------------ |
-| `root`                 | Outermost wrapper (scroll container).                        |
-| `grid`                 | The CSS grid element.                                        |
-| `cornerCell`           | Top-left corner cell (sticky).                               |
-| `headerCell`           | Resource column header cell (sticky).                        |
-| `headerName`           | Resource name text inside the header.                        |
-| `headerAvatar`         | Avatar image inside the header.                              |
-| `gutterCell`           | Time gutter cell for hour labels (sticky).                   |
-| `gutterCellMinor`      | Time gutter cell for sub-hour intervals.                     |
-| `gutterLabel`          | Text label inside gutter cells.                              |
-| `bodyCell`             | Hour-start body cell in the grid.                            |
-| `bodyCellMinor`        | Sub-hour body cell in the grid.                              |
-| `eventColumn`          | Container for events within a resource column.               |
-| `event`                | Individual event element.                                    |
-| `eventSelected`        | Additional classes applied to a selected event.              |
-| `eventColorBar`        | Vertical color bar on the left edge of an event.             |
-| `eventTitle`           | Event title text.                                            |
-| `eventTime`            | Event time text.                                             |
-| `eventClientName`      | Client name text on the event.                               |
-| `nowIndicator`         | Horizontal "now" indicator line.                             |
-| `slotHighlight`        | Hover highlight on time slots.                               |
-| `selectionHighlight`   | Drag selection highlight overlay.                            |
-| `allDayCell`           | All-day event row cell.                                      |
-| `unavailableOverlay`   | Unavailable time cross-hatch overlay.                        |
-| `overflowChip`         | "+N more" chip shown when overlapping events exceed the cap. |
-| `overflowChipLabel`    | Label text inside the overflow chip.                         |
-| `overflowPopover`      | Built-in overflow popover panel.                             |
-| `overflowPopoverEvent` | A single event row inside the overflow popover.              |
-| `overflowPopoverTitle` | Event title inside an overflow popover row.                  |
-| `overflowPopoverTime`  | Event time range inside an overflow popover row.             |
+| Key                    | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| `root`                 | Outermost wrapper (scroll container).                         |
+| `grid`                 | The CSS grid element.                                         |
+| `cornerCell`           | Top-left corner cell (sticky).                                |
+| `headerCell`           | Resource column header cell (sticky).                         |
+| `headerName`           | Resource name text inside the header.                         |
+| `headerAvatar`         | Avatar image inside the header.                               |
+| `gutterCell`           | Time gutter cell for hour labels (sticky).                    |
+| `gutterCellMinor`      | Time gutter cell for sub-hour intervals.                      |
+| `gutterLabel`          | Text label inside gutter cells.                               |
+| `bodyCell`             | Hour-start body cell in the grid.                             |
+| `bodyCellMinor`        | Sub-hour body cell in the grid.                               |
+| `eventColumn`          | Container for events within a resource column.                |
+| `event`                | Individual event element.                                     |
+| `eventSelected`        | Additional classes applied to a selected event.               |
+| `eventOutline`         | Additional classes for an event with `appearance: 'outline'`. |
+| `eventColorBar`        | Vertical color bar on the left edge of an event.              |
+| `eventTitle`           | Event title text.                                             |
+| `eventTime`            | Event time text.                                              |
+| `eventClientName`      | Client name text on the event.                                |
+| `nowIndicator`         | Horizontal "now" indicator line.                              |
+| `slotHighlight`        | Hover highlight on time slots.                                |
+| `selectionHighlight`   | Drag selection highlight overlay.                             |
+| `allDayCell`           | All-day event row cell.                                       |
+| `unavailableOverlay`   | Unavailable time cross-hatch overlay.                         |
+| `overflowChip`         | "+N more" chip shown when overlapping events exceed the cap.  |
+| `overflowChipLabel`    | Label text inside the overflow chip.                          |
+| `overflowPopover`      | Built-in overflow popover panel.                              |
+| `overflowPopoverEvent` | A single event row inside the overflow popover.               |
+| `overflowPopoverTitle` | Event title inside an overflow popover row.                   |
+| `overflowPopoverTime`  | Event time range inside an overflow popover row.              |
 
 ### `resourceGridViewDefaults`
 
