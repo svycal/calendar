@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.12.1
+
+### Patch Changes
+
+- [#32](https://github.com/svycal/calendar/pull/32) [`cc836c0`](https://github.com/svycal/calendar/commit/cc836c0cca900d48b88660138eb2a960252bc300) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Outlined events stay readable with pale and deep colors. Their text and outline keep the event's hue but cap its lightness in light mode and raise it in dark mode, through the new `--color-cal-event-outline` and `--color-cal-event-outline-dark` theme colors. Month view's hollow dot for an outlined event now matches its text.
+
 ## 0.12.0
 
 ### Minor Changes
