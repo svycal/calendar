@@ -138,7 +138,7 @@ describe('MonthView outlined events', () => {
 
     const bar = item('offsite');
     expect(bar.style.getPropertyValue('--cal-event-color')).toBe('#ef4444');
-    expect(bar.className).toContain('ring-(--cal-event-color)');
+    expect(bar.className).toContain('ring-cal-event-outline');
     expect(bar.className).not.toContain('bg-cal-event-bg');
     expect(
       Array.from(bar.querySelectorAll<HTMLElement>('span')).some(
@@ -150,9 +150,9 @@ describe('MonthView outlined events', () => {
     expect(timedItem.style.getPropertyValue('--cal-event-color')).toBe(
       '#ef4444'
     );
-    expect(timedItem.className).toContain('text-(--cal-event-color)');
+    expect(timedItem.className).toContain('text-cal-event-outline');
     const dot = timedItem.querySelector<HTMLElement>('span')!;
     expect(dot.style.backgroundColor).toBe('');
-    expect(dot.style.boxShadow).toBe('inset 0 0 0 1.5px #ef4444');
+    expect(dot.style.boxShadow).toBe('inset 0 0 0 1.5px currentColor');
   });
 });

@@ -119,9 +119,12 @@ export const MonthEventItem = memo(function MonthEventItem({
         <span
           className={cls('timedEventDot')}
           style={
-            isTentative || isOutline
-              ? { boxShadow: `inset 0 0 0 1.5px ${dotColor}` }
-              : { backgroundColor: dotColor }
+            isOutline
+              ? // Matches the text, whose color is readable on the surface
+                { boxShadow: 'inset 0 0 0 1.5px currentColor' }
+              : isTentative
+                ? { boxShadow: `inset 0 0 0 1.5px ${dotColor}` }
+                : { backgroundColor: dotColor }
           }
         />
         {startTime && (

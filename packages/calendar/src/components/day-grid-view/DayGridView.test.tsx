@@ -454,7 +454,7 @@ describe('DayGridView outlined events', () => {
       expect(outlined.style.getPropertyValue('--cal-event-color')).toBe(
         '#ef4444'
       );
-      expect(outlined.className).toContain('ring-(--cal-event-color)');
+      expect(outlined.className).toContain('ring-cal-event-outline');
       expect(outlined.className).toContain('bg-cal-surface');
       expect(outlined.className).not.toContain('bg-cal-event-bg');
       expect(hasColorBar(outlined)).toBe(false);
@@ -462,7 +462,7 @@ describe('DayGridView outlined events', () => {
 
     const filled = chip('Filled');
     expect(filled.style.getPropertyValue('--cal-event-color')).toBe('');
-    expect(filled.className).not.toContain('ring-(--cal-event-color)');
+    expect(filled.className).not.toContain('ring-cal-event-outline');
     expect(hasColorBar(filled)).toBe(true);
   });
 });

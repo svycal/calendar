@@ -53,6 +53,19 @@
 }
 
 /*
+ * An outlined event's text and outline color: its own color, with the
+ * lightness capped (light mode) or floored (dark mode) so pale and deep
+ * colors stay readable, and colors that already are keep their exact hue.
+ * Inline, because --cal-event-color is set on each event, not on :root.
+ */
+@theme inline {
+  --color-cal-event-outline: oklch(from var(--cal-event-color) min(l, 0.53) c h);
+  --color-cal-event-outline-dark: oklch(
+    from var(--cal-event-color) max(l, 0.75) c h
+  );
+}
+
+/*
  * Dark mode overrides.
  * @theme output lands in @layer theme, so unlayered CSS always wins
  * regardless of source order.
