@@ -108,3 +108,51 @@ describe('MonthView', () => {
     expect(more.map((b) => b.textContent)).toEqual(['+1 more']);
   });
 });
+
+describe('MonthView outlined events', () => {
+  const RED = 'rgb(239, 68, 68)';
+
+  it('outlines bars and gives timed items a hollow dot, both in the event color', () => {
+    const container = render({
+      events: [
+        {
+          ...timed('invite', '2026-10-14T09:00', '2026-10-14T10:00'),
+          color: '#ef4444',
+          appearance: 'outline',
+        },
+        {
+          id: 'offsite',
+          title: 'offsite',
+          resourceId: '',
+          color: '#ef4444',
+          appearance: 'outline',
+          allDay: true,
+          startDate: Temporal.PlainDate.from('2026-10-15'),
+          endDate: Temporal.PlainDate.from('2026-10-16'),
+        },
+      ],
+    });
+
+    const item = (label: string) =>
+      container.querySelector<HTMLElement>(`button[aria-label^="${label}"]`)!;
+
+    const bar = item('offsite');
+    expect(bar.style.getPropertyValue('--cal-event-color')).toBe('#ef4444');
+    expect(bar.className).toContain('ring-(--cal-event-color)');
+    expect(bar.className).not.toContain('bg-cal-event-bg');
+    expect(
+      Array.from(bar.querySelectorAll<HTMLElement>('span')).some(
+        (span) => span.style.backgroundColor === RED
+      )
+    ).toBe(false);
+
+    const timedItem = item('invite');
+    expect(timedItem.style.getPropertyValue('--cal-event-color')).toBe(
+      '#ef4444'
+    );
+    expect(timedItem.className).toContain('text-(--cal-event-color)');
+    const dot = timedItem.querySelector<HTMLElement>('span')!;
+    expect(dot.style.backgroundColor).toBe('');
+    expect(dot.style.boxShadow).toBe('inset 0 0 0 1.5px #ef4444');
+  });
+});

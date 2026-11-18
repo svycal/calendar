@@ -21,6 +21,8 @@ export const resourceGridViewDefaults: Required<ResourceGridViewClassNames> = {
     'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring',
   eventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
+  eventOutline:
+    'bg-cal-surface text-(--cal-event-color) ring-(--cal-event-color) dark:text-[color-mix(in_oklab,var(--cal-event-color)_55%,white)] dark:ring-[color-mix(in_oklab,var(--cal-event-color)_65%,transparent)]',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
   eventTitle: 'text-cal-text-body text-xs/4 font-medium',
   eventTime: 'text-cal-text-muted text-xs/4',

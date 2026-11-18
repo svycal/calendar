@@ -164,6 +164,26 @@ function buildMonthEvents(month: Temporal.PlainYearMonth): CalendarEvent[] {
       color: COLORS.blue,
       status: 'tentative',
     },
+    // Invitations awaiting a reply
+    {
+      id: `${p}-outline`,
+      title: 'Invite: roadmap review',
+      startTime: at(day(16), 13, 0),
+      endTime: at(day(16), 14, 0),
+      resourceId: '',
+      color: COLORS.blue,
+      appearance: 'outline',
+    },
+    {
+      id: `${p}-outline-allday`,
+      title: 'Invite: team offsite',
+      allDay: true,
+      startDate: day(16),
+      endDate: day(17),
+      resourceId: '',
+      color: COLORS.pink,
+      appearance: 'outline',
+    },
     {
       id: `${p}-nocolor`,
       title: 'No color event',

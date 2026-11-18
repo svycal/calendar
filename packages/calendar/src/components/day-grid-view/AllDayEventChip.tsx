@@ -30,6 +30,8 @@ export const AllDayEventChip = memo(function AllDayEventChip({
     continuesAfter,
   } = positioned;
   const isSelected = event.id === selectedEventId;
+  const isOutline = event.appearance === 'outline';
+  const outlineCls = isOutline && cls('allDayEventOutline');
   const gridRow = lane + 1 + laneOffset;
 
   const labelParts: string[] = [getEventLabel(event), 'all day'];
@@ -41,6 +43,7 @@ export const AllDayEventChip = memo(function AllDayEventChip({
   const marginRight = continuesAfter ? 2 : 4;
 
   const chipStyle = {
+    ...(isOutline && { '--cal-event-color': event.color }),
     ...(continuesBefore
       ? {
           borderTopLeftRadius: 0,
@@ -55,13 +58,18 @@ export const AllDayEventChip = memo(function AllDayEventChip({
 
   const chipContent = (
     <>
-      {event.color && !continuesBefore && (
+      {event.color && !continuesBefore && !isOutline && (
         <div
           className={cls('allDayEventColorBar')}
           style={{ backgroundColor: event.color, borderRadius: 'inherit' }}
         />
       )}
-      <span className={cls('allDayEventTitle')}>{event.title}</span>
+      <span
+        className={cls('allDayEventTitle')}
+        style={isOutline ? { color: 'inherit' } : undefined}
+      >
+        {event.title}
+      </span>
     </>
   );
 
@@ -76,7 +84,11 @@ export const AllDayEventChip = memo(function AllDayEventChip({
   if (event.interactive === false) {
     return (
       <div
-        className={cn(cls('allDayEvent'), 'relative flex items-center gap-1')}
+        className={cn(
+          cls('allDayEvent'),
+          outlineCls,
+          'relative flex items-center gap-1'
+        )}
         style={{ ...placement, ...chipStyle, pointerEvents: 'none' }}
       >
         {chipContent}
@@ -96,6 +108,7 @@ export const AllDayEventChip = memo(function AllDayEventChip({
           className={cn(
             cls('allDayEvent'),
             cls('allDayEventSelected'),
+            outlineCls,
             'relative flex items-center gap-1 w-full'
           )}
           style={chipStyle}
@@ -111,7 +124,11 @@ export const AllDayEventChip = memo(function AllDayEventChip({
     <button
       type="button"
       aria-label={labelParts.join(', ')}
-      className={cn(cls('allDayEvent'), 'relative flex items-center gap-1')}
+      className={cn(
+        cls('allDayEvent'),
+        outlineCls,
+        'relative flex items-center gap-1'
+      )}
       style={{ ...placement, ...chipStyle }}
       onClick={() => onEventClick?.(event)}
     >

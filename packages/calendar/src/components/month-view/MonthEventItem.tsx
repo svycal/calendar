@@ -43,9 +43,15 @@ export const MonthEventItem = memo(function MonthEventItem({
 }: MonthEventItemProps) {
   const isCanceled = event.status === 'canceled';
   const isTentative = event.status === 'tentative';
-  const titleStyle: CSSProperties | undefined = isCanceled
-    ? { textDecoration: 'line-through' }
+  const isOutline = event.appearance === 'outline';
+  // An outlined event's text takes the color its shell sets
+  const textStyle: CSSProperties | undefined = isOutline
+    ? { color: 'inherit' }
     : undefined;
+  const titleStyle: CSSProperties = {
+    ...textStyle,
+    ...(isCanceled ? { textDecoration: 'line-through' } : {}),
+  };
   const startTime =
     !event.allDay && !continuesBefore
       ? formatEventStartTime(event.startTime, timeZone)
@@ -56,8 +62,13 @@ export const MonthEventItem = memo(function MonthEventItem({
   let content: ReactNode;
 
   if (isBar) {
-    className = cn(cls('event'), isSelected && cls('eventSelected'));
+    className = cn(
+      cls('event'),
+      isSelected && cls('eventSelected'),
+      isOutline && cls('eventOutline')
+    );
     shellStyle = {
+      ...(isOutline && { '--cal-event-color': event.color }),
       marginLeft: continuesBefore ? 0 : 4,
       marginRight: continuesAfter ? 0 : 4,
       ...(continuesBefore
@@ -69,7 +80,7 @@ export const MonthEventItem = memo(function MonthEventItem({
     };
     content = (
       <>
-        {event.color && !continuesBefore && (
+        {event.color && !continuesBefore && !isOutline && (
           <span
             className={cls('eventColorBar')}
             style={{
@@ -80,7 +91,11 @@ export const MonthEventItem = memo(function MonthEventItem({
             }}
           />
         )}
-        {startTime && <span className={cls('eventTime')}>{startTime}</span>}
+        {startTime && (
+          <span className={cls('eventTime')} style={textStyle}>
+            {startTime}
+          </span>
+        )}
         <span className={cls('eventTitle')} style={titleStyle}>
           {event.title}
         </span>
@@ -88,20 +103,31 @@ export const MonthEventItem = memo(function MonthEventItem({
     );
   } else {
     const dotColor = event.color ?? 'var(--color-cal-text-muted)';
-    className = cn(cls('timedEvent'), isSelected && cls('timedEventSelected'));
-    shellStyle = { marginLeft: 4, marginRight: 4 };
+    className = cn(
+      cls('timedEvent'),
+      isSelected && cls('timedEventSelected'),
+      isOutline && cls('timedEventOutline')
+    );
+    // An outlined timed item has a hollow dot and text in its color
+    shellStyle = {
+      ...(isOutline && { '--cal-event-color': event.color }),
+      marginLeft: 4,
+      marginRight: 4,
+    };
     content = (
       <>
         <span
           className={cls('timedEventDot')}
           style={
-            isTentative
+            isTentative || isOutline
               ? { boxShadow: `inset 0 0 0 1.5px ${dotColor}` }
               : { backgroundColor: dotColor }
           }
         />
         {startTime && (
-          <span className={cls('timedEventTime')}>{startTime}</span>
+          <span className={cls('timedEventTime')} style={textStyle}>
+            {startTime}
+          </span>
         )}
         <span className={cls('timedEventTitle')} style={titleStyle}>
           {event.title}

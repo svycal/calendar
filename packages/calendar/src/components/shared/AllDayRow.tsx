@@ -28,6 +28,7 @@ export const AllDayRow = memo(function AllDayRow({
     <>
       {events.map((event) => {
         const isSelected = event.id === selectedEventId;
+        const isOutline = event.appearance === 'outline';
         const labelParts: string[] = [getEventLabel(event), 'all day'];
         const clientLabel = getClientNameLabel(event);
         if (clientLabel) labelParts.push(clientLabel);
@@ -36,8 +37,13 @@ export const AllDayRow = memo(function AllDayRow({
             key={event.id}
             type="button"
             aria-label={labelParts.join(', ')}
-            className={cn(cls('event'), isSelected && cls('eventSelected'))}
+            className={cn(
+              cls('event'),
+              isSelected && cls('eventSelected'),
+              isOutline && cls('eventOutline')
+            )}
             style={{
+              ...(isOutline && { '--cal-event-color': event.color }),
               position: 'relative',
               inset: 'unset',
               cursor: 'pointer',
@@ -46,13 +52,18 @@ export const AllDayRow = memo(function AllDayRow({
             }}
             onClick={() => onEventClick?.(event)}
           >
-            {event.color && (
+            {event.color && !isOutline && (
               <div
                 className={cls('eventColorBar')}
                 style={{ backgroundColor: event.color }}
               />
             )}
-            <div className={cls('eventTitle')}>{event.title}</div>
+            <div
+              className={cls('eventTitle')}
+              style={isOutline ? { color: 'inherit' } : undefined}
+            >
+              {event.title}
+            </div>
           </button>
         );
 

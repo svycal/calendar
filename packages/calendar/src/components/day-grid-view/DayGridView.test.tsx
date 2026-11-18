@@ -406,3 +406,63 @@ describe('DayGridView scrollKey', () => {
     }
   });
 });
+
+describe('DayGridView outlined events', () => {
+  const RED = 'rgb(239, 68, 68)';
+
+  it('draws outlined timed and all-day events in their color, without a fill or color bar', () => {
+    const container = render({
+      events: [
+        {
+          id: 'invite',
+          title: 'Invite',
+          resourceId: '',
+          color: '#ef4444',
+          appearance: 'outline',
+          startTime: at(monday, 9),
+          endTime: at(monday, 10),
+        },
+        {
+          id: 'offsite',
+          title: 'Offsite',
+          resourceId: '',
+          color: '#ef4444',
+          appearance: 'outline',
+          allDay: true,
+          startDate: monday,
+          endDate: monday,
+        },
+        {
+          id: 'filled',
+          title: 'Filled',
+          resourceId: '',
+          color: '#ef4444',
+          startTime: at(wednesday, 9),
+          endTime: at(wednesday, 10),
+        },
+      ],
+    });
+
+    const chip = (label: string) =>
+      container.querySelector<HTMLElement>(`[aria-label^="${label}"]`)!;
+    const hasColorBar = (el: HTMLElement) =>
+      Array.from(el.querySelectorAll<HTMLElement>('*')).some(
+        (child) => child.style.backgroundColor === RED
+      );
+
+    for (const outlined of [chip('Invite'), chip('Offsite, all day')]) {
+      expect(outlined.style.getPropertyValue('--cal-event-color')).toBe(
+        '#ef4444'
+      );
+      expect(outlined.className).toContain('ring-(--cal-event-color)');
+      expect(outlined.className).toContain('bg-cal-surface');
+      expect(outlined.className).not.toContain('bg-cal-event-bg');
+      expect(hasColorBar(outlined)).toBe(false);
+    }
+
+    const filled = chip('Filled');
+    expect(filled.style.getPropertyValue('--cal-event-color')).toBe('');
+    expect(filled.className).not.toContain('ring-(--cal-event-color)');
+    expect(hasColorBar(filled)).toBe(true);
+  });
+});
