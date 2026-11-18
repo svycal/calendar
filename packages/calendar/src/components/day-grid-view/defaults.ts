@@ -21,7 +21,7 @@ export const dayGridViewDefaults: Required<DayGridViewClassNames> = {
   eventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   eventOutline:
-    'bg-cal-surface text-(--cal-event-color) ring-(--cal-event-color) dark:text-[color-mix(in_oklab,var(--cal-event-color)_55%,white)] dark:ring-[color-mix(in_oklab,var(--cal-event-color)_65%,transparent)]',
+    'bg-cal-surface text-cal-event-outline ring-cal-event-outline dark:text-cal-event-outline-dark dark:ring-cal-event-outline-dark/65',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
   eventTitle: 'text-cal-text-body text-xs/4 font-medium',
   eventTime: 'text-cal-text-muted text-xs/4',
@@ -44,7 +44,7 @@ export const dayGridViewDefaults: Required<DayGridViewClassNames> = {
   allDayEventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   allDayEventOutline:
-    'bg-cal-surface text-(--cal-event-color) ring-(--cal-event-color) dark:text-[color-mix(in_oklab,var(--cal-event-color)_55%,white)] dark:ring-[color-mix(in_oklab,var(--cal-event-color)_65%,transparent)]',
+    'bg-cal-surface text-cal-event-outline ring-cal-event-outline dark:text-cal-event-outline-dark dark:ring-cal-event-outline-dark/65',
   allDayEventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
   allDayEventTitle:
     'text-cal-text-body text-xs/4 font-medium whitespace-nowrap',

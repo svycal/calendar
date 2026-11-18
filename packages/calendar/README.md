@@ -449,7 +449,7 @@ The optional `ariaLabel` field provides a plain-text label used for `aria-label`
 
 Set `interactive: false` for a display-only event: it ignores clicks and the pointer, so clicks, hovers, and drags reach the time slot beneath it.
 
-Set `appearance: 'outline'` to draw an event as an outline in its color, with its text in that color and no fill or color bar, the way calendar apps show invitations awaiting a reply. In month view, an outlined single-day timed event gets a hollow dot and text in its color. In dark mode, the text takes a lighter tint of the color and the outline is softer, so both stay readable. The shell exposes the color as the `--cal-event-color` CSS variable; style the outline with the `eventOutline`, `allDayEventOutline`, and `timedEventOutline` class names.
+Set `appearance: 'outline'` to draw an event as an outline in its color, with its text in that color and no fill or color bar, the way calendar apps show invitations awaiting a reply. In month view, an outlined single-day timed event gets a hollow dot and text in its color. So that every color stays readable, the text and outline keep the color's hue but cap its lightness in light mode and raise it in dark mode, where the outline is also softer. Colors that already contrast well with the surface are unchanged. The shell exposes the color as the `--cal-event-color` CSS variable; style the outline with the `eventOutline`, `allDayEventOutline`, and `timedEventOutline` class names.
 
 `priority` controls overlap packing. Higher values are placed in earlier columns, so they stay visible when `eventMaxStack` or `eventMinWidth` caps how many overlapping events are shown. Omit it (or use `0`) for the default. Use this to keep product appointments on the grid ahead of connected-calendar events.
 
@@ -502,20 +502,22 @@ interface PositionedEvent {
 
 The preset defines a set of `--color-cal-*` CSS custom properties under `@theme`. Override them in your own CSS to change the calendar's color palette:
 
-| Variable                          | Light default    | Description                       |
-| --------------------------------- | ---------------- | --------------------------------- |
-| `--color-cal-surface`             | `white`          | Background color of the calendar. |
-| `--color-cal-border`              | `zinc-300`       | Border color for grid lines.      |
-| `--color-cal-text`                | `zinc-950`       | Primary text color (headers).     |
-| `--color-cal-text-body`           | `zinc-900`       | Body text color (event titles).   |
-| `--color-cal-text-muted`          | `zinc-600`       | Muted text color (times, labels). |
-| `--color-cal-event-bg`            | `zinc-100 @ 90%` | Event background.                 |
-| `--color-cal-event-ring`          | `zinc-900 @ 15%` | Event border ring.                |
-| `--color-cal-event-ring-selected` | `zinc-900 @ 30%` | Ring color for selected events.   |
-| `--color-cal-event-shadow`        | `black @ 10%`    | Shadow color for selected events. |
-| `--color-cal-now`                 | `orange-500`     | Now indicator line color.         |
-| `--color-cal-slot-highlight`      | `blue-400 @ 15%` | Hover slot highlight.             |
-| `--color-cal-selection`           | `blue-400 @ 25%` | Drag selection highlight.         |
+| Variable                          | Light default                                     | Description                            |
+| --------------------------------- | ------------------------------------------------- | -------------------------------------- |
+| `--color-cal-surface`             | `white`                                           | Background color of the calendar.      |
+| `--color-cal-border`              | `zinc-300`                                        | Border color for grid lines.           |
+| `--color-cal-text`                | `zinc-950`                                        | Primary text color (headers).          |
+| `--color-cal-text-body`           | `zinc-900`                                        | Body text color (event titles).        |
+| `--color-cal-text-muted`          | `zinc-600`                                        | Muted text color (times, labels).      |
+| `--color-cal-event-bg`            | `zinc-100 @ 90%`                                  | Event background.                      |
+| `--color-cal-event-ring`          | `zinc-900 @ 15%`                                  | Event border ring.                     |
+| `--color-cal-event-ring-selected` | `zinc-900 @ 30%`                                  | Ring color for selected events.        |
+| `--color-cal-event-shadow`        | `black @ 10%`                                     | Shadow color for selected events.      |
+| `--color-cal-now`                 | `orange-500`                                      | Now indicator line color.              |
+| `--color-cal-slot-highlight`      | `blue-400 @ 15%`                                  | Hover slot highlight.                  |
+| `--color-cal-selection`           | `blue-400 @ 25%`                                  | Drag selection highlight.              |
+| `--color-cal-event-outline`       | the event color, lightness capped at 0.53 (OKLCH) | Text and outline of an outlined event. |
+| `--color-cal-event-outline-dark`  | the event color, lightness at least 0.75 (OKLCH)  | The same, in dark mode.                |
 
 Example override:
 
