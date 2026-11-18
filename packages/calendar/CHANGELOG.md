@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.12.0
+
+### Minor Changes
+
+- [#30](https://github.com/svycal/calendar/pull/30) [`596c7e2`](https://github.com/svycal/calendar/commit/596c7e2f5b0d73738aa13e306e45d4beaf841c5a) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Events take an optional `appearance: 'outline'`, which draws them as an outline in their color, with no fill or color bar, as calendar apps show invitations awaiting a reply. It applies in every view, including all-day events and month view. In dark mode the text takes a lighter tint of the color and the outline is softer. The event's color is exposed as the `--cal-event-color` CSS variable, and the new `eventOutline`, `allDayEventOutline`, and `timedEventOutline` class names style the outline.
+
 ## 0.11.2
 
 ### Patch Changes
