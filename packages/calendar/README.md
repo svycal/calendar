@@ -775,7 +775,7 @@ The calendar includes built-in ARIA support for screen readers:
 
 ### Custom renderers
 
-When using `renderEvent`, the library does **not** add `aria-label` or `role` attributes to the wrapper `<div>`. Your custom renderer is responsible for providing its own accessible markup.
+An interactive event drawn by `renderEvent` gets the same wrapper behavior as a default chip: `role="button"`, `tabIndex`, an `aria-label`, and `onEventClick` on click, Enter, or Space. Return non-interactive content from `renderEvent`, without your own button, to avoid nesting interactive elements.
 
 ## License
 
