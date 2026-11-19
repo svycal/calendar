@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.15.0
+
+### Minor Changes
+
+- [#37](https://github.com/svycal/calendar/pull/37) [`6e3fd07`](https://github.com/svycal/calendar/commit/6e3fd07e7ad8a9abed2a8d0b1d992e7fa1156b02) Thanks [@derrickreimer](https://github.com/derrickreimer)! - `DayGridView` takes `hiddenDates` to leave days out of `activeRange`, such as a week's weekend. The remaining days sit side by side, an all-day event spans the shown days it covers, and one that covers only hidden days isn't drawn.
+
 ## 0.14.0
 
 ### Minor Changes
