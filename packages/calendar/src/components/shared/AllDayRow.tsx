@@ -34,7 +34,6 @@ export const AllDayRow = memo(function AllDayRow({
         if (clientLabel) labelParts.push(clientLabel);
         const button = (
           <button
-            key={event.id}
             type="button"
             aria-label={labelParts.join(', ')}
             className={cn(
@@ -67,19 +66,17 @@ export const AllDayRow = memo(function AllDayRow({
           </button>
         );
 
-        if (isSelected) {
-          return (
-            <div
-              key={event.id}
-              ref={selectedEventRef}
-              style={{ flex: '1 1 0', minWidth: 0 }}
-            >
-              {button}
-            </div>
-          );
-        }
-
-        return button;
+        // Every chip gets the same wrapper, so selecting one, which attaches
+        // the ref to its wrapper, doesn't change how the row divides its width
+        return (
+          <div
+            key={event.id}
+            ref={isSelected ? selectedEventRef : undefined}
+            style={{ flex: '1 1 0', minWidth: 0, display: 'flex' }}
+          >
+            {button}
+          </div>
+        );
       })}
     </>
   );
