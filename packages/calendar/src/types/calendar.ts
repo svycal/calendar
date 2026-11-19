@@ -307,6 +307,12 @@ export interface DayGridViewProps {
     startDate: Temporal.PlainDate;
     endDate: Temporal.PlainDate;
   };
+  /**
+   * Days in `activeRange` to leave out. The remaining days sit side by side,
+   * so a week can skip its weekend. An all-day event spans the shown days it
+   * covers, and one that covers only hidden days isn't drawn.
+   */
+  hiddenDates?: Temporal.PlainDate[];
   timeZone: string;
   events: CalendarEvent[];
   availability?: AvailabilityRange[];

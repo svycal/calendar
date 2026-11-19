@@ -12,32 +12,24 @@ export interface ClippedSpan {
 }
 
 /**
- * Clips an inclusive date range to a run of consecutive dates, or returns
- * null when it doesn't overlap them.
+ * Clips an inclusive date range to ascending dates, which may skip days, or
+ * returns null when it covers none of them.
  */
 export function clipDateSpan(
   startDate: Temporal.PlainDate,
   endDate: Temporal.PlainDate,
   dates: Temporal.PlainDate[]
 ): ClippedSpan | null {
-  if (dates.length === 0) return null;
-  const rangeStart = dates[0];
-  const rangeEnd = dates[dates.length - 1];
-  if (
-    Temporal.PlainDate.compare(startDate, rangeEnd) > 0 ||
-    Temporal.PlainDate.compare(endDate, rangeStart) < 0
-  ) {
-    return null;
-  }
+  const startCol = dates.findIndex(
+    (d) => Temporal.PlainDate.compare(d, startDate) >= 0
+  );
+  const endCol =
+    dates.filter((d) => Temporal.PlainDate.compare(d, endDate) <= 0).length - 1;
+  if (startCol === -1 || startCol > endCol) return null;
 
-  const continuesBefore = Temporal.PlainDate.compare(startDate, rangeStart) < 0;
-  const continuesAfter = Temporal.PlainDate.compare(endDate, rangeEnd) > 0;
-  const startCol = continuesBefore
-    ? 0
-    : startDate.since(rangeStart, { largestUnit: 'days' }).days;
-  const endCol = continuesAfter
-    ? dates.length - 1
-    : endDate.since(rangeStart, { largestUnit: 'days' }).days;
+  const continuesBefore = Temporal.PlainDate.compare(startDate, dates[0]) < 0;
+  const continuesAfter =
+    Temporal.PlainDate.compare(endDate, dates[dates.length - 1]) > 0;
 
   return {
     startCol,
