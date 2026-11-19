@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.13.0
+
+### Minor Changes
+
+- [#34](https://github.com/svycal/calendar/pull/34) [`2878501`](https://github.com/svycal/calendar/commit/28785013802828341b154871430f9c287d41b388) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Events drawn by `renderEvent` handle clicks and keys like default event chips. An interactive event's wrapper gets `role="button"`, `tabIndex`, an `aria-label`, and calls `onEventClick` on click, Enter, or Space. A renderer that returned its own button should return plain content instead, to avoid nested buttons.
+
 ## 0.12.1
 
 ### Patch Changes
