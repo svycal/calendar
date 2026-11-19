@@ -9,6 +9,7 @@ import {
 import type { Temporal } from 'temporal-polyfill';
 import type { CalendarEvent, DayGridViewClassNames } from '@/types/calendar';
 import type { PositionedAllDayEvent } from '@/lib/overlap';
+import { clipDateSpan } from '@/lib/lanes';
 import {
   createAutoScroller,
   findVerticalScrollParent,
@@ -182,13 +183,15 @@ export const AllDaySection = memo(function AllDaySection({
       first: Math.min(drag.anchor, drag.current),
       last: Math.max(drag.anchor, drag.current),
     };
-  } else if (selectedDays && dates.length > 0) {
-    const first = Math.max(0, dates[0].until(selectedDays.startDate).days);
-    const last = Math.min(
-      dates.length - 1,
-      dates[0].until(selectedDays.endDate).days
+  } else if (selectedDays) {
+    const clip = clipDateSpan(
+      selectedDays.startDate,
+      selectedDays.endDate,
+      dates
     );
-    if (first <= last) highlight = { first, last };
+    if (clip) {
+      highlight = { first: clip.startCol, last: clip.startCol + clip.span - 1 };
+    }
   }
 
   const laneCount =

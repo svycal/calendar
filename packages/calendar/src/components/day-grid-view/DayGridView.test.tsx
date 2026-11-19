@@ -363,6 +363,73 @@ describe('DayGridView all-day events', () => {
   });
 });
 
+describe('DayGridView hiddenDates', () => {
+  const tuesday = monday.add({ days: 1 });
+  const thursday = monday.add({ days: 3 });
+  const allDay = (id: string, start: Temporal.PlainDate, end = start) => ({
+    id,
+    title: id,
+    resourceId: '',
+    allDay: true as const,
+    startDate: start,
+    endDate: end,
+  });
+  const chipColumn = (container: HTMLElement, title: string) =>
+    [...container.querySelectorAll<HTMLElement>('[style*="grid-column"]')]
+      .filter((el) => el.textContent === title)
+      .pop()?.style.gridColumn;
+
+  it('leaves out hidden days and lays out the rest side by side', () => {
+    const container = render({
+      hiddenDates: [wednesday],
+      events: [
+        allDay('tue-thu', tuesday, thursday),
+        allDay('wed-only', wednesday),
+        {
+          id: 'thu-timed',
+          title: 'thu-timed',
+          resourceId: '',
+          startTime: at(thursday, 9),
+          endTime: at(thursday, 10),
+        },
+      ],
+      selectedRange: {
+        startTime: at(tuesday, 0),
+        endTime: at(wednesday, 0),
+        endDate: thursday,
+        allDay: true,
+      },
+      classNames: { selectionHighlight: 'test-selection' },
+    });
+
+    const headers = [
+      ...container.querySelectorAll<HTMLElement>('[role="columnheader"]'),
+    ];
+    expect(headers.map((h) => h.textContent)).toEqual([
+      'Mon2',
+      'Tue3',
+      'Thu5',
+      'Fri6',
+    ]);
+    expect(
+      [...container.querySelectorAll<HTMLElement>('[data-day-column]')].map(
+        (el) => el.dataset.dayColumn
+      )
+    ).toEqual(['2026-03-02', '2026-03-03', '2026-03-05', '2026-03-06']);
+
+    // Tuesday and Thursday are the second and third columns.
+    expect(chipColumn(container, 'tue-thu')).toBe('2 / span 2');
+    expect(chipColumn(container, 'wed-only')).toBeUndefined();
+    expect(
+      container.querySelector<HTMLElement>('.test-selection')?.style.gridColumn
+    ).toBe('2 / 4');
+    const thuColumn = container.querySelector<HTMLElement>(
+      '[data-event-column="2026-03-05"]'
+    );
+    expect(thuColumn?.textContent).toContain('thu-timed');
+  });
+});
+
 describe('DayGridView display-only events', () => {
   it('lets clicks through an event with interactive: false', () => {
     const onEventClick = vi.fn();

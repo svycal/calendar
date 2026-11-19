@@ -49,6 +49,7 @@ import { describeEvent } from '@/lib/accessibility';
 
 export function DayGridView({
   activeRange,
+  hiddenDates,
   timeZone,
   events,
   availability,
@@ -96,10 +97,12 @@ export function DayGridView({
   const endHour = timeAxis?.endHour ?? 24;
   const intervalMinutes = timeAxis?.intervalMinutes ?? 60;
 
-  const dates = useMemo(
-    () => generateDateRange(activeRange.startDate, activeRange.endDate),
-    [activeRange.startDate, activeRange.endDate]
-  );
+  const dates = useMemo(() => {
+    const hidden = new Set(hiddenDates?.map((d) => d.toString()));
+    return generateDateRange(activeRange.startDate, activeRange.endDate).filter(
+      (d) => !hidden.has(d.toString())
+    );
+  }, [activeRange.startDate, activeRange.endDate, hiddenDates]);
 
   const todayStr = useMemo(() => {
     return Temporal.Now.plainDateISO(timeZone).toString();

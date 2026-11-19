@@ -199,6 +199,10 @@ function App() {
 
 #### Layout, events & interaction
 
+| Prop          | Type          | Description                                                                                                                                                                                |
+| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `hiddenDates` | `PlainDate[]` | Days in `activeRange` to leave out, such as a weekend. The remaining days sit side by side. An all-day event spans the shown days it covers; one that covers only hidden days isn't drawn. |
+
 The following props work identically to `ResourceGridView`: `timeAxis`, `initialScrollHour`, `hourHeight`, `columnMinWidth`, `eventLayout`, `eventGap`, `stackOffset`, `eventMinWidth`, `eventMaxStack`, `onOverflowClick`, `renderOverflowPopover`, `className`, `classNames` (uses `DayGridViewClassNames`), `onEventClick`, `snapDuration`, `placeholderDuration`, `selectionAppearance`, `dragPreviewAppearance`, `selectedEventId`, `selectedEventRef`, `onEventDrop`, `pendingDrop`, `pendingDropRef`. In `DayGridView`, an event can be dragged to another day; `EventDrop.resourceId` is always the event's own resource.
 
 #### Selection
