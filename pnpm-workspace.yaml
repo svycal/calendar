@@ -6,3 +6,5 @@ allowBuilds:
 overrides:
   browserslist: ^4.28.7
   baseline-browser-mapping: ^2.11.0
+  '@microsoft/api-extractor>minimatch': ^11.0.1
+  '@vue/language-core>minimatch': ^11.0.1
