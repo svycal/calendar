@@ -1,5 +1,17 @@
 # @savvycal/calendar
 
+## 0.14.0
+
+### Minor Changes
+
+- [`44e32e0`](https://github.com/svycal/calendar/commit/44e32e009300c3e0b7d8076a7e07a516fd080e3c) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Drag timed events to a new time, resource, or day in `ResourceGridView` and `DayGridView` with `onEventDrop`, using a mouse or, after a long press, touch. The grid doesn't move the event: show the drop with `pendingDrop` and anchor a confirmation popover to `pendingDropRef`, then update `events` to apply it.
+
+  Drag selection in every view, and multi-day selection in `DayGridView`, also work on touch after a long press, and multi-day selection scrolls sideways near the grid's edges.
+
+### Patch Changes
+
+- [`5116c9e`](https://github.com/svycal/calendar/commit/5116c9eb9b2bbc3a6d2897f6e29439cf8b40cec7) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Keep a selected all-day event in `ResourceGridView` at full width instead of shrinking it to fit its title.
+
 ## 0.13.0
 
 ### Minor Changes
