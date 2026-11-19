@@ -85,6 +85,21 @@ export const EventChip = memo(function EventChip({
   // An outlined event's text takes the color its shell sets
   const textStyle = isOutline ? { color: 'inherit' } : undefined;
 
+  const interactionProps = isInteractive
+    ? {
+        role: 'button',
+        tabIndex: 0,
+        'aria-label': describeEvent(event, timeZone, { includeStatus: true }),
+        onClick: () => onClick?.(event),
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onClick?.(event);
+          }
+        },
+      }
+    : {};
+
   if (renderEvent) {
     const customContent = renderEvent({ event, position: positioned });
 
@@ -92,8 +107,10 @@ export const EventChip = memo(function EventChip({
       return (
         <div
           ref={selectedEventRef}
+          {...interactionProps}
           style={{
             position: 'absolute',
+            cursor: isInteractive ? 'pointer' : undefined,
             top,
             height,
             left,
@@ -110,16 +127,10 @@ export const EventChip = memo(function EventChip({
 
   const startTimeStr = formatEventStartTime(event.startTime, timeZone);
 
-  const ariaLabel = isInteractive
-    ? describeEvent(event, timeZone, { includeStatus: true })
-    : undefined;
-
   return (
     <div
       ref={selectedEventRef}
-      {...(isInteractive
-        ? { role: 'button', tabIndex: 0, 'aria-label': ariaLabel }
-        : {})}
+      {...interactionProps}
       className={cn(
         cls('event'),
         isSelected && cls('eventSelected'),
@@ -134,17 +145,6 @@ export const EventChip = memo(function EventChip({
         zIndex,
         pointerEvents: isInteractive ? 'auto' : 'none',
       }}
-      {...(isInteractive
-        ? {
-            onClick: () => onClick?.(event),
-            onKeyDown: (e: React.KeyboardEvent) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onClick?.(event);
-              }
-            },
-          }
-        : {})}
     >
       {color && !isOutline && (
         <div

@@ -355,6 +355,58 @@ describe('DayGridView display-only events', () => {
   });
 });
 
+describe('DayGridView custom-rendered events', () => {
+  it('handles clicks and keys on events drawn by renderEvent, as on default chips', () => {
+    const onEventClick = vi.fn();
+    const container = render({
+      onEventClick,
+      renderEvent: ({ event }) => <span>{event.title} (custom)</span>,
+      events: [
+        {
+          id: 'custom',
+          title: 'Custom',
+          resourceId: '',
+          startTime: at(monday, 9),
+          endTime: at(monday, 10),
+        },
+        {
+          id: 'busy',
+          title: 'Busy',
+          resourceId: '',
+          startTime: at(wednesday, 9),
+          endTime: at(wednesday, 10),
+          interactive: false,
+        },
+      ],
+    });
+
+    const wrapperOf = (text: string) =>
+      [...container.querySelectorAll('span')].find(
+        (span) => span.textContent === text
+      )!.parentElement!;
+
+    const custom = wrapperOf('Custom (custom)');
+    expect(custom.getAttribute('role')).toBe('button');
+    expect(custom.tabIndex).toBe(0);
+    expect(custom.getAttribute('aria-label')).toMatch(/^Custom, /);
+
+    act(() => custom.click());
+    expect(onEventClick).toHaveBeenCalledTimes(1);
+    expect(onEventClick.mock.calls[0][0].id).toBe('custom');
+
+    act(() => {
+      custom.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+      );
+    });
+    expect(onEventClick).toHaveBeenCalledTimes(2);
+
+    const busy = wrapperOf('Busy (custom)');
+    expect(busy.getAttribute('role')).toBeNull();
+    expect(busy.style.pointerEvents).toBe('none');
+  });
+});
+
 describe('DayGridView scrollKey', () => {
   it('re-applies initialScrollHour when scrollKey changes', () => {
     const height = Object.getOwnPropertyDescriptor(
