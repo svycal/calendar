@@ -127,6 +127,11 @@ describe('SlotInteractionLayer auto-scroll', () => {
       document.dispatchEvent(mouse('mousemove', 200));
     });
 
+    // At most one frame runs, finds the pointer outside the edge zones, and
+    // stops the loop
+    act(() => {
+      queuedFrames.splice(0).forEach((tick) => tick(0));
+    });
     expect(queuedFrames).toHaveLength(0);
     expect(scroller.scrollTop).toBe(0);
   });

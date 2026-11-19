@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Temporal } from 'temporal-polyfill';
 import { cn } from '@/lib/utils';
 import {
@@ -14,6 +14,7 @@ import {
 import type {
   AllDayCalendarEvent,
   CalendarEvent,
+  EventDrop,
   ResourceGridViewClassNames,
   ResourceGridViewProps,
   SelectedRange,
@@ -31,6 +32,8 @@ import { AllDayRow } from '../shared/AllDayRow';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
 import { useInitialScroll } from '../shared/useInitialScroll';
 import { useAnnouncer } from '../shared/useAnnouncer';
+import { useEventDrag } from '../shared/useEventDrag';
+import { useLingeringValue } from '../shared/useLingeringValue';
 import { getEventLabel, getClientNameLabel } from '@/lib/accessibility';
 
 export function ResourceGridView({
@@ -59,6 +62,9 @@ export function ResourceGridView({
   dragPreviewAppearance,
   selectionRef,
   selectionLingerMs = 0,
+  onEventDrop,
+  pendingDrop,
+  pendingDropRef,
   selectedEventId,
   selectedEventRef,
   renderCorner,
@@ -101,34 +107,13 @@ export function ResourceGridView({
     [classNames]
   );
 
-  // Keep the selection overlay mounted briefly after clearing so popover
-  // close transitions can finish without losing their reference element.
-  const staleSelectionRef = useRef<SelectedRange | null>(null);
-  const lingerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [staleSelection, setStaleSelection] = useState<SelectedRange | null>(
-    null
+  // Keep the selection and pending drop mounted briefly after clearing so
+  // popover close transitions can finish without losing their reference.
+  const effectiveSelectedRange = useLingeringValue(
+    selectedRange,
+    selectionLingerMs
   );
-
-  useEffect(() => {
-    if (selectedRange) {
-      // New selection starting — cancel any pending linger timer
-      if (lingerTimerRef.current !== null) {
-        clearTimeout(lingerTimerRef.current);
-        lingerTimerRef.current = null;
-      }
-      staleSelectionRef.current = selectedRange;
-    } else if (staleSelectionRef.current && selectionLingerMs > 0) {
-      const last = staleSelectionRef.current;
-      staleSelectionRef.current = null;
-      setStaleSelection(last);
-      lingerTimerRef.current = setTimeout(() => {
-        lingerTimerRef.current = null;
-        setStaleSelection(null);
-      }, selectionLingerMs);
-    }
-  }, [selectedRange, selectionLingerMs]);
-
-  const effectiveSelectedRange = selectedRange ?? staleSelection;
+  const shownPendingDrop = useLingeringValue(pendingDrop, selectionLingerMs);
 
   const timeSlots = useMemo(
     () => generateTimeSlots({ startHour, endHour, intervalMinutes }),
@@ -252,6 +237,40 @@ export function ResourceGridView({
     },
     [onSelect, onOverflowClick]
   );
+
+  const handleEventDrop = useCallback(
+    (drop: EventDrop) => {
+      onEventDrop?.(drop);
+      const parts = [
+        getEventLabel(drop.event),
+        formatTimeRange(drop.startTime, drop.endTime, timeZone),
+      ];
+      const resource = resources.find((r) => r.id === drop.resourceId);
+      if (resource) parts.push(resource.name);
+      announce(`Moved: ${parts.join(', ')}`);
+    },
+    [onEventDrop, timeZone, resources, announce]
+  );
+
+  const resolveDragTarget = useCallback(
+    (columnId: string) => ({ date, resourceId: columnId }),
+    [date]
+  );
+
+  const { dragPreview, startEventDrag } = useEventDrag({
+    onDrop: onEventDrop ? handleEventDrop : undefined,
+    gridRef,
+    rootRef,
+    gutterRef: allDayRef,
+    timeZone,
+    startHour,
+    endHour,
+    hourHeight: effectiveHourHeight,
+    snapDuration: snapDuration ?? 15,
+    resolveTarget: resolveDragTarget,
+  });
+
+  const dragSourceId = dragPreview?.event.id ?? pendingDrop?.event.id ?? null;
 
   const handleSlotInteractionSelect = useCallback(
     (
@@ -477,6 +496,8 @@ export function ResourceGridView({
             eventMaxStack={eventMaxStack}
             onOverflowClick={handleOverflowClick}
             renderOverflowPopover={renderOverflowPopover}
+            dragSourceId={dragSourceId}
+            onEventDragStart={onEventDrop ? startEventDrag : undefined}
           />
         ))}
 
@@ -505,6 +526,35 @@ export function ResourceGridView({
               />
             );
           })()}
+
+        {/* A dropped event awaiting confirmation, then the one being dragged */}
+        {[
+          { drop: shownPendingDrop, ref: pendingDropRef, hidden: !pendingDrop },
+          { drop: dragPreview, ref: undefined, hidden: false },
+        ].map(({ drop, ref, hidden }, i) => {
+          if (!drop) return null;
+          const colIdx = resources.findIndex((r) => r.id === drop.resourceId);
+          if (colIdx === -1) return null;
+          return (
+            <SelectionOverlay
+              key={i === 0 ? 'pending-drop' : 'drag-preview'}
+              event={drop.event}
+              startTime={drop.startTime}
+              endTime={drop.endTime}
+              fallbackColor={resources[colIdx].color}
+              column={colIdx + 2}
+              viewDate={date}
+              timeZone={timeZone}
+              startHour={startHour}
+              endHour={endHour}
+              hourHeight={effectiveHourHeight}
+              cls={cls}
+              selectionRef={ref}
+              renderEvent={renderEvent}
+              hidden={hidden}
+            />
+          );
+        })}
 
         {/* Now indicator */}
         <NowIndicator

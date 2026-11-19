@@ -30,6 +30,7 @@ export type {
   OverflowClickInfo,
   OverflowPopoverRenderProps,
   SelectedRange,
+  EventDrop,
   SelectionAppearance,
   SelectionEventData,
   EventLayout,

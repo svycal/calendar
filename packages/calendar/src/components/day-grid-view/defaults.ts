@@ -22,6 +22,7 @@ export const dayGridViewDefaults: Required<DayGridViewClassNames> = {
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   eventOutline:
     'bg-cal-surface text-cal-event-outline ring-cal-event-outline dark:text-cal-event-outline-dark dark:ring-cal-event-outline-dark/65',
+  eventDragSource: 'opacity-40',
   eventColorBar: 'absolute left-0 top-0 bottom-0 w-1',
   eventTitle: 'text-cal-text-body text-xs/4 font-medium',
   eventTime: 'text-cal-text-muted text-xs/4',

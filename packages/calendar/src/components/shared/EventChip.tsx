@@ -9,6 +9,7 @@ import type {
 } from '@/types/calendar';
 import { formatEventStartTime } from '@/lib/time';
 import { describeEvent } from '@/lib/accessibility';
+import { TOUCH_DRAG_STYLE } from './useTouchDrag';
 
 interface EventChipProps {
   positioned: PositionedEvent;
@@ -26,6 +27,13 @@ interface EventChipProps {
   stackOffset?: number;
   isSelected?: boolean;
   selectedEventRef?: Ref<HTMLDivElement>;
+  /** Dims the event while it's dragged or a drop of it awaits confirmation. */
+  isDragSource?: boolean;
+  /** Makes the event draggable: called when the user presses on it. */
+  onDragStart?: (
+    event: TimedCalendarEvent,
+    e: React.PointerEvent<HTMLElement>
+  ) => void;
 }
 
 export const EventChip = memo(function EventChip({
@@ -41,6 +49,8 @@ export const EventChip = memo(function EventChip({
   stackOffset = 8,
   isSelected,
   selectedEventRef,
+  isDragSource,
+  onDragStart,
 }: EventChipProps) {
   const { event, top, height, subColumn, totalSubColumns } = positioned;
   const isInteractive = interactive && event.interactive !== false;
@@ -85,8 +95,15 @@ export const EventChip = memo(function EventChip({
   // An outlined event's text takes the color its shell sets
   const textStyle = isOutline ? { color: 'inherit' } : undefined;
 
+  const isDraggable = isInteractive && event.draggable !== false && onDragStart;
+  // A long press starts a touch drag, so keep it from opening the iOS callout
+  const dragStyle = isDraggable ? TOUCH_DRAG_STYLE : undefined;
+
   const interactionProps = isInteractive
     ? {
+        onPointerDown: isDraggable
+          ? (e: React.PointerEvent<HTMLElement>) => onDragStart(event, e)
+          : undefined,
         role: 'button',
         tabIndex: 0,
         'aria-label': describeEvent(event, timeZone, { includeStatus: true }),
@@ -108,6 +125,7 @@ export const EventChip = memo(function EventChip({
         <div
           ref={selectedEventRef}
           {...interactionProps}
+          className={isDragSource ? cls('eventDragSource') : undefined}
           style={{
             position: 'absolute',
             cursor: isInteractive ? 'pointer' : undefined,
@@ -117,6 +135,7 @@ export const EventChip = memo(function EventChip({
             width,
             zIndex,
             pointerEvents: isInteractive ? 'auto' : 'none',
+            ...dragStyle,
           }}
         >
           {customContent}
@@ -134,7 +153,8 @@ export const EventChip = memo(function EventChip({
       className={cn(
         cls('event'),
         isSelected && cls('eventSelected'),
-        isOutline && cls('eventOutline')
+        isOutline && cls('eventOutline'),
+        isDragSource && cls('eventDragSource')
       )}
       style={{
         ...(isOutline && { '--cal-event-color': color }),
@@ -144,6 +164,7 @@ export const EventChip = memo(function EventChip({
         width,
         zIndex,
         pointerEvents: isInteractive ? 'auto' : 'none',
+        ...dragStyle,
       }}
     >
       {color && !isOutline && (

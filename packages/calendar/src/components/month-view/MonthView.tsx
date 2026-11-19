@@ -26,6 +26,7 @@ import type {
   MonthViewProps,
   SelectionAppearance,
 } from '@/types/calendar';
+import { useTouchDrag } from '../shared/useTouchDrag';
 import { useAnnouncer } from '../shared/useAnnouncer';
 import { monthViewDefaults } from './defaults';
 import {
@@ -150,12 +151,12 @@ export function MonthView({
   const onSelectRef = useRef(onSelect);
   const announceRef = useRef(announce);
 
-  const handleDocMouseMove = useCallback((e: MouseEvent) => {
+  const extendDragTo = useCallback((clientX: number, clientY: number) => {
     const anchor = dragAnchorRef.current;
     const grid = gridRef.current;
     if (!anchor || !grid) return;
     const week = document
-      .elementFromPoint(e.clientX, e.clientY)
+      .elementFromPoint(clientX, clientY)
       ?.closest<HTMLElement>('[data-month-week]');
     if (!week || !grid.contains(week)) return;
     const dates = weeksRef.current[Number(week.dataset.monthWeek)];
@@ -165,7 +166,7 @@ export function MonthView({
       DAYS_PER_WEEK - 1,
       Math.max(
         0,
-        Math.floor((e.clientX - rect.left) / (rect.width / DAYS_PER_WEEK))
+        Math.floor((clientX - rect.left) / (rect.width / DAYS_PER_WEEK))
       )
     );
     const date = dates[col];
@@ -178,6 +179,11 @@ export function MonthView({
     dragCurrentRef.current = date;
     setDragRange(orderRange(anchor, date));
   }, []);
+
+  const handleDocMouseMove = useCallback(
+    (e: MouseEvent) => extendDragTo(e.clientX, e.clientY),
+    [extendDragTo]
+  );
 
   // Ends the drag in progress (if any) without selecting
   const stopDragRef = useRef<() => void>(() => {});
@@ -212,13 +218,9 @@ export function MonthView({
 
   useEffect(() => () => stopDragRef.current(), []);
 
-  const handleCellMouseDown = useCallback(
-    (date: Temporal.PlainDate, e: React.MouseEvent) => {
-      // Ctrl-click opens the context menu on macOS, and the mouseup that
-      // would end the drag may never arrive
-      if (!onSelect || e.button !== 0 || e.ctrlKey) return;
-      e.preventDefault(); // Prevent text selection
-      onSelect(null);
+  const beginDrag = useCallback(
+    (date: Temporal.PlainDate) => {
+      onSelectRef.current?.(null);
       dragAnchorRef.current = date;
       dragCurrentRef.current = date;
       setDragRange({ startDate: date, endDate: date });
@@ -235,11 +237,37 @@ export function MonthView({
         document.removeEventListener('keydown', handleDocKeyDown);
         stopDragRef.current = () => {};
       };
-      document.addEventListener('mousemove', handleDocMouseMove);
-      document.addEventListener('mouseup', handleDocMouseUp);
       document.addEventListener('keydown', handleDocKeyDown);
     },
-    [onSelect, handleDocMouseMove, handleDocMouseUp]
+    [handleDocMouseMove, handleDocMouseUp]
+  );
+
+  const handleCellMouseDown = useCallback(
+    (date: Temporal.PlainDate, e: React.MouseEvent) => {
+      // Ctrl-click opens the context menu on macOS, and the mouseup that
+      // would end the drag may never arrive
+      if (!onSelect || e.button !== 0 || e.ctrlKey) return;
+      e.preventDefault(); // Prevent text selection
+      beginDrag(date);
+      document.addEventListener('mousemove', handleDocMouseMove);
+      document.addEventListener('mouseup', handleDocMouseUp);
+    },
+    [onSelect, beginDrag, handleDocMouseMove, handleDocMouseUp]
+  );
+
+  // On touch, a long press starts the drag; a tap still arrives as mouse
+  // events and selects the day
+  const startTouchDrag = useTouchDrag(gridRef, onSelect != null);
+  const handleCellPointerDown = useCallback(
+    (date: Temporal.PlainDate, e: React.PointerEvent) => {
+      startTouchDrag(e, {
+        start: () => beginDrag(date),
+        move: extendDragTo,
+        end: handleDocMouseUp,
+        cancel: () => stopDragRef.current(),
+      });
+    },
+    [startTouchDrag, beginDrag, extendDragTo, handleDocMouseUp]
   );
 
   useEffect(() => {
@@ -397,6 +425,7 @@ export function MonthView({
             onEventClick={handleEventClick}
             onDayNumberClick={onDayNumberClick}
             onCellMouseDown={onSelect ? handleCellMouseDown : undefined}
+            onCellPointerDown={onSelect ? handleCellPointerDown : undefined}
             onOverflowClick={onOverflowClick}
             renderOverflowPopover={renderOverflowPopover}
             highlight={highlights[w]}

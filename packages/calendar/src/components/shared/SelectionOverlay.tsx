@@ -27,6 +27,10 @@ interface SelectionOverlayProps {
     event: TimedCalendarEvent;
     position: PositionedEvent;
   }) => React.ReactNode;
+  /** Draws this event, moved to `startTime`–`endTime`, instead of a placeholder. */
+  event?: TimedCalendarEvent;
+  /** Keeps the overlay laid out, as a popover anchor, but invisible. */
+  hidden?: boolean;
 }
 
 export const SelectionOverlay = memo(function SelectionOverlay({
@@ -43,6 +47,8 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   appearance = 'highlight',
   selectionRef,
   renderEvent,
+  event,
+  hidden,
 }: SelectionOverlayProps) {
   const pixelsPerMinute = hourHeight / 60;
   const axisStartMin = startHour * 60;
@@ -58,7 +64,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
 
   if (height <= 0) return null;
 
-  const isEventStyle = appearance !== 'highlight';
+  const isEventStyle = event != null || appearance !== 'highlight';
 
   return (
     <div
@@ -68,6 +74,7 @@ export const SelectionOverlay = memo(function SelectionOverlay({
         gridColumn: column,
         position: 'relative',
         pointerEvents: 'none',
+        visibility: hidden ? 'hidden' : undefined,
       }}
     >
       <div
@@ -86,12 +93,16 @@ export const SelectionOverlay = memo(function SelectionOverlay({
               interactive={false}
               isSelected
               positioned={{
-                event: buildSyntheticEvent(
-                  '',
-                  startTime,
-                  endTime,
-                  appearance.eventData
-                ),
+                event: event
+                  ? { ...event, startTime, endTime }
+                  : buildSyntheticEvent(
+                      '',
+                      startTime,
+                      endTime,
+                      appearance !== 'highlight'
+                        ? appearance.eventData
+                        : undefined
+                    ),
                 top: 0,
                 height,
                 subColumn: 0,

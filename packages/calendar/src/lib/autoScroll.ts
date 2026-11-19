@@ -4,6 +4,18 @@ export const AUTO_SCROLL_EDGE_PX = 48;
 /** Peak auto-scroll speed while the pointer is at or past an edge. */
 export const AUTO_SCROLL_MAX_PX_PER_SECOND = 400;
 
+/**
+ * Sideways edge zone, in px. Narrower than the vertical one, which would
+ * take a quarter of a phone's width.
+ */
+export const AUTO_SCROLL_HORIZONTAL_EDGE_PX = 32;
+
+/**
+ * Peak sideways speed. Slower than vertical, since one column can be most of
+ * the viewport and is easy to overshoot.
+ */
+export const AUTO_SCROLL_HORIZONTAL_MAX_PX_PER_SECOND = 250;
+
 function isScrollableOverflowY(value: string): boolean {
   return value === 'auto' || value === 'scroll' || value === 'overlay';
 }
@@ -55,38 +67,55 @@ export function computeAutoScrollIntensity(
 }
 
 /**
- * Scroll `scrollParent` by `intensity * maxPxPerSecond * deltaSeconds`.
- * Returns the actual delta applied after clamping to the scroll range.
+ * Scroll `scrollParent` along `axis` by
+ * `intensity * maxPxPerSecond * deltaSeconds`. Returns the actual delta
+ * applied after clamping to the scroll range.
  */
-export function applyVerticalAutoScroll(
+export function applyAutoScroll(
   scrollParent: HTMLElement,
+  axis: 'x' | 'y',
   intensity: number,
   deltaSeconds: number,
-  maxPxPerSecond: number = AUTO_SCROLL_MAX_PX_PER_SECOND
+  maxPxPerSecond: number = axis === 'y'
+    ? AUTO_SCROLL_MAX_PX_PER_SECOND
+    : AUTO_SCROLL_HORIZONTAL_MAX_PX_PER_SECOND
 ): number {
   if (intensity === 0 || deltaSeconds <= 0) return 0;
 
   const delta = intensity * maxPxPerSecond * deltaSeconds;
   const maxScroll = Math.max(
     0,
-    scrollParent.scrollHeight - scrollParent.clientHeight
+    axis === 'y'
+      ? scrollParent.scrollHeight - scrollParent.clientHeight
+      : scrollParent.scrollWidth - scrollParent.clientWidth
   );
-  const prev = scrollParent.scrollTop;
+  const key = axis === 'y' ? 'scrollTop' : 'scrollLeft';
+  const prev = scrollParent[key];
   const next = Math.min(maxScroll, Math.max(0, prev + delta));
-  scrollParent.scrollTop = next;
+  scrollParent[key] = next;
   return next - prev;
 }
 
-export interface VerticalAutoScroller {
+export interface AutoScroller {
   /** Start the rAF loop if it isn't already running. */
   ensure: () => void;
   /** Cancel the rAF loop. Safe to call more than once. */
   stop: () => void;
 }
 
-interface CreateVerticalAutoScrollerOptions {
-  getPointerY: () => number;
+interface CreateAutoScrollerOptions {
+  /** Omit to scroll sideways only. */
+  getPointerY?: () => number;
   getScrollParent: () => HTMLElement | null;
+  /** Also scroll sideways when the pointer nears the left or right edge. */
+  horizontal?: {
+    getPointerX: () => number;
+    /**
+     * Left edge of the visible area, such as the right edge of a sticky
+     * gutter that covers the first column. Default: the scroller's left edge.
+     */
+    getViewportLeft?: () => number | undefined;
+  };
   /** Called after the scroller actually moves, so the caller can remap the pointer. */
   onScroll: () => void;
   raf?: typeof requestAnimationFrame;
@@ -95,16 +124,17 @@ interface CreateVerticalAutoScrollerOptions {
 
 /**
  * rAF loop that auto-scrolls while the pointer sits in an edge zone. The
- * loop stops on its own when intensity hits 0 or the scroller can't move
- * further; call `ensure()` again to resume.
+ * loop stops on its own when the pointer leaves the edge zones or the
+ * scroller can't move further; call `ensure()` again to resume.
  */
-export function createVerticalAutoScroller({
+export function createAutoScroller({
   getPointerY,
   getScrollParent,
+  horizontal,
   onScroll,
   raf = requestAnimationFrame,
   cancelRaf = cancelAnimationFrame,
-}: CreateVerticalAutoScrollerOptions): VerticalAutoScroller {
+}: CreateAutoScrollerOptions): AutoScroller {
   let rafId: number | null = null;
   let lastTs: number | null = null;
   let stopped = false;
@@ -120,12 +150,18 @@ export function createVerticalAutoScroller({
     }
 
     const rect = scrollParent.getBoundingClientRect();
-    const intensity = computeAutoScrollIntensity(
-      getPointerY(),
-      rect.top,
-      rect.bottom
-    );
-    if (intensity === 0) {
+    const intensityY = getPointerY
+      ? computeAutoScrollIntensity(getPointerY(), rect.top, rect.bottom)
+      : 0;
+    const intensityX = horizontal
+      ? computeAutoScrollIntensity(
+          horizontal.getPointerX(),
+          horizontal.getViewportLeft?.() ?? rect.left,
+          rect.right,
+          AUTO_SCROLL_HORIZONTAL_EDGE_PX
+        )
+      : 0;
+    if (intensityX === 0 && intensityY === 0) {
       lastTs = null;
       return;
     }
@@ -133,8 +169,9 @@ export function createVerticalAutoScroller({
     const dt = lastTs == null ? 1 / 60 : Math.min(0.05, (now - lastTs) / 1000);
     lastTs = now;
 
-    const scrolled = applyVerticalAutoScroll(scrollParent, intensity, dt);
-    if (scrolled === 0) {
+    const scrolledY = applyAutoScroll(scrollParent, 'y', intensityY, dt);
+    const scrolledX = applyAutoScroll(scrollParent, 'x', intensityX, dt);
+    if (scrolledX === 0 && scrolledY === 0) {
       lastTs = null;
       return;
     }

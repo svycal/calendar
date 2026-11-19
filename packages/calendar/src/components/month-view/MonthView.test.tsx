@@ -53,13 +53,13 @@ function mouse(target: EventTarget, type: string, init: MouseEventInit = {}) {
   });
 }
 
-describe('MonthView drag selection', () => {
-  function firstDayCell(container: HTMLElement) {
-    return container.querySelector<HTMLElement>(
-      '[data-month-week="0"] [data-popover-dismiss-only]'
-    )!;
-  }
+function firstDayCell(container: HTMLElement) {
+  return container.querySelector<HTMLElement>(
+    '[data-month-week="0"] [data-popover-dismiss-only]'
+  )!;
+}
 
+describe('MonthView drag selection', () => {
   it('selects the pressed day', () => {
     const onSelect = vi.fn();
     const container = render({ onSelect });
@@ -154,5 +154,63 @@ describe('MonthView outlined events', () => {
     const dot = timedItem.querySelector<HTMLElement>('span')!;
     expect(dot.style.backgroundColor).toBe('');
     expect(dot.style.boxShadow).toBe('inset 0 0 0 1.5px currentColor');
+  });
+
+  describe('on touch', () => {
+    afterEach(() => vi.useRealTimers());
+
+    function touch(target: EventTarget, type: string) {
+      act(() => {
+        target.dispatchEvent(
+          new PointerEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            pointerId: 1,
+            pointerType: 'touch',
+            isPrimary: true,
+          })
+        );
+      });
+    }
+
+    function touchMoveBlocked(target: EventTarget) {
+      const move = new Event('touchmove', { bubbles: true, cancelable: true });
+      act(() => {
+        target.dispatchEvent(move);
+      });
+      return move.defaultPrevented;
+    }
+
+    it('selects after a long press, keeping the finger from scrolling', () => {
+      vi.useFakeTimers();
+      const onSelect = vi.fn();
+      const container = render({ onSelect });
+      const cell = firstDayCell(container);
+
+      touch(cell, 'pointerdown');
+      expect(touchMoveBlocked(cell)).toBe(false);
+      act(() => vi.advanceTimersByTime(400));
+      expect(onSelect).toHaveBeenLastCalledWith(null);
+      expect(touchMoveBlocked(cell)).toBe(true);
+      touch(document, 'pointerup');
+
+      expect(onSelect).toHaveBeenLastCalledWith({
+        startDate: Temporal.PlainDate.from('2026-09-27'),
+        endDate: Temporal.PlainDate.from('2026-09-27'),
+      });
+    });
+
+    it('selects nothing when the browser cancels the touch', () => {
+      vi.useFakeTimers();
+      const onSelect = vi.fn();
+      const container = render({ onSelect });
+
+      touch(firstDayCell(container), 'pointerdown');
+      act(() => vi.advanceTimersByTime(400));
+      touch(document, 'pointercancel');
+
+      expect(onSelect).toHaveBeenCalledTimes(1);
+      expect(onSelect).toHaveBeenLastCalledWith(null);
+    });
   });
 });

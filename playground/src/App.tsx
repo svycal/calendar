@@ -25,6 +25,7 @@ import {
 import StressTestPage from './StressTestPage';
 import OverlapPage from './OverlapPage';
 import MonthPage from './MonthPage';
+import { useDropConfirm } from './useDropConfirm';
 
 type Page = 'demo' | 'month' | 'overlap' | 'stress-test';
 
@@ -76,7 +77,7 @@ const resources: CalendarResource[] = [
   },
 ];
 
-const events: CalendarEvent[] = [
+const initialEvents: CalendarEvent[] = [
   // Resource 1: 2-event overlap
   {
     id: '1',
@@ -276,7 +277,7 @@ function makeDayTime(
   return date.toPlainDateTime({ hour, minute }).toZonedDateTime(tz);
 }
 
-const weekEvents: CalendarEvent[] = [
+const initialWeekEvents: CalendarEvent[] = [
   {
     id: 'w1',
     title: 'Team Standup',
@@ -451,6 +452,13 @@ function App() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [dayGridSelectedRange, setDayGridSelectedRange] =
     useState<DayGridSelectedRange | null>(null);
+  const [events, setEvents] = useState(initialEvents);
+  const [weekEvents, setWeekEvents] = useState(initialWeekEvents);
+  const resourceDrop = useDropConfirm(
+    setEvents,
+    (id) => resources.find((r) => r.id === id)?.name
+  );
+  const weekDrop = useDropConfirm(setWeekEvents);
 
   const {
     context: selectionContext,
@@ -636,6 +644,13 @@ function App() {
                 selectionRef={setSelectionRef}
                 selectedEventId={selectedEventId}
                 selectedEventRef={setEventRef}
+                onEventDrop={(drop) => {
+                  setSelectedEventId(null);
+                  resourceDrop.onEventDrop(drop);
+                }}
+                pendingDrop={resourceDrop.pendingDrop}
+                pendingDropRef={resourceDrop.pendingDropRef}
+                selectionLingerMs={100}
                 onSelect={(range) => {
                   setSelectedRange(range);
                   setSelectedEventId(null);
@@ -663,6 +678,7 @@ function App() {
                 )}
                 className="h-full"
               />
+              {resourceDrop.popover}
               {isSelectionMounted && (
                 <div
                   ref={setSelectionFloating}
@@ -734,7 +750,12 @@ function App() {
                 onEventClick={(event) => {
                   console.log('Day grid event clicked:', event);
                 }}
+                onEventDrop={weekDrop.onEventDrop}
+                pendingDrop={weekDrop.pendingDrop}
+                pendingDropRef={weekDrop.pendingDropRef}
+                selectionLingerMs={100}
                 selectedRange={dayGridSelectedRange}
+                multiDaySelection
                 onSelect={(range) => {
                   setDayGridSelectedRange(range);
                   console.log('Day grid selection:', range);
@@ -763,6 +784,7 @@ function App() {
                 )}
                 className="h-full"
               />
+              {weekDrop.popover}
             </div>
           </section>
         </div>

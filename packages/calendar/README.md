@@ -116,6 +116,16 @@ function App() {
 | `selectedEventId`       | `string \| null`                         | —       | ID of the currently selected event (controlled). Applies selected styling and enables `selectedEventRef`.                                 |
 | `selectedEventRef`      | `Ref<HTMLDivElement>`                    | —       | Ref attached to the selected event element, useful for positioning popovers.                                                              |
 
+### Drag and drop
+
+| Prop             | Type                        | Default | Description                                                                                                                                                               |
+| ---------------- | --------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onEventDrop`    | `(drop: EventDrop) => void` | —       | Called when the user drags a timed event to a new time or resource and releases it. Setting it makes interactive timed events draggable. The grid doesn't move the event. |
+| `pendingDrop`    | `EventDrop \| null`         | —       | A drop awaiting confirmation (controlled). The grid draws the event at its new place and dims it in its old one. Clear it to cancel, or after applying the move.          |
+| `pendingDropRef` | `Ref<HTMLDivElement>`       | —       | Ref attached to the event drawn at `pendingDrop`, for positioning a confirmation popover.                                                                                 |
+
+See [Drag and drop with confirmation](#drag-and-drop-with-confirmation).
+
 ### Availability
 
 | Prop                 | Type                                  | Default | Description                                                                                       |
@@ -189,17 +199,17 @@ function App() {
 
 #### Layout, events & interaction
 
-The following props work identically to `ResourceGridView`: `timeAxis`, `initialScrollHour`, `hourHeight`, `columnMinWidth`, `eventLayout`, `eventGap`, `stackOffset`, `eventMinWidth`, `eventMaxStack`, `onOverflowClick`, `renderOverflowPopover`, `className`, `classNames` (uses `DayGridViewClassNames`), `onEventClick`, `snapDuration`, `placeholderDuration`, `selectionAppearance`, `dragPreviewAppearance`, `selectedEventId`, `selectedEventRef`.
+The following props work identically to `ResourceGridView`: `timeAxis`, `initialScrollHour`, `hourHeight`, `columnMinWidth`, `eventLayout`, `eventGap`, `stackOffset`, `eventMinWidth`, `eventMaxStack`, `onOverflowClick`, `renderOverflowPopover`, `className`, `classNames` (uses `DayGridViewClassNames`), `onEventClick`, `snapDuration`, `placeholderDuration`, `selectionAppearance`, `dragPreviewAppearance`, `selectedEventId`, `selectedEventRef`, `onEventDrop`, `pendingDrop`, `pendingDropRef`. In `DayGridView`, an event can be dragged to another day; `EventDrop.resourceId` is always the event's own resource.
 
 #### Selection
 
-| Prop                | Type                                            | Description                                                                                                                                                                                                                                |
-| ------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `selectedRange`     | `DayGridSelectedRange \| null`                  | The currently selected time range (controlled).                                                                                                                                                                                            |
-| `onSelect`          | `(range: DayGridSelectedRange \| null) => void` | Called when the user selects or clears a range.                                                                                                                                                                                            |
-| `selectionRef`      | `Ref<HTMLDivElement>`                           | Ref attached to the selection overlay element (the first day of a multi-day selection).                                                                                                                                                    |
-| `multiDaySelection` | `boolean`                                       | Let a drag span several days. Dragging across day columns repeats the time window on each day; dragging across the all-day row selects whole days (`allDay: true`), drawn in the all-day row. The range reports its last day in `endDate`. |
-| `selectionLingerMs` | `number`                                        | How long (ms) the selection stays in the DOM after clearing, so popover close transitions keep their reference. Default: `0`.                                                                                                              |
+| Prop                | Type                                            | Description                                                                                                                                                                                                                                                                                                         |
+| ------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `selectedRange`     | `DayGridSelectedRange \| null`                  | The currently selected time range (controlled).                                                                                                                                                                                                                                                                     |
+| `onSelect`          | `(range: DayGridSelectedRange \| null) => void` | Called when the user selects or clears a range.                                                                                                                                                                                                                                                                     |
+| `selectionRef`      | `Ref<HTMLDivElement>`                           | Ref attached to the selection overlay element (the first day of a multi-day selection).                                                                                                                                                                                                                             |
+| `multiDaySelection` | `boolean`                                       | Let a drag span several days. Dragging across day columns repeats the time window on each day; dragging across the all-day row selects whole days (`allDay: true`), drawn in the all-day row. The range reports its last day in `endDate`. The grid scrolls sideways when the pointer nears its left or right edge. |
+| `selectionLingerMs` | `number`                                        | How long (ms) the selection stays in the DOM after clearing, so popover close transitions keep their reference. Default: `0`.                                                                                                                                                                                       |
 
 #### Background events
 
@@ -423,6 +433,7 @@ interface TimedCalendarEvent {
   ariaLabel?: string;
   priority?: number;
   interactive?: boolean;
+  draggable?: boolean;
   appearance?: 'filled' | 'outline';
   metadata?: Record<string, unknown>;
 }
@@ -448,6 +459,8 @@ interface AllDayCalendarEvent {
 The optional `ariaLabel` field provides a plain-text label used for `aria-label` attributes and screen reader announcements. When `title` or `clientName` are React elements (not plain strings), set `ariaLabel` to avoid `"[object Object]"` in accessible labels.
 
 Set `interactive: false` for a display-only event: it ignores clicks and the pointer, so clicks, hovers, and drags reach the time slot beneath it.
+
+Set `draggable: false` to keep an interactive timed event from being dragged when the view has `onEventDrop`. It can still be clicked.
 
 Set `appearance: 'outline'` to draw an event as an outline in its color, with its text in that color and no fill or color bar, the way calendar apps show invitations awaiting a reply. In month view, an outlined single-day timed event gets a hollow dot and text in its color. So that every color stays readable, the text and outline keep the color's hue but cap its lightness in light mode and raise it in dark mode, where the outline is also softer. Colors that already contrast well with the surface are unchanged. The shell exposes the color as the `--cal-event-color` CSS variable; style the outline with the `eventOutline`, `allDayEventOutline`, and `timedEventOutline` class names.
 
@@ -544,38 +557,39 @@ The preset uses a `.dark` class convention (matching Tailwind's `@custom-variant
 
 Every internal element can be restyled via the `classNames` prop. Each key maps to a specific part of the calendar:
 
-| Key                    | Description                                                   |
-| ---------------------- | ------------------------------------------------------------- |
-| `root`                 | Outermost wrapper (scroll container).                         |
-| `grid`                 | The CSS grid element.                                         |
-| `cornerCell`           | Top-left corner cell (sticky).                                |
-| `headerCell`           | Resource column header cell (sticky).                         |
-| `headerName`           | Resource name text inside the header.                         |
-| `headerAvatar`         | Avatar image inside the header.                               |
-| `gutterCell`           | Time gutter cell for hour labels (sticky).                    |
-| `gutterCellMinor`      | Time gutter cell for sub-hour intervals.                      |
-| `gutterLabel`          | Text label inside gutter cells.                               |
-| `bodyCell`             | Hour-start body cell in the grid.                             |
-| `bodyCellMinor`        | Sub-hour body cell in the grid.                               |
-| `eventColumn`          | Container for events within a resource column.                |
-| `event`                | Individual event element.                                     |
-| `eventSelected`        | Additional classes applied to a selected event.               |
-| `eventOutline`         | Additional classes for an event with `appearance: 'outline'`. |
-| `eventColorBar`        | Vertical color bar on the left edge of an event.              |
-| `eventTitle`           | Event title text.                                             |
-| `eventTime`            | Event time text.                                              |
-| `eventClientName`      | Client name text on the event.                                |
-| `nowIndicator`         | Horizontal "now" indicator line.                              |
-| `slotHighlight`        | Hover highlight on time slots.                                |
-| `selectionHighlight`   | Drag selection highlight overlay.                             |
-| `allDayCell`           | All-day event row cell.                                       |
-| `unavailableOverlay`   | Unavailable time cross-hatch overlay.                         |
-| `overflowChip`         | "+N more" chip shown when overlapping events exceed the cap.  |
-| `overflowChipLabel`    | Label text inside the overflow chip.                          |
-| `overflowPopover`      | Built-in overflow popover panel.                              |
-| `overflowPopoverEvent` | A single event row inside the overflow popover.               |
-| `overflowPopoverTitle` | Event title inside an overflow popover row.                   |
-| `overflowPopoverTime`  | Event time range inside an overflow popover row.              |
+| Key                    | Description                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `root`                 | Outermost wrapper (scroll container).                                                |
+| `grid`                 | The CSS grid element.                                                                |
+| `cornerCell`           | Top-left corner cell (sticky).                                                       |
+| `headerCell`           | Resource column header cell (sticky).                                                |
+| `headerName`           | Resource name text inside the header.                                                |
+| `headerAvatar`         | Avatar image inside the header.                                                      |
+| `gutterCell`           | Time gutter cell for hour labels (sticky).                                           |
+| `gutterCellMinor`      | Time gutter cell for sub-hour intervals.                                             |
+| `gutterLabel`          | Text label inside gutter cells.                                                      |
+| `bodyCell`             | Hour-start body cell in the grid.                                                    |
+| `bodyCellMinor`        | Sub-hour body cell in the grid.                                                      |
+| `eventColumn`          | Container for events within a resource column.                                       |
+| `event`                | Individual event element.                                                            |
+| `eventSelected`        | Additional classes applied to a selected event.                                      |
+| `eventOutline`         | Additional classes for an event with `appearance: 'outline'`.                        |
+| `eventDragSource`      | An event being dragged, or awaiting confirmation of its drop, in its original place. |
+| `eventColorBar`        | Vertical color bar on the left edge of an event.                                     |
+| `eventTitle`           | Event title text.                                                                    |
+| `eventTime`            | Event time text.                                                                     |
+| `eventClientName`      | Client name text on the event.                                                       |
+| `nowIndicator`         | Horizontal "now" indicator line.                                                     |
+| `slotHighlight`        | Hover highlight on time slots.                                                       |
+| `selectionHighlight`   | Drag selection highlight overlay.                                                    |
+| `allDayCell`           | All-day event row cell.                                                              |
+| `unavailableOverlay`   | Unavailable time cross-hatch overlay.                                                |
+| `overflowChip`         | "+N more" chip shown when overlapping events exceed the cap.                         |
+| `overflowChipLabel`    | Label text inside the overflow chip.                                                 |
+| `overflowPopover`      | Built-in overflow popover panel.                                                     |
+| `overflowPopoverEvent` | A single event row inside the overflow popover.                                      |
+| `overflowPopoverTitle` | Event title inside an overflow popover row.                                          |
+| `overflowPopoverTime`  | Event time range inside an overflow popover row.                                     |
 
 ### `resourceGridViewDefaults`
 
@@ -605,6 +619,8 @@ import {
 The `cn()` utility (re-exported from the library) merges Tailwind classes with conflict resolution via `tailwind-merge`.
 
 ## Selection & interaction
+
+On touch screens, every view's drag selection starts with a 400 ms press and hold, as event drags do: a quick swipe still scrolls, and a tap still selects a slot or day.
 
 ### Controlled selection
 
@@ -707,6 +723,57 @@ const { refs, floatingStyles } = useFloating({
 }
 ```
 
+### Drag and drop with confirmation
+
+Pass `onEventDrop` to make timed events draggable. With a mouse, press an event and move the pointer a few pixels to start a drag. On touch screens, press and hold an event for 400 ms; a quick swipe across events still scrolls the grid, and a tap still opens the event. Once a drag starts, the event follows the pointer, snapped to `snapDuration` (default 15 minutes), across columns, and the grid auto-scrolls when the pointer nears any of its edges, so you can drag an event to a column or time that's scrolled out of view. Press Escape to cancel a drag. A mouse press without movement is still a click.
+
+Releasing the event somewhere new calls `onEventDrop` with an `EventDrop`. The grid never moves the event itself, so you can confirm the move before applying it: store the drop in `pendingDrop`, which draws the event at its new place and dims its original, and anchor a popover to `pendingDropRef`. Then update `events` and clear `pendingDrop` to apply the move, or just clear `pendingDrop` to cancel it. Set `selectionLingerMs` to keep the anchor mounted while the popover closes.
+
+```tsx
+const [pendingDrop, setPendingDrop] = useState<EventDrop | null>(null);
+
+const { refs, floatingStyles } = useFloating({
+  open: pendingDrop !== null,
+  onOpenChange: (open) => {
+    if (!open) setPendingDrop(null);
+  },
+  placement: 'right',
+  whileElementsMounted: autoUpdate,
+});
+
+<ResourceGridView
+  onEventDrop={setPendingDrop}
+  pendingDrop={pendingDrop}
+  pendingDropRef={refs.setReference}
+  // ...
+/>;
+
+{
+  pendingDrop && (
+    <div ref={refs.setFloating} style={floatingStyles}>
+      <button
+        onClick={() => {
+          moveEvent(pendingDrop); // update your events
+          setPendingDrop(null);
+        }}
+      >
+        Move
+      </button>
+      <button onClick={() => setPendingDrop(null)}>Cancel</button>
+    </div>
+  );
+}
+```
+
+```ts
+interface EventDrop {
+  event: TimedCalendarEvent; // The event before the drag
+  resourceId: string; // Where it was dropped (its own resource in DayGridView)
+  startTime: Temporal.ZonedDateTime;
+  endTime: Temporal.ZonedDateTime; // startTime plus the original duration
+}
+```
+
 ### Slot and event clicks
 
 - `onSlotClick` fires when clicking an empty time slot, receiving the `resource`, `startTime`, and `endTime`.
@@ -750,6 +817,7 @@ export type {
   DayGridSelectedRange,
   PositionedEvent,
   SelectedRange,
+  EventDrop,
   SelectionAppearance,
   SelectionEventData,
   EventLayout,

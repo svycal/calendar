@@ -30,6 +30,11 @@ interface BaseCalendarEvent {
    */
   interactive?: boolean;
   /**
+   * Set to `false` to keep an interactive event from being dragged when the
+   * view has `onEventDrop`. Default: true.
+   */
+  draggable?: boolean;
+  /**
    * `'outline'` draws the event as an outline in its color, with no fill or
    * color bar, as calendar apps draw invitations awaiting a reply. Default:
    * `'filled'`.
@@ -69,6 +74,20 @@ export interface BackgroundEvent {
   layer?: 'below' | 'above';
   /** Class name applied to the positioned block. */
   className?: string;
+}
+
+/**
+ * Where the user dropped a dragged event. The event itself is unchanged:
+ * apply the move by updating your events.
+ */
+export interface EventDrop {
+  /** The event as it was before the drag. */
+  event: TimedCalendarEvent;
+  /** The resource it was dropped on. In DayGridView, the event's own resource. */
+  resourceId: string;
+  startTime: Temporal.ZonedDateTime;
+  /** The new start plus the event's original duration. */
+  endTime: Temporal.ZonedDateTime;
 }
 
 export interface AvailabilityRange {
@@ -115,6 +134,8 @@ export interface GridViewClassNames {
   event?: string;
   eventSelected?: string;
   eventOutline?: string;
+  /** The event being dragged, or awaiting confirmation of a drop, in its original place. */
+  eventDragSource?: string;
   eventColorBar?: string;
   eventTitle?: string;
   eventTime?: string;
@@ -217,6 +238,21 @@ export interface ResourceGridViewProps {
   selectionRef?: Ref<HTMLDivElement>;
   /** How long (ms) the selection overlay remains in DOM after clearing, to allow popover close transitions. Default: 0 */
   selectionLingerMs?: number;
+  /**
+   * Called when the user drags a timed event to a new time or resource and releases
+   * it. Setting it makes interactive timed events draggable. The grid doesn't
+   * move the event: store the drop in `pendingDrop` to show it while you ask
+   * for confirmation, then update `events` to apply it.
+   */
+  onEventDrop?: (drop: EventDrop) => void;
+  /**
+   * A drop awaiting confirmation. The grid draws the event at its new place
+   * and dims it in its old one. Clear it to cancel the move or after applying
+   * it. It lingers, invisible, for `selectionLingerMs` after clearing.
+   */
+  pendingDrop?: EventDrop | null;
+  /** Ref attached to the event drawn at `pendingDrop`, for positioning a confirmation popover. */
+  pendingDropRef?: Ref<HTMLDivElement>;
   selectedEventId?: string | null;
   selectedEventRef?: Ref<HTMLDivElement>;
   renderCorner?: (props: {
@@ -319,6 +355,21 @@ export interface DayGridViewProps {
   dragPreviewAppearance?: SelectionAppearance;
   selectionRef?: Ref<HTMLDivElement>;
   selectionLingerMs?: number;
+  /**
+   * Called when the user drags a timed event to a new time or day and releases
+   * it. Setting it makes interactive timed events draggable. The grid doesn't
+   * move the event: store the drop in `pendingDrop` to show it while you ask
+   * for confirmation, then update `events` to apply it.
+   */
+  onEventDrop?: (drop: EventDrop) => void;
+  /**
+   * A drop awaiting confirmation. The grid draws the event at its new place
+   * and dims it in its old one. Clear it to cancel the move or after applying
+   * it. It lingers, invisible, for `selectionLingerMs` after clearing.
+   */
+  pendingDrop?: EventDrop | null;
+  /** Ref attached to the event drawn at `pendingDrop`, for positioning a confirmation popover. */
+  pendingDropRef?: Ref<HTMLDivElement>;
   selectedEventId?: string | null;
   selectedEventRef?: Ref<HTMLDivElement>;
   renderCorner?: (props: { timeZone: string }) => ReactNode;

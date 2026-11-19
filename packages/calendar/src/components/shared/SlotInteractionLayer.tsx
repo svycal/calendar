@@ -14,15 +14,15 @@ import type {
   TimedCalendarEvent,
 } from '@/types/calendar';
 import {
-  computeAutoScrollIntensity,
-  createVerticalAutoScroller,
+  createAutoScroller,
   findVerticalScrollParent,
-  type VerticalAutoScroller,
+  type AutoScroller,
 } from '@/lib/autoScroll';
 import { buildSyntheticEvent } from '@/lib/selection';
 import { minutesToZonedDateTime } from '@/lib/time';
 import { EventChip } from './EventChip';
 import { DISMISS_ONLY_ATTR } from './AnchoredPopover';
+import { TOUCH_DRAG_STYLE, useTouchDrag } from './useTouchDrag';
 
 export interface SlotRange {
   columnId: string;
@@ -64,6 +64,11 @@ interface SlotInteractionLayerProps {
    * draws `previewRange` instead of its own preview.
    */
   resolveColumnId?: (clientX: number) => string | null;
+  /**
+   * Left edge of the grid's visible area, right of its sticky gutter. A drag
+   * that spans columns scrolls sideways when it nears this or the right edge.
+   */
+  getScrollViewportLeft?: () => number | undefined;
   onDragPreviewChange?: (preview: DragPreview | null) => void;
   /** This column's part of a drag preview that spans columns. */
   previewRange?: { startMin: number; endMin: number } | null;
@@ -98,6 +103,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   onSelect,
   onSlotHover,
   resolveColumnId,
+  getScrollViewportLeft,
   onDragPreviewChange,
   previewRange,
   dragPreviewAppearance = 'highlight',
@@ -116,7 +122,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   const lastClientXRef = useRef(0);
   const hoveredSlotRef = useRef<number | null>(null);
   const scrollParentRef = useRef<HTMLElement | null>(null);
-  const autoScrollerRef = useRef<VerticalAutoScroller | null>(null);
+  const autoScrollerRef = useRef<AutoScroller | null>(null);
   const applyDragFromPointerRef = useRef<
     (clientX: number, clientY: number) => void
   >(() => {});
@@ -124,6 +130,7 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
   // Stable refs for document-level handlers
   const onSelectRef = useRef(onSelect);
   const resolveColumnIdRef = useRef(resolveColumnId);
+  const getScrollViewportLeftRef = useRef(getScrollViewportLeft);
   const onDragPreviewChangeRef = useRef(onDragPreviewChange);
   const columnIdRef = useRef(columnId);
   const dateRef = useRef(date);
@@ -218,62 +225,69 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     [computeRange, showDragPreview]
   );
 
-  const handleDocMouseMove = useCallback(
-    (e: MouseEvent) => {
-      lastClientYRef.current = e.clientY;
-      lastClientXRef.current = e.clientX;
-      applyDragFromPointer(e.clientX, e.clientY);
-
-      const scrollParent = scrollParentRef.current;
-      if (!scrollParent) return;
-      const rect = scrollParent.getBoundingClientRect();
-      if (computeAutoScrollIntensity(e.clientY, rect.top, rect.bottom) !== 0) {
-        autoScrollerRef.current?.ensure();
-      }
+  const moveDrag = useCallback(
+    (clientX: number, clientY: number) => {
+      lastClientYRef.current = clientY;
+      lastClientXRef.current = clientX;
+      applyDragFromPointer(clientX, clientY);
+      // Scrolls if the pointer is near an edge, and stops on its own if not
+      autoScrollerRef.current?.ensure();
     },
     [applyDragFromPointer]
   );
 
+  const handleDocMouseMove = useCallback(
+    (e: MouseEvent) => moveDrag(e.clientX, e.clientY),
+    [moveDrag]
+  );
+
   const handleDocMouseUpRef = useRef<() => void>(() => {});
 
-  const handleDocMouseUp = useCallback(() => {
-    autoScrollerRef.current?.stop();
-    autoScrollerRef.current = null;
-    scrollParentRef.current = null;
+  // Ends the drag, reporting its range unless the browser cancelled it
+  const finishDrag = useCallback(
+    (select: boolean) => {
+      autoScrollerRef.current?.stop();
+      autoScrollerRef.current = null;
+      scrollParentRef.current = null;
 
-    const drag = dragRef.current;
-    if (drag) {
-      if (drag.moved) {
-        didDragRef.current = true;
+      const drag = dragRef.current;
+      if (drag && select) {
+        if (drag.moved) {
+          didDragRef.current = true;
+        }
+        // Fire onSelect with the final settled range
+        onSelectRef.current?.({
+          columnId: columnIdRef.current,
+          ...(resolveColumnIdRef.current
+            ? { endColumnId: drag.currentColumnId }
+            : {}),
+          startTime: minutesToZonedDateTime(
+            dateRef.current,
+            drag.currentStartMin,
+            timeZoneRef.current
+          ),
+          endTime: minutesToZonedDateTime(
+            dateRef.current,
+            drag.currentEndMin,
+            timeZoneRef.current
+          ),
+        });
       }
-      // Fire onSelect with the final settled range
-      onSelectRef.current?.({
-        columnId: columnIdRef.current,
-        ...(resolveColumnIdRef.current
-          ? { endColumnId: drag.currentColumnId }
-          : {}),
-        startTime: minutesToZonedDateTime(
-          dateRef.current,
-          drag.currentStartMin,
-          timeZoneRef.current
-        ),
-        endTime: minutesToZonedDateTime(
-          dateRef.current,
-          drag.currentEndMin,
-          timeZoneRef.current
-        ),
-      });
-    }
-    dragRef.current = null;
-    showDragPreview(null);
-    document.removeEventListener('mousemove', handleDocMouseMove);
-    document.removeEventListener('mouseup', handleDocMouseUpRef.current);
-  }, [handleDocMouseMove, showDragPreview]);
+      dragRef.current = null;
+      showDragPreview(null);
+      document.removeEventListener('mousemove', handleDocMouseMove);
+      document.removeEventListener('mouseup', handleDocMouseUpRef.current);
+    },
+    [handleDocMouseMove, showDragPreview]
+  );
+
+  const handleDocMouseUp = useCallback(() => finishDrag(true), [finishDrag]);
 
   // Sync all latest-value refs after render, before browser events
   useLayoutEffect(() => {
     onSelectRef.current = onSelect;
     resolveColumnIdRef.current = resolveColumnId;
+    getScrollViewportLeftRef.current = getScrollViewportLeft;
     onDragPreviewChangeRef.current = onDragPreviewChange;
     columnIdRef.current = columnId;
     dateRef.current = date;
@@ -316,19 +330,17 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
     [onSlotHover, columnId, date, timeZone, placeholderDuration]
   );
 
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!onSelect) return;
-
+  // Starts a drag selection at the pointer. Returns false when the pointer
+  // is outside the time axis.
+  const beginDrag = useCallback(
+    (clientX: number, clientY: number): boolean => {
       const container = containerRef.current;
-      if (!container) return;
+      if (!onSelect || !container) return false;
 
       const rect = container.getBoundingClientRect();
-      const yOffset = e.clientY - rect.top;
-      const slotStart = snapToSlot(yOffset);
-      if (slotStart == null) return;
+      const slotStart = snapToSlot(clientY - rect.top);
+      if (slotStart == null) return false;
 
-      e.preventDefault(); // Prevent text selection
       onSelect(null); // Clear previous selection
       // No hover while dragging
       setHoveredSlotStart(null);
@@ -342,13 +354,18 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
         currentEndMin: slotEnd,
         moved: false,
       };
-      lastClientYRef.current = e.clientY;
-      lastClientXRef.current = e.clientX;
+      lastClientYRef.current = clientY;
+      lastClientXRef.current = clientX;
       scrollParentRef.current = findVerticalScrollParent(container);
       autoScrollerRef.current?.stop();
-      autoScrollerRef.current = createVerticalAutoScroller({
+      autoScrollerRef.current = createAutoScroller({
         getPointerY: () => lastClientYRef.current,
         getScrollParent: () => scrollParentRef.current,
+        // Only a drag that can span columns has a reason to scroll sideways
+        horizontal: resolveColumnIdRef.current && {
+          getPointerX: () => lastClientXRef.current,
+          getViewportLeft: () => getScrollViewportLeftRef.current?.(),
+        },
         onScroll: () =>
           applyDragFromPointerRef.current(
             lastClientXRef.current,
@@ -362,20 +379,42 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
         startMin: slotStart,
         endMin: slotEnd,
       });
-
-      document.addEventListener('mousemove', handleDocMouseMove);
-      document.addEventListener('mouseup', handleDocMouseUp);
+      return true;
     },
     [
       onSelect,
       snapToSlot,
       placeholderDuration,
-      handleDocMouseMove,
-      handleDocMouseUp,
       columnId,
       showDragPreview,
       reportHover,
     ]
+  );
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!beginDrag(e.clientX, e.clientY)) return;
+      e.preventDefault(); // Prevent text selection
+      document.addEventListener('mousemove', handleDocMouseMove);
+      document.addEventListener('mouseup', handleDocMouseUp);
+    },
+    [beginDrag, handleDocMouseMove, handleDocMouseUp]
+  );
+
+  // On touch, a long press starts the drag; a tap still arrives as mouse
+  // events and a click
+  const startTouchDrag = useTouchDrag(containerRef, onSelect != null);
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!onSelect) return;
+      startTouchDrag(e, {
+        start: beginDrag,
+        move: moveDrag,
+        end: () => finishDrag(true),
+        cancel: () => finishDrag(false),
+      });
+    },
+    [onSelect, startTouchDrag, beginDrag, moveDrag, finishDrag]
   );
 
   const handleMouseMove = useCallback(
@@ -448,7 +487,11 @@ export const SlotInteractionLayer = memo(function SlotInteractionLayer({
         position: 'relative',
         pointerEvents: 'auto',
         cursor: onSlotClick || onSelect ? 'pointer' : undefined,
+        // A long press starts a touch drag: keep it from selecting text or
+        // opening the iOS callout
+        ...(onSelect && TOUCH_DRAG_STYLE),
       }}
+      onPointerDown={handlePointerDown}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}

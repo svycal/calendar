@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Temporal } from 'temporal-polyfill';
 import { cn } from '@/lib/utils';
 import {
@@ -23,6 +23,7 @@ import type {
   DayGridSelectedRange,
   DayGridViewClassNames,
   DayGridViewProps,
+  EventDrop,
   TimedCalendarEvent,
 } from '@/types/calendar';
 import { UnavailabilityOverlay } from '../shared/UnavailabilityOverlay';
@@ -42,6 +43,8 @@ import { AllDaySection } from './AllDaySection';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
 import { useInitialScroll } from '../shared/useInitialScroll';
 import { useAnnouncer } from '../shared/useAnnouncer';
+import { useEventDrag } from '../shared/useEventDrag';
+import { useLingeringValue } from '../shared/useLingeringValue';
 import { describeEvent } from '@/lib/accessibility';
 
 export function DayGridView({
@@ -70,6 +73,9 @@ export function DayGridView({
   dragPreviewAppearance,
   selectionRef,
   selectionLingerMs = 0,
+  onEventDrop,
+  pendingDrop,
+  pendingDropRef,
   selectedEventId,
   selectedEventRef,
   renderCorner,
@@ -125,32 +131,13 @@ export function DayGridView({
     [classNames]
   );
 
-  // Keep the selection overlay mounted briefly after clearing so popover
-  // close transitions can finish without losing their reference element.
-  const staleSelectionRef = useRef<DayGridSelectedRange | null>(null);
-  const lingerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [staleSelection, setStaleSelection] =
-    useState<DayGridSelectedRange | null>(null);
-
-  useEffect(() => {
-    if (selectedRange) {
-      if (lingerTimerRef.current !== null) {
-        clearTimeout(lingerTimerRef.current);
-        lingerTimerRef.current = null;
-      }
-      staleSelectionRef.current = selectedRange;
-    } else if (staleSelectionRef.current && selectionLingerMs > 0) {
-      const last = staleSelectionRef.current;
-      staleSelectionRef.current = null;
-      setStaleSelection(last);
-      lingerTimerRef.current = setTimeout(() => {
-        lingerTimerRef.current = null;
-        setStaleSelection(null);
-      }, selectionLingerMs);
-    }
-  }, [selectedRange, selectionLingerMs]);
-
-  const effectiveSelectedRange = selectedRange ?? staleSelection;
+  // Keep the selection and pending drop mounted briefly after clearing so
+  // popover close transitions can finish without losing their reference.
+  const effectiveSelectedRange = useLingeringValue(
+    selectedRange,
+    selectionLingerMs
+  );
+  const shownPendingDrop = useLingeringValue(pendingDrop, selectionLingerMs);
 
   const [dragPreview, setDragPreview] = useState<DragPreview | null>(null);
 
@@ -294,6 +281,40 @@ export function DayGridView({
     [onSelect, onOverflowClick]
   );
 
+  const handleEventDrop = useCallback(
+    (drop: EventDrop) => {
+      onEventDrop?.(drop);
+      announce(
+        `Moved: ${describeEvent(
+          { ...drop.event, startTime: drop.startTime, endTime: drop.endTime },
+          timeZone
+        )}`
+      );
+    },
+    [onEventDrop, timeZone, announce]
+  );
+
+  const resolveDragTarget = useCallback(
+    (columnId: string) => ({ date: Temporal.PlainDate.from(columnId) }),
+    []
+  );
+
+  const { dragPreview: eventDragPreview, startEventDrag } = useEventDrag({
+    onDrop: onEventDrop ? handleEventDrop : undefined,
+    gridRef,
+    rootRef,
+    gutterRef: allDayRef,
+    timeZone,
+    startHour,
+    endHour,
+    hourHeight: effectiveHourHeight,
+    snapDuration: snapDuration ?? 15,
+    resolveTarget: resolveDragTarget,
+  });
+
+  const dragSourceId =
+    eventDragPreview?.event.id ?? pendingDrop?.event.id ?? null;
+
   const handleSlotInteractionSelect = useCallback(
     (range: SlotRange | null) => {
       if (!range) {
@@ -380,6 +401,13 @@ export function DayGridView({
       return columns[columns.length - 1].dataset.dayColumn ?? null;
     },
     [gridRef, rootRef, allDayRef]
+  );
+
+  // Where the grid's visible area starts, right of the sticky gutter, for
+  // drags that scroll sideways
+  const getScrollViewportLeft = useCallback(
+    () => allDayRef.current?.getBoundingClientRect().right,
+    [allDayRef]
   );
 
   const handleSlotHover = useCallback(
@@ -513,6 +541,7 @@ export function DayGridView({
             multiDaySelection && onSelect ? handleSelectDays : undefined
           }
           resolveColumnId={resolveColumnId}
+          getScrollViewportLeft={getScrollViewportLeft}
           selectedDays={selectedDays}
           selectionRef={selectionRef}
         />
@@ -595,6 +624,7 @@ export function DayGridView({
               resolveColumnId={
                 multiDaySelection && onSelect ? resolveColumnId : undefined
               }
+              getScrollViewportLeft={getScrollViewportLeft}
               onDragPreviewChange={
                 multiDaySelection && onSelect ? setDragPreview : undefined
               }
@@ -608,6 +638,7 @@ export function DayGridView({
         {dates.map((date, i) => (
           <DayColumn
             key={date.toString()}
+            columnId={date.toString()}
             positionedEvents={positionedByDate.get(date.toString()) ?? []}
             column={i + 2}
             timeZone={timeZone}
@@ -623,6 +654,8 @@ export function DayGridView({
             eventMaxStack={eventMaxStack}
             onOverflowClick={handleOverflowClick}
             renderOverflowPopover={renderOverflowPopover}
+            dragSourceId={dragSourceId}
+            onEventDragStart={onEventDrop ? startEventDrag : undefined}
           />
         ))}
 
@@ -662,6 +695,34 @@ export function DayGridView({
             );
           });
         })()}
+
+        {/* A dropped event awaiting confirmation, then the one being dragged,
+            on each day they cover. The ref goes to the start day. */}
+        {[
+          { drop: shownPendingDrop, ref: pendingDropRef, hidden: !pendingDrop },
+          { drop: eventDragPreview, ref: undefined, hidden: false },
+        ].map(({ drop, ref, hidden }, i) => {
+          if (!drop) return null;
+          const startDate = drop.startTime.withTimeZone(timeZone).toPlainDate();
+          return dates.map((date, colIdx) => (
+            <SelectionOverlay
+              key={`${i === 0 ? 'pending-drop' : 'drag-preview'}-${date.toString()}`}
+              event={drop.event}
+              startTime={drop.startTime}
+              endTime={drop.endTime}
+              column={colIdx + 2}
+              viewDate={date}
+              timeZone={timeZone}
+              startHour={startHour}
+              endHour={endHour}
+              hourHeight={effectiveHourHeight}
+              cls={cls}
+              selectionRef={date.equals(startDate) ? ref : undefined}
+              renderEvent={renderEvent}
+              hidden={hidden}
+            />
+          ));
+        })}
 
         {/* Now indicator — only if today is in the active range */}
         {todayDate && (

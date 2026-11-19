@@ -9,8 +9,14 @@ import {
 import type { Temporal } from 'temporal-polyfill';
 import type { CalendarEvent, DayGridViewClassNames } from '@/types/calendar';
 import type { PositionedAllDayEvent } from '@/lib/overlap';
+import {
+  createAutoScroller,
+  findVerticalScrollParent,
+  type AutoScroller,
+} from '@/lib/autoScroll';
 import { DISMISS_ONLY_ATTR } from '../shared/AnchoredPopover';
 import { AllDayEventChip } from './AllDayEventChip';
+import { TOUCH_DRAG_STYLE, useTouchDrag } from '../shared/useTouchDrag';
 
 interface DaySpan {
   startDate: Temporal.PlainDate;
@@ -32,6 +38,8 @@ interface AllDaySectionProps {
   onSelectDays?: (days: DaySpan | null) => void;
   /** Finds the date (as a string) of the day column under the pointer. */
   resolveColumnId?: (clientX: number) => string | null;
+  /** Left edge of the grid's visible area, right of its sticky gutter. */
+  getScrollViewportLeft?: () => number | undefined;
   /** Whole days to highlight as the current selection. */
   selectedDays?: DaySpan | null;
   /** Ref attached to the selected days' highlight. */
@@ -48,6 +56,7 @@ export const AllDaySection = memo(function AllDaySection({
   selectedEventRef,
   onSelectDays,
   resolveColumnId,
+  getScrollViewportLeft,
   selectedDays,
   selectionRef,
 }: AllDaySectionProps) {
@@ -58,10 +67,14 @@ export const AllDaySection = memo(function AllDaySection({
   const datesRef = useRef(dates);
   const onSelectDaysRef = useRef(onSelectDays);
   const resolveColumnIdRef = useRef(resolveColumnId);
+  const getScrollViewportLeftRef = useRef(getScrollViewportLeft);
+  const lastClientXRef = useRef(0);
+  const scrollerRef = useRef<AutoScroller | null>(null);
   useEffect(() => {
     datesRef.current = dates;
     onSelectDaysRef.current = onSelectDays;
     resolveColumnIdRef.current = resolveColumnId;
+    getScrollViewportLeftRef.current = getScrollViewportLeft;
   });
 
   const updateDrag = (next: { anchor: number; current: number } | null) => {
@@ -69,9 +82,9 @@ export const AllDaySection = memo(function AllDaySection({
     setDrag(next);
   };
 
-  const handleDocMouseMove = useCallback((e: MouseEvent) => {
+  const extendDrag = useCallback(() => {
     const current = dragRef.current;
-    const columnId = resolveColumnIdRef.current?.(e.clientX);
+    const columnId = resolveColumnIdRef.current?.(lastClientXRef.current);
     if (!current || !columnId) return;
     const index = datesRef.current.findIndex((d) => d.toString() === columnId);
     if (index !== -1 && index !== current.current) {
@@ -79,33 +92,86 @@ export const AllDaySection = memo(function AllDaySection({
     }
   }, []);
 
-  const handleDocMouseUp = useCallback(() => {
-    document.removeEventListener('mousemove', handleDocMouseMove);
-    const current = dragRef.current;
-    updateDrag(null);
-    if (!current) return;
-    const first = Math.min(current.anchor, current.current);
-    const last = Math.max(current.anchor, current.current);
-    onSelectDaysRef.current?.({
-      startDate: datesRef.current[first],
-      endDate: datesRef.current[last],
-    });
-  }, [handleDocMouseMove]);
+  const moveDrag = useCallback(
+    (clientX: number) => {
+      lastClientXRef.current = clientX;
+      extendDrag();
+      scrollerRef.current?.ensure();
+    },
+    [extendDrag]
+  );
+
+  const handleDocMouseMove = useCallback(
+    (e: MouseEvent) => moveDrag(e.clientX),
+    [moveDrag]
+  );
+
+  // Ends the drag, selecting its days unless the browser cancelled it
+  const finishDrag = useCallback(
+    (select: boolean) => {
+      scrollerRef.current?.stop();
+      scrollerRef.current = null;
+      document.removeEventListener('mousemove', handleDocMouseMove);
+      const current = dragRef.current;
+      updateDrag(null);
+      if (!current || !select) return;
+      const first = Math.min(current.anchor, current.current);
+      const last = Math.max(current.anchor, current.current);
+      onSelectDaysRef.current?.({
+        startDate: datesRef.current[first],
+        endDate: datesRef.current[last],
+      });
+    },
+    [handleDocMouseMove]
+  );
+
+  const handleDocMouseUp = useCallback(() => finishDrag(true), [finishDrag]);
 
   useEffect(() => {
     return () => {
+      scrollerRef.current?.stop();
       document.removeEventListener('mousemove', handleDocMouseMove);
       document.removeEventListener('mouseup', handleDocMouseUp);
     };
   }, [handleDocMouseMove, handleDocMouseUp]);
 
+  const beginDrag = (index: number, clientX: number, target: HTMLElement) => {
+    onSelectDays?.(null);
+    updateDrag({ anchor: index, current: index });
+    lastClientXRef.current = clientX;
+    // Sideways only: the all-day row stays pinned under the header
+    const scrollParent = findVerticalScrollParent(target);
+    scrollerRef.current?.stop();
+    scrollerRef.current = createAutoScroller({
+      getScrollParent: () => scrollParent,
+      horizontal: {
+        getPointerX: () => lastClientXRef.current,
+        getViewportLeft: () => getScrollViewportLeftRef.current?.(),
+      },
+      onScroll: extendDrag,
+    });
+  };
+
   const handleMouseDown = (index: number) => (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.preventDefault();
-    onSelectDays?.(null);
-    updateDrag({ anchor: index, current: index });
+    beginDrag(index, e.clientX, e.currentTarget as HTMLElement);
     document.addEventListener('mousemove', handleDocMouseMove);
     document.addEventListener('mouseup', handleDocMouseUp, { once: true });
+  };
+
+  // On touch, a long press starts the drag; a tap still arrives as mouse
+  // events and selects the day
+  const laneRef = useRef<HTMLDivElement>(null);
+  const startTouchDrag = useTouchDrag(laneRef, onSelectDays != null);
+  const handlePointerDown = (index: number) => (e: React.PointerEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    startTouchDrag(e, {
+      start: (x) => beginDrag(index, x, target),
+      move: (x) => moveDrag(x),
+      end: () => finishDrag(true),
+      cancel: () => finishDrag(false),
+    });
   };
 
   // The highlighted columns: the drag in progress, else the selected days
@@ -137,6 +203,7 @@ export const AllDaySection = memo(function AllDaySection({
 
   return (
     <div
+      ref={laneRef}
       className={cls('allDayLane')}
       style={{
         gridRow: 2,
@@ -162,10 +229,12 @@ export const AllDaySection = memo(function AllDaySection({
             gridRow: '1 / -1',
             pointerEvents: onSelectDays ? 'auto' : 'none',
             cursor: onSelectDays ? 'pointer' : undefined,
+            ...(onSelectDays && TOUCH_DRAG_STYLE),
           }}
           data-day-column={date.toString()}
           {...(onSelectDays ? { [DISMISS_ONLY_ATTR]: '' } : {})}
           onMouseDown={onSelectDays ? handleMouseDown(i) : undefined}
+          onPointerDown={onSelectDays ? handlePointerDown(i) : undefined}
         />
       ))}
 

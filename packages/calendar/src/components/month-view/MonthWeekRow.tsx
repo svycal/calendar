@@ -11,6 +11,7 @@ import type {
 } from '@/types/calendar';
 import { MonthEventItem } from './MonthEventItem';
 import { MonthMoreButton } from './MonthMoreButton';
+import { TOUCH_DRAG_STYLE } from '../shared/useTouchDrag';
 import { DISMISS_ONLY_ATTR } from '../shared/AnchoredPopover';
 
 export const DAY_HEADER_HEIGHT = 28;
@@ -31,6 +32,7 @@ interface MonthWeekRowProps {
   onEventClick?: (event: CalendarEvent) => void;
   onDayNumberClick?: (date: Temporal.PlainDate) => void;
   onCellMouseDown?: (date: Temporal.PlainDate, e: React.MouseEvent) => void;
+  onCellPointerDown?: (date: Temporal.PlainDate, e: React.PointerEvent) => void;
   onOverflowClick?: (info: MonthOverflowClickInfo) => void;
   renderOverflowPopover?: (props: MonthOverflowPopoverRenderProps) => ReactNode;
   /** Inclusive columns to highlight in this week ('highlight' selection appearance). */
@@ -54,6 +56,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   onEventClick,
   onDayNumberClick,
   onCellMouseDown,
+  onCellPointerDown,
   onOverflowClick,
   renderOverflowPopover,
   highlight,
@@ -103,9 +106,17 @@ export const MonthWeekRow = memo(function MonthWeekRow({
                 gridColumn: col + 1,
                 ...(weekIndex === 0 ? { borderTopWidth: 0 } : {}),
                 ...(col === DAYS_PER_WEEK - 1 ? { borderRightWidth: 0 } : {}),
+                // A long press starts a touch drag: keep it from opening the
+                // iOS callout
+                ...(onCellPointerDown && TOUCH_DRAG_STYLE),
               }}
               onMouseDown={
                 onCellMouseDown ? (e) => onCellMouseDown(date, e) : undefined
+              }
+              onPointerDown={
+                onCellPointerDown
+                  ? (e) => onCellPointerDown(date, e)
+                  : undefined
               }
             />
           );

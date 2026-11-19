@@ -1,10 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   AUTO_SCROLL_EDGE_PX,
+  AUTO_SCROLL_HORIZONTAL_MAX_PX_PER_SECOND,
   AUTO_SCROLL_MAX_PX_PER_SECOND,
-  applyVerticalAutoScroll,
+  applyAutoScroll,
   computeAutoScrollIntensity,
-  createVerticalAutoScroller,
+  createAutoScroller,
   findVerticalScrollParent,
 } from './autoScroll';
 
@@ -54,7 +55,7 @@ describe('computeAutoScrollIntensity', () => {
   });
 });
 
-describe('applyVerticalAutoScroll', () => {
+describe('applyAutoScroll', () => {
   function makeScroller(init: {
     scrollTop: number;
     clientHeight: number;
@@ -79,7 +80,7 @@ describe('applyVerticalAutoScroll', () => {
       clientHeight: 400,
       scrollHeight: 2000,
     });
-    const applied = applyVerticalAutoScroll(el, 1, 0.1);
+    const applied = applyAutoScroll(el, 'y', 1, 0.1);
     expect(applied).toBeCloseTo(AUTO_SCROLL_MAX_PX_PER_SECOND * 0.1);
     expect(el.scrollTop).toBeCloseTo(AUTO_SCROLL_MAX_PX_PER_SECOND * 0.1);
   });
@@ -90,7 +91,7 @@ describe('applyVerticalAutoScroll', () => {
       clientHeight: 400,
       scrollHeight: 2000,
     });
-    const applied = applyVerticalAutoScroll(el, -1, 0.1);
+    const applied = applyAutoScroll(el, 'y', -1, 0.1);
     expect(applied).toBeCloseTo(-AUTO_SCROLL_MAX_PX_PER_SECOND * 0.1);
     expect(el.scrollTop).toBeCloseTo(200 - AUTO_SCROLL_MAX_PX_PER_SECOND * 0.1);
   });
@@ -101,7 +102,7 @@ describe('applyVerticalAutoScroll', () => {
       clientHeight: 400,
       scrollHeight: 2000,
     });
-    const applied = applyVerticalAutoScroll(el, 1, 1);
+    const applied = applyAutoScroll(el, 'y', 1, 1);
     expect(applied).toBe(20);
     expect(el.scrollTop).toBe(1600);
   });
@@ -112,7 +113,7 @@ describe('applyVerticalAutoScroll', () => {
       clientHeight: 400,
       scrollHeight: 2000,
     });
-    const applied = applyVerticalAutoScroll(el, -1, 1);
+    const applied = applyAutoScroll(el, 'y', -1, 1);
     expect(applied).toBe(-10);
     expect(el.scrollTop).toBe(0);
   });
@@ -123,9 +124,25 @@ describe('applyVerticalAutoScroll', () => {
       clientHeight: 400,
       scrollHeight: 2000,
     });
-    expect(applyVerticalAutoScroll(el, 0, 0.1)).toBe(0);
-    expect(applyVerticalAutoScroll(el, 1, 0)).toBe(0);
+    expect(applyAutoScroll(el, 'y', 0, 0.1)).toBe(0);
+    expect(applyAutoScroll(el, 'y', 1, 0)).toBe(0);
     expect(el.scrollTop).toBe(50);
+  });
+
+  it('scrolls sideways at the horizontal speed, clamped to the scroll width', () => {
+    const el = document.createElement('div');
+    Object.defineProperty(el, 'clientWidth', { get: () => 400 });
+    Object.defineProperty(el, 'scrollWidth', { get: () => 1000 });
+    el.scrollLeft = 0;
+
+    expect(applyAutoScroll(el, 'x', 1, 0.1)).toBeCloseTo(
+      AUTO_SCROLL_HORIZONTAL_MAX_PX_PER_SECOND * 0.1
+    );
+    expect(el.scrollTop).toBe(0);
+    expect(applyAutoScroll(el, 'x', 1, 10)).toBeCloseTo(
+      600 - AUTO_SCROLL_HORIZONTAL_MAX_PX_PER_SECOND * 0.1
+    );
+    expect(el.scrollLeft).toBe(600);
   });
 });
 
@@ -174,7 +191,7 @@ describe('findVerticalScrollParent', () => {
   });
 });
 
-describe('createVerticalAutoScroller', () => {
+describe('createAutoScroller', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -189,7 +206,10 @@ describe('createVerticalAutoScroller', () => {
       configurable: true,
       get: () => 2000,
     });
+    Object.defineProperty(el, 'clientWidth', { get: () => 200 });
+    Object.defineProperty(el, 'scrollWidth', { get: () => 1000 });
     el.scrollTop = 0;
+    el.scrollLeft = 100;
     el.getBoundingClientRect = () =>
       ({
         top: 0,
@@ -215,7 +235,7 @@ describe('createVerticalAutoScroller', () => {
     const cancelRaf = vi.fn();
     const onScroll = vi.fn();
 
-    const scroller = createVerticalAutoScroller({
+    const scroller = createAutoScroller({
       getPointerY: () => 400,
       getScrollParent: () => el,
       onScroll,
@@ -247,7 +267,7 @@ describe('createVerticalAutoScroller', () => {
       return queued.length;
     });
 
-    const scroller = createVerticalAutoScroller({
+    const scroller = createAutoScroller({
       getPointerY: () => pointerY,
       getScrollParent: () => el,
       onScroll: vi.fn(),
@@ -271,7 +291,7 @@ describe('createVerticalAutoScroller', () => {
       return 1;
     });
 
-    const scroller = createVerticalAutoScroller({
+    const scroller = createAutoScroller({
       getPointerY: () => 400,
       getScrollParent: () => el,
       onScroll: vi.fn(),
@@ -282,5 +302,43 @@ describe('createVerticalAutoScroller', () => {
     scroller.ensure();
     scroller.ensure();
     expect(raf).toHaveBeenCalledTimes(1);
+  });
+
+  describe('horizontal', () => {
+    function run(pointerX: number, viewportLeft?: number) {
+      const el = makeScroller();
+      const queued: FrameRequestCallback[] = [];
+      createAutoScroller({
+        getPointerY: () => 200,
+        getScrollParent: () => el,
+        horizontal: {
+          getPointerX: () => pointerX,
+          getViewportLeft: () => viewportLeft,
+        },
+        onScroll: vi.fn(),
+        raf: ((cb: FrameRequestCallback) =>
+          queued.push(cb)) as unknown as typeof requestAnimationFrame,
+        cancelRaf: vi.fn() as unknown as typeof cancelAnimationFrame,
+      }).ensure();
+      queued.shift()!(0);
+      return el;
+    }
+
+    it('scrolls right at the right edge without scrolling vertically', () => {
+      const el = run(200);
+      expect(el.scrollLeft).toBeCloseTo(
+        100 + AUTO_SCROLL_HORIZONTAL_MAX_PX_PER_SECOND / 60
+      );
+      expect(el.scrollTop).toBe(0);
+    });
+
+    it('measures the left edge zone from the end of a sticky gutter', () => {
+      // 40px in: inside the zone measured from the scroller's own edge (32px)
+      // only once the zone starts at a 50px gutter
+      expect(run(40).scrollLeft).toBe(100);
+      expect(run(40, 50).scrollLeft).toBeCloseTo(
+        100 - AUTO_SCROLL_HORIZONTAL_MAX_PX_PER_SECOND / 60
+      );
+    });
   });
 });

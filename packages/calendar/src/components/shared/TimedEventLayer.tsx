@@ -17,7 +17,9 @@ import { EventChip } from './EventChip';
 import { OverflowChip } from './OverflowChip';
 import { useColumnWidth } from './useColumnWidth';
 
-interface TimedEventLayerProps {
+export interface TimedEventLayerProps {
+  /** Identifies the column to event drags (`data-event-column`). */
+  columnId: string;
   positionedEvents: PositionedEvent[];
   column: number;
   timeZone: string;
@@ -39,9 +41,15 @@ interface TimedEventLayerProps {
   renderOverflowPopover?: (
     props: OverflowPopoverRenderProps
   ) => React.ReactNode;
+  dragSourceId?: string | null;
+  onEventDragStart?: (
+    event: TimedCalendarEvent,
+    e: React.PointerEvent<HTMLElement>
+  ) => void;
 }
 
 export const TimedEventLayer = memo(function TimedEventLayer({
+  columnId,
   positionedEvents,
   column,
   timeZone,
@@ -58,6 +66,8 @@ export const TimedEventLayer = memo(function TimedEventLayer({
   eventMaxStack,
   onOverflowClick,
   renderOverflowPopover,
+  dragSourceId,
+  onEventDragStart,
 }: TimedEventLayerProps) {
   const { ref, width } = useColumnWidth();
 
@@ -73,6 +83,7 @@ export const TimedEventLayer = memo(function TimedEventLayer({
   return (
     <div
       ref={ref}
+      data-event-column={columnId}
       className={cls('eventColumn')}
       style={{
         gridRow: '3 / -1',
@@ -97,6 +108,8 @@ export const TimedEventLayer = memo(function TimedEventLayer({
             stackOffset={stackOffset}
             isSelected={isSelected}
             selectedEventRef={isSelected ? selectedEventRef : undefined}
+            isDragSource={positioned.event.id === dragSourceId}
+            onDragStart={onEventDragStart}
           />
         );
       })}
