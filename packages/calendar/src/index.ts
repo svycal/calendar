@@ -34,6 +34,7 @@ export type {
   SelectionAppearance,
   SelectionEventData,
   EventLayout,
+  SwipeDirection,
   MonthViewProps,
   MonthViewClassNames,
   MonthSelectedRange,

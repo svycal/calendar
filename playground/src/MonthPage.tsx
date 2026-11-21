@@ -505,6 +505,9 @@ export default function MonthPage() {
       >
         <MonthView
           month={month}
+          onSwipe={(direction) =>
+            setMonth((m) => m.add({ months: direction === 'next' ? 1 : -1 }))
+          }
           timeZone={tz}
           events={events}
           weekStartsOn={weekStartsOn}

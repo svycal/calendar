@@ -171,6 +171,9 @@ export interface DayGridViewClassNames extends GridViewClassNames {
 
 export type EventLayout = 'columns' | 'stacked';
 
+/** Which way a swipe turns the page. */
+export type SwipeDirection = 'previous' | 'next';
+
 export interface PositionedEvent {
   event: TimedCalendarEvent;
   top: number;
@@ -215,6 +218,14 @@ export interface ResourceGridViewProps {
    */
   initialScrollHour?: number;
   onEventClick?: (event: CalendarEvent) => void;
+  /**
+   * Called when a one-finger swipe sideways turns the page, `'next'` for a
+   * swipe to the left. Setting it turns on swiping: the columns follow the
+   * finger, with the time gutter staying put, revealing the same resources'
+   * empty columns. Change `date` in response; the grid waits for it, then
+   * shows the new day with the scroll unchanged.
+   */
+  onSwipe?: (direction: SwipeDirection) => void;
   snapDuration?: number;
   placeholderDuration?: number;
   onSlotClick?: (info: {
@@ -336,6 +347,14 @@ export interface DayGridViewProps {
    */
   scrollKey?: string;
   onEventClick?: (event: CalendarEvent) => void;
+  /**
+   * Called when a one-finger swipe sideways turns the page, `'next'` for a
+   * swipe to the left. Setting it turns on swiping: the days follow the
+   * finger, with the time gutter staying put, revealing the period as long as
+   * `activeRange` beside it. Change `activeRange` in response; the grid waits
+   * for it, then shows the new days with the scroll unchanged.
+   */
+  onSwipe?: (direction: SwipeDirection) => void;
   snapDuration?: number;
   placeholderDuration?: number;
   onSlotClick?: (info: {
@@ -502,6 +521,13 @@ export interface MonthViewProps {
   /** Hard cap on event rows per day (including the "+N more" row). Omit to fit as many as the cell height allows. */
   maxEventRows?: number;
   onEventClick?: (event: CalendarEvent) => void;
+  /**
+   * Called when a one-finger swipe sideways turns the page, `'next'` for a
+   * swipe to the left. Setting it turns on swiping: the month follows the
+   * finger, revealing the month beside it. Change `month` in response; the
+   * view waits for it, then shows the new month.
+   */
+  onSwipe?: (direction: SwipeDirection) => void;
   /** Called when the day number is clicked (e.g. to navigate to a day view). */
   onDayNumberClick?: (date: Temporal.PlainDate) => void;
   /** Controlled day-range selection. */

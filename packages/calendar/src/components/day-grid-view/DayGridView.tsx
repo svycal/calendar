@@ -42,6 +42,8 @@ import { NowIndicator } from '../shared/NowIndicator';
 import { AllDaySection } from './AllDaySection';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
 import { useInitialScroll } from '../shared/useInitialScroll';
+import { useSwipeNavigation } from '../shared/useSwipeNavigation';
+import { TimeGridSwipeNeighbor } from '../shared/TimeGridSwipeNeighbor';
 import { useAnnouncer } from '../shared/useAnnouncer';
 import { useEventDrag } from '../shared/useEventDrag';
 import { useLingeringValue } from '../shared/useLingeringValue';
@@ -59,6 +61,7 @@ export function DayGridView({
   initialScrollHour,
   scrollKey,
   onEventClick,
+  onSwipe,
   snapDuration,
   placeholderDuration,
   selectedRange,
@@ -104,6 +107,15 @@ export function DayGridView({
     );
   }, [activeRange.startDate, activeRange.endDate, hiddenDates]);
 
+  // The periods beside this one, drawn while a swipe reveals them
+  const neighborDates = useMemo(() => {
+    const days = activeRange.startDate.until(activeRange.endDate).days + 1;
+    return {
+      previous: dates.map((d) => d.subtract({ days })),
+      next: dates.map((d) => d.add({ days })),
+    };
+  }, [activeRange.startDate, activeRange.endDate, dates]);
+
   const todayStr = useMemo(() => {
     return Temporal.Now.plainDateISO(timeZone).toString();
   }, [timeZone]);
@@ -118,6 +130,14 @@ export function DayGridView({
     containerHeight,
   } = useEffectiveHourHeight(hourHeight, endHour - startHour);
 
+  const swipe = useSwipeNavigation({
+    rootRef,
+    gridRef,
+    gutterRef: allDayRef,
+    onSwipe,
+    periodKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}`,
+  });
+
   useInitialScroll({
     rootRef,
     initialScrollHour,
@@ -126,6 +146,7 @@ export function DayGridView({
     effectiveHourHeight,
     containerHeight,
     scrollKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}/${scrollKey ?? ''}`,
+    swipedRef: swipe.swipedRef,
   });
 
   const cls = useCallback(
@@ -486,7 +507,11 @@ export function DayGridView({
   const todayDate = dates.find((d) => d.toString() === todayStr);
 
   return (
-    <div ref={rootRef} className={cn(cls('root'), className)}>
+    <div
+      ref={rootRef}
+      className={cn(cls('root'), className)}
+      style={swipe.rootStyle}
+    >
       <div
         ref={gridRef}
         className={cls('grid')}
@@ -497,13 +522,14 @@ export function DayGridView({
           display: 'grid',
           gridTemplateColumns: `max-content repeat(${dates.length}, minmax(${columnMinWidth}px, 1fr))`,
           gridTemplateRows: `auto auto repeat(${timeSlots.length}, ${rowHeight}px)`,
+          ...swipe.gridStyle,
         }}
       >
         {/* Corner cell */}
         <div
           ref={headerRef}
           className={cls('cornerCell')}
-          style={{ gridRow: 1, gridColumn: 1 }}
+          style={{ gridRow: 1, gridColumn: 1, ...swipe.pinnedStyle }}
         >
           {renderCorner?.({ timeZone })}
         </div>
@@ -528,6 +554,7 @@ export function DayGridView({
             gridRow: 2,
             gridColumn: 1,
             top: headerHeight,
+            ...swipe.pinnedStyle,
           }}
         />
 
@@ -567,6 +594,7 @@ export function DayGridView({
             isHourStart={slot.isHourStart}
             isFirst={slot.index === 0}
             cls={cls}
+            style={swipe.pinnedStyle}
           />
         ))}
 
@@ -726,6 +754,34 @@ export function DayGridView({
             />
           ));
         })}
+
+        {swipe.swiping &&
+          (['previous', 'next'] as const).map((side) => (
+            <TimeGridSwipeNeighbor
+              key={side}
+              side={side}
+              columnCount={dates.length}
+              headers={neighborDates[side].map((date, i) => (
+                <DayHeader
+                  key={date.toString()}
+                  date={date}
+                  isToday={date.toString() === todayStr}
+                  column={i + 1}
+                  cls={cls}
+                  renderHeader={renderHeader}
+                />
+              ))}
+              allDayClassName={(i) =>
+                cn(
+                  cls('allDayLane'),
+                  i < dates.length - 1 && 'border-r border-cal-border'
+                )
+              }
+              headerHeight={headerHeight}
+              timeSlots={timeSlots}
+              cls={cls}
+            />
+          ))}
 
         {/* Now indicator — only if today is in the active range */}
         {todayDate && (

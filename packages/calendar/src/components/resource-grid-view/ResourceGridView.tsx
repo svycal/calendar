@@ -31,6 +31,8 @@ import { NowIndicator } from '../shared/NowIndicator';
 import { AllDayRow } from '../shared/AllDayRow';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
 import { useInitialScroll } from '../shared/useInitialScroll';
+import { useSwipeNavigation } from '../shared/useSwipeNavigation';
+import { TimeGridSwipeNeighbor } from '../shared/TimeGridSwipeNeighbor';
 import { useAnnouncer } from '../shared/useAnnouncer';
 import { useEventDrag } from '../shared/useEventDrag';
 import { useLingeringValue } from '../shared/useLingeringValue';
@@ -47,6 +49,7 @@ export function ResourceGridView({
   timeAxis,
   initialScrollHour,
   onEventClick,
+  onSwipe,
   snapDuration,
   placeholderDuration,
   selectedRange,
@@ -91,6 +94,14 @@ export function ResourceGridView({
     containerHeight,
   } = useEffectiveHourHeight(hourHeight, endHour - startHour);
 
+  const swipe = useSwipeNavigation({
+    rootRef,
+    gridRef,
+    gutterRef: allDayRef,
+    onSwipe,
+    periodKey: date.toString(),
+  });
+
   useInitialScroll({
     rootRef,
     initialScrollHour,
@@ -99,6 +110,7 @@ export function ResourceGridView({
     effectiveHourHeight,
     containerHeight,
     scrollKey: date.toString(),
+    swipedRef: swipe.swipedRef,
   });
 
   const cls = useCallback(
@@ -331,7 +343,11 @@ export function ResourceGridView({
   const rowHeight = (effectiveHourHeight * intervalMinutes) / 60;
 
   return (
-    <div ref={rootRef} className={cn(cls('root'), className)}>
+    <div
+      ref={rootRef}
+      className={cn(cls('root'), className)}
+      style={swipe.rootStyle}
+    >
       <div
         ref={gridRef}
         className={cls('grid')}
@@ -342,13 +358,14 @@ export function ResourceGridView({
           display: 'grid',
           gridTemplateColumns: `max-content repeat(${resources.length}, minmax(${columnMinWidth}px, 1fr))`,
           gridTemplateRows: `auto auto repeat(${timeSlots.length}, ${rowHeight}px)`,
+          ...swipe.gridStyle,
         }}
       >
         {/* Corner cell */}
         <div
           ref={headerRef}
           className={cls('cornerCell')}
-          style={{ gridRow: 1, gridColumn: 1 }}
+          style={{ gridRow: 1, gridColumn: 1, ...swipe.pinnedStyle }}
         >
           {renderCorner?.({ timeZone, date })}
         </div>
@@ -372,6 +389,7 @@ export function ResourceGridView({
             gridRow: 2,
             gridColumn: 1,
             top: headerHeight,
+            ...swipe.pinnedStyle,
           }}
         />
 
@@ -415,6 +433,7 @@ export function ResourceGridView({
             isHourStart={slot.isHourStart}
             isFirst={slot.index === 0}
             cls={cls}
+            style={swipe.pinnedStyle}
           />
         ))}
 
@@ -555,6 +574,28 @@ export function ResourceGridView({
             />
           );
         })}
+
+        {swipe.swiping &&
+          (['previous', 'next'] as const).map((side) => (
+            <TimeGridSwipeNeighbor
+              key={side}
+              side={side}
+              columnCount={resources.length}
+              headers={resources.map((resource, i) => (
+                <GridHeader
+                  key={resource.id}
+                  resource={resource}
+                  column={i + 1}
+                  cls={cls}
+                  renderHeader={renderHeader}
+                />
+              ))}
+              allDayClassName={() => cls('allDayCell')}
+              headerHeight={headerHeight}
+              timeSlots={timeSlots}
+              cls={cls}
+            />
+          ))}
 
         {/* Now indicator */}
         <NowIndicator

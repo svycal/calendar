@@ -1089,3 +1089,124 @@ describe('DayGridView drag selection on touch', () => {
     expect(range?.endDate?.toString()).toBe(wednesday.toString());
   });
 });
+
+describe('DayGridView swipe navigation', () => {
+  const nextWeek = monday.add({ days: 7 });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  // A phone-width grid, scrolled to `scrollLeft` of `scrollWidth`. Reduced
+  // motion turns the page without animating.
+  function renderSwipeable(
+    onSwipe: DayGridViewProps['onSwipe'],
+    { scrollLeft = 0, scrollWidth = 400 } = {}
+  ) {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const container = render({ onSwipe });
+    const root = container.firstElementChild as HTMLElement;
+    Object.defineProperty(root, 'clientWidth', { value: 400 });
+    Object.defineProperty(root, 'scrollWidth', { value: scrollWidth });
+    root.scrollLeft = scrollLeft;
+    return { container, root };
+  }
+
+  function fireTouch(
+    target: Element,
+    type: string,
+    [x, y, time]: [number, number, number]
+  ) {
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    const point = { identifier: 1, clientX: x, clientY: y };
+    Object.defineProperties(event, {
+      touches: { value: type === 'touchend' ? [] : [point] },
+      changedTouches: { value: [point] },
+      timeStamp: { value: time },
+    });
+    act(() => {
+      target.dispatchEvent(event);
+    });
+    return event;
+  }
+
+  // Each point is [x, y, ms since the touch started]
+  function drag(target: Element, path: [number, number, number][]) {
+    const [start, ...rest] = path;
+    fireTouch(target, 'touchstart', start);
+    const moves = rest.map((point) => fireTouch(target, 'touchmove', point));
+    fireTouch(target, 'touchend', path[path.length - 1]);
+    return moves;
+  }
+
+  it('turns the page for a swipe past a third of the width, and shows the new range in place', () => {
+    const onSwipe = vi.fn();
+    const { container, root } = renderSwipeable(onSwipe);
+    const grid = root.firstElementChild as HTMLElement;
+
+    // The page starts moving after the touch slop, so it moves 150px of 400
+    const moves = drag(grid, [
+      [300, 300, 0],
+      [280, 302, 50],
+      [130, 305, 300],
+    ]);
+    expect(moves.every((move) => move.defaultPrevented)).toBe(true);
+    expect(onSwipe).toHaveBeenCalledExactlyOnceWith('next');
+    expect(grid.style.translate).not.toBe('');
+
+    act(() =>
+      mounts[0].root.render(
+        <DayGridView
+          activeRange={{
+            startDate: nextWeek,
+            endDate: nextWeek.add({ days: 4 }),
+          }}
+          timeZone={TZ}
+          events={[]}
+          hourHeight={HOUR_HEIGHT}
+          onSwipe={onSwipe}
+        />
+      )
+    );
+    expect(grid.style.translate).toBe('');
+    expect(
+      container.querySelector('[aria-hidden="true"] [role="columnheader"]')
+    ).toBeNull();
+  });
+
+  it('leaves short swipes, swipes down, and swipes the grid can still scroll to the browser', () => {
+    const onSwipe = vi.fn();
+    const { root } = renderSwipeable(onSwipe);
+    const grid = root.firstElementChild as HTMLElement;
+
+    // 110px of 400, held still before letting go
+    drag(grid, [
+      [300, 300, 0],
+      [280, 300, 50],
+      [170, 300, 300],
+      [170, 300, 600],
+    ]);
+    expect(grid.style.translate).toBe('');
+    const down = drag(grid, [
+      [300, 300, 0],
+      [295, 330, 50],
+      [100, 600, 100],
+    ]);
+    expect(down.some((move) => move.defaultPrevented)).toBe(false);
+    expect(onSwipe).not.toHaveBeenCalled();
+
+    // Scrolled to the left edge of a wider grid: only a swipe right turns
+    const wide = renderSwipeable(onSwipe, { scrollWidth: 800 });
+    const wideGrid = wide.root.firstElementChild as HTMLElement;
+    drag(wideGrid, [
+      [300, 300, 0],
+      [280, 300, 50],
+      [50, 300, 100],
+    ]);
+    expect(onSwipe).not.toHaveBeenCalled();
+    drag(wideGrid, [
+      [100, 300, 0],
+      [120, 300, 50],
+      [350, 300, 100],
+    ]);
+    expect(onSwipe).toHaveBeenCalledExactlyOnceWith('previous');
+  });
+});

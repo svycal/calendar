@@ -28,6 +28,8 @@ import type {
 } from '@/types/calendar';
 import { useTouchDrag } from '../shared/useTouchDrag';
 import { useAnnouncer } from '../shared/useAnnouncer';
+import { useSwipeNavigation } from '../shared/useSwipeNavigation';
+import { MonthSwipeNeighbor } from './MonthSwipeNeighbor';
 import { monthViewDefaults } from './defaults';
 import {
   DAY_HEADER_HEIGHT,
@@ -70,6 +72,7 @@ export function MonthView({
   eventHeight = 20,
   maxEventRows,
   onEventClick,
+  onSwipe,
   onDayNumberClick,
   selectedRange,
   onSelect,
@@ -100,7 +103,14 @@ export function MonthView({
   );
 
   // Measure a week row to work out how many event rows fit in each day
+  const rootRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+  const swipe = useSwipeNavigation({
+    rootRef,
+    gridRef,
+    onSwipe,
+    periodKey: month.toString(),
+  });
   const [weekHeight, setWeekHeight] = useState(minWeekHeight);
 
   useLayoutEffect(() => {
@@ -381,7 +391,11 @@ export function MonthView({
   );
 
   return (
-    <div className={cn(cls('root'), className)}>
+    <div
+      ref={rootRef}
+      className={cn(cls('root'), className)}
+      style={swipe.rootStyle}
+    >
       <div
         ref={gridRef}
         className={cls('grid')}
@@ -392,6 +406,8 @@ export function MonthView({
           display: 'grid',
           gridTemplateColumns: `repeat(${DAYS_PER_WEEK}, minmax(0, 1fr))`,
           gridTemplateRows: `auto repeat(${weeks.length}, minmax(${minWeekHeight}px, 1fr))`,
+          ...(swipe.swiping && { position: 'relative' }),
+          ...swipe.gridStyle,
         }}
       >
         {weeks[0].map((date, i) => (
@@ -435,6 +451,24 @@ export function MonthView({
             selectedEventRef={selectedEventRef}
           />
         ))}
+
+        {swipe.swiping &&
+          (['previous', 'next'] as const).map((side) => (
+            <MonthSwipeNeighbor
+              key={side}
+              side={side}
+              month={
+                side === 'next'
+                  ? month.add({ months: 1 })
+                  : month.subtract({ months: 1 })
+              }
+              weekStartsOn={weekStartsOn}
+              fixedWeekCount={fixedWeekCount}
+              todayStr={todayStr}
+              cls={cls}
+              renderHeader={renderHeader}
+            />
+          ))}
       </div>
       <div
         aria-live="polite"
