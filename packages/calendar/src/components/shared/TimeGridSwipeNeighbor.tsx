@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { TimeSlotEntry } from '@/lib/time';
+import { makeInert } from '@/lib/utils';
 import type { GridViewClassNames, SwipeDirection } from '@/types/calendar';
 
 interface TimeGridSwipeNeighborProps {
@@ -35,6 +36,7 @@ export function TimeGridSwipeNeighbor({
   return (
     <div
       aria-hidden="true"
+      ref={makeInert}
       style={{
         gridColumn: '2 / -1',
         gridRow: '1 / -1',
@@ -59,29 +61,39 @@ export function TimeGridSwipeNeighbor({
           }}
         />
       ))}
-      {timeSlots.map((slot) =>
-        columns.map((i) => (
-          <div
-            key={`${slot.index}-${i}`}
-            className={cls(slot.isHourStart ? 'bodyCell' : 'bodyCellMinor')}
-            style={{
-              gridRow: slot.index + 3,
-              gridColumn: i + 1,
-              ...(!slot.isHourStart
-                ? { borderTopStyle: 'dotted' as const }
-                : {}),
-              ...(slot.index === 0 ? { borderTopWidth: 0 } : {}),
-              // The edge that meets the grid's columns keeps its line
-              ...(side === 'next' && i === columnCount - 1
-                ? { borderRightWidth: 0 }
-                : {}),
-              ...(side === 'next' && i === 0
-                ? { borderLeftWidth: 1, borderLeftStyle: 'solid' as const }
-                : {}),
-            }}
-          />
-        ))
-      )}
+      {/* Grid lines: one element per row and one per column, rather than a
+          cell for each, as the neighbor mounts as a swipe starts */}
+      {timeSlots.map((slot) => (
+        <div
+          key={`row-${slot.index}`}
+          className={cls(slot.isHourStart ? 'bodyCell' : 'bodyCellMinor')}
+          style={{
+            gridRow: slot.index + 3,
+            gridColumn: '1 / -1',
+            borderRightWidth: 0,
+            ...(!slot.isHourStart ? { borderTopStyle: 'dotted' as const } : {}),
+            ...(slot.index === 0 ? { borderTopWidth: 0 } : {}),
+          }}
+        />
+      ))}
+      {columns.map((i) => (
+        <div
+          key={`column-${i}`}
+          className={cls('bodyCell')}
+          style={{
+            gridRow: '3 / -1',
+            gridColumn: i + 1,
+            borderTopWidth: 0,
+            // The edge that meets the grid's columns keeps its line
+            ...(side === 'next' && i === columnCount - 1
+              ? { borderRightWidth: 0 }
+              : {}),
+            ...(side === 'next' && i === 0
+              ? { borderLeftWidth: 1, borderLeftStyle: 'solid' as const }
+              : {}),
+          }}
+        />
+      ))}
       {children}
     </div>
   );

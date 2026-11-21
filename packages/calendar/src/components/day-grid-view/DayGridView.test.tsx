@@ -8,6 +8,7 @@ import type {
   DayGridViewProps,
   EventDrop,
 } from '@/types/calendar';
+import { touchDrag, type TouchPoint } from '@/test/touch';
 
 // jsdom has no layout: the container measures 0, so hours stay HOUR_HEIGHT
 // tall and a time's offset in a column is its minutes since midnight.
@@ -1092,100 +1093,144 @@ describe('DayGridView drag selection on touch', () => {
 
 describe('DayGridView swipe navigation', () => {
   const nextWeek = monday.add({ days: 7 });
+  const nextRange = {
+    startDate: nextWeek,
+    endDate: nextWeek.add({ days: 4 }),
+  };
 
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
 
   // A phone-width grid, scrolled to `scrollLeft` of `scrollWidth`. Reduced
   // motion turns the page without animating.
   function renderSwipeable(
-    onSwipe: DayGridViewProps['onSwipe'],
+    props: Partial<DayGridViewProps>,
     { scrollLeft = 0, scrollWidth = 400 } = {}
   ) {
     vi.stubGlobal('matchMedia', () => ({ matches: true }));
-    const container = render({ onSwipe });
+    const container = render(props);
     const root = container.firstElementChild as HTMLElement;
     Object.defineProperty(root, 'clientWidth', { value: 400 });
     Object.defineProperty(root, 'scrollWidth', { value: scrollWidth });
     root.scrollLeft = scrollLeft;
-    return { container, root };
+    const grid = root.firstElementChild as HTMLElement;
+    const rerender = (next: Partial<DayGridViewProps>) =>
+      act(() =>
+        mounts[mounts.length - 1].root.render(
+          <DayGridView
+            activeRange={{
+              startDate: monday,
+              endDate: monday.add({ days: 4 }),
+            }}
+            timeZone={TZ}
+            events={[]}
+            hourHeight={HOUR_HEIGHT}
+            {...props}
+            {...next}
+          />
+        )
+      );
+    return { container, root, grid, rerender };
   }
 
-  function fireTouch(
-    target: Element,
-    type: string,
-    [x, y, time]: [number, number, number]
-  ) {
-    const event = new Event(type, { bubbles: true, cancelable: true });
-    const point = { identifier: 1, clientX: x, clientY: y };
-    Object.defineProperties(event, {
-      touches: { value: type === 'touchend' ? [] : [point] },
-      changedTouches: { value: [point] },
-      timeStamp: { value: time },
-    });
-    act(() => {
-      target.dispatchEvent(event);
-    });
-    return event;
-  }
-
-  // Each point is [x, y, ms since the touch started]
-  function drag(target: Element, path: [number, number, number][]) {
-    const [start, ...rest] = path;
-    fireTouch(target, 'touchstart', start);
-    const moves = rest.map((point) => fireTouch(target, 'touchmove', point));
-    fireTouch(target, 'touchend', path[path.length - 1]);
-    return moves;
-  }
+  // 150px of 400 to the left, past a third: the page starts moving after
+  // the touch slop
+  const swipeLeft: TouchPoint[] = [
+    [300, 300, 0],
+    [280, 302, 50],
+    [130, 305, 300],
+  ];
 
   it('turns the page for a swipe past a third of the width, and shows the new range in place', () => {
     const onSwipe = vi.fn();
-    const { container, root } = renderSwipeable(onSwipe);
-    const grid = root.firstElementChild as HTMLElement;
+    const { container, grid, rerender } = renderSwipeable({ onSwipe });
 
-    // The page starts moving after the touch slop, so it moves 150px of 400
-    const moves = drag(grid, [
-      [300, 300, 0],
-      [280, 302, 50],
-      [130, 305, 300],
-    ]);
+    const moves = touchDrag(grid, swipeLeft);
     expect(moves.every((move) => move.defaultPrevented)).toBe(true);
     expect(onSwipe).toHaveBeenCalledExactlyOnceWith('next');
     expect(grid.style.translate).not.toBe('');
-
-    act(() =>
-      mounts[0].root.render(
-        <DayGridView
-          activeRange={{
-            startDate: nextWeek,
-            endDate: nextWeek.add({ days: 4 }),
-          }}
-          timeZone={TZ}
-          events={[]}
-          hourHeight={HOUR_HEIGHT}
-          onSwipe={onSwipe}
-        />
-      )
-    );
-    expect(grid.style.translate).toBe('');
     expect(
-      container.querySelector('[aria-hidden="true"] [role="columnheader"]')
-    ).toBeNull();
+      container.querySelector('[inert] [role="columnheader"]')
+    ).not.toBeNull();
+
+    rerender({ activeRange: nextRange });
+    expect(grid.style.translate).toBe('');
+    expect(container.querySelector('[inert]')).toBeNull();
+  });
+
+  it('turns the page for a flick, but not for a drag that rests before lifting', () => {
+    const onSwipe = vi.fn();
+    const { grid } = renderSwipeable({ onSwipe });
+    // 80px of 400 in 50ms
+    const flick: TouchPoint[] = [
+      [300, 300, 0],
+      [280, 300, 50],
+      [230, 300, 80],
+      [200, 300, 100],
+    ];
+
+    touchDrag(grid, flick, 1000);
+    expect(onSwipe).not.toHaveBeenCalled();
+    expect(grid.style.translate).toBe('');
+
+    touchDrag(grid, flick, 110);
+    expect(onSwipe).toHaveBeenCalledExactlyOnceWith('next');
+  });
+
+  it('slides back when onSwipe returns false, or the range does not change in time', () => {
+    vi.useFakeTimers();
+    const onSwipe = vi.fn(() => false);
+    const { grid, rerender } = renderSwipeable({ onSwipe });
+
+    touchDrag(grid, swipeLeft);
+    expect(onSwipe).toHaveBeenCalledTimes(1);
+    expect(grid.style.translate).toBe('');
+
+    // A page that waits ignores swipes until it comes back
+    rerender({ onSwipe: vi.fn() });
+    touchDrag(grid, swipeLeft);
+    expect(grid.style.translate).not.toBe('');
+    act(() => vi.advanceTimersByTime(4900));
+    expect(grid.style.translate).not.toBe('');
+    act(() => vi.advanceTimersByTime(100));
+    expect(grid.style.translate).toBe('');
+  });
+
+  it('keeps the scroll after a swipe, and still scrolls for a later scrollKey', () => {
+    // A laid-out container, so the initial scroll applies
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(600);
+    const hourTop = 8 * HOUR_HEIGHT + 1;
+    const { root, grid, rerender } = renderSwipeable({
+      onSwipe: vi.fn(),
+      initialScrollHour: 8,
+      scrollKey: 'a',
+    });
+    expect(root.scrollTop).toBe(hourTop);
+
+    root.scrollTop = 30;
+    touchDrag(grid, swipeLeft);
+    rerender({ activeRange: nextRange });
+    expect(root.scrollTop).toBe(30);
+
+    rerender({ activeRange: nextRange, scrollKey: 'b' });
+    expect(root.scrollTop).toBe(hourTop);
   });
 
   it('leaves short swipes, swipes down, and swipes the grid can still scroll to the browser', () => {
     const onSwipe = vi.fn();
-    const { root } = renderSwipeable(onSwipe);
-    const grid = root.firstElementChild as HTMLElement;
+    const { grid } = renderSwipeable({ onSwipe });
 
-    // 110px of 400, held still before letting go
-    drag(grid, [
+    // 110px of 400, slowly
+    touchDrag(grid, [
       [300, 300, 0],
       [280, 300, 50],
-      [170, 300, 300],
       [170, 300, 600],
     ]);
     expect(grid.style.translate).toBe('');
-    const down = drag(grid, [
+    const down = touchDrag(grid, [
       [300, 300, 0],
       [295, 330, 50],
       [100, 600, 100],
@@ -1194,15 +1239,14 @@ describe('DayGridView swipe navigation', () => {
     expect(onSwipe).not.toHaveBeenCalled();
 
     // Scrolled to the left edge of a wider grid: only a swipe right turns
-    const wide = renderSwipeable(onSwipe, { scrollWidth: 800 });
-    const wideGrid = wide.root.firstElementChild as HTMLElement;
-    drag(wideGrid, [
+    const wide = renderSwipeable({ onSwipe }, { scrollWidth: 800 });
+    touchDrag(wide.grid, [
       [300, 300, 0],
       [280, 300, 50],
       [50, 300, 100],
     ]);
     expect(onSwipe).not.toHaveBeenCalled();
-    drag(wideGrid, [
+    touchDrag(wide.grid, [
       [100, 300, 0],
       [120, 300, 50],
       [350, 300, 100],

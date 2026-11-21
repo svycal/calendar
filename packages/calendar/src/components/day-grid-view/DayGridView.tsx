@@ -130,25 +130,6 @@ export function DayGridView({
     containerHeight,
   } = useEffectiveHourHeight(hourHeight, endHour - startHour);
 
-  const swipe = useSwipeNavigation({
-    rootRef,
-    gridRef,
-    gutterRef: allDayRef,
-    onSwipe,
-    periodKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}`,
-  });
-
-  useInitialScroll({
-    rootRef,
-    initialScrollHour,
-    startHour,
-    endHour,
-    effectiveHourHeight,
-    containerHeight,
-    scrollKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}/${scrollKey ?? ''}`,
-    swipedRef: swipe.swipedRef,
-  });
-
   const cls = useCallback(
     (key: keyof DayGridViewClassNames) =>
       cn(dayGridViewDefaults[key], classNames?.[key]),
@@ -286,14 +267,6 @@ export function DayGridView({
     [unavailableFor, dates]
   );
 
-  const neighborUnavailable = useMemo(
-    () =>
-      swipe.swiping
-        ? unavailableFor([...neighborDates.previous, ...neighborDates.next])
-        : null,
-    [swipe.swiping, unavailableFor, neighborDates]
-  );
-
   const { message: announcerMessage, announce } = useAnnouncer();
 
   const gridAriaLabel = useMemo(() => {
@@ -350,6 +323,35 @@ export function DayGridView({
     snapDuration: snapDuration ?? 15,
     resolveTarget: resolveDragTarget,
   });
+
+  // After the event drag, so its touch listeners run first and the swipe
+  // sees when a long press started dragging an event
+  const swipe = useSwipeNavigation({
+    rootRef,
+    gridRef,
+    gutterRef: allDayRef,
+    onSwipe,
+    periodKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}`,
+  });
+
+  useInitialScroll({
+    rootRef,
+    initialScrollHour,
+    startHour,
+    endHour,
+    effectiveHourHeight,
+    containerHeight,
+    scrollKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}/${scrollKey ?? ''}`,
+    swipedRef: swipe.swipedRef,
+  });
+
+  const neighborUnavailable = useMemo(
+    () =>
+      swipe.swiping
+        ? unavailableFor([...neighborDates.previous, ...neighborDates.next])
+        : null,
+    [swipe.swiping, unavailableFor, neighborDates]
+  );
 
   const dragSourceId =
     eventDragPreview?.event.id ?? pendingDrop?.event.id ?? null;

@@ -464,6 +464,7 @@ export function MonthView({
               }
               weekStartsOn={weekStartsOn}
               fixedWeekCount={fixedWeekCount}
+              minWeekHeight={minWeekHeight}
               todayStr={todayStr}
               cls={cls}
               renderHeader={renderHeader}

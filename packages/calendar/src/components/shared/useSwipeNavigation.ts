@@ -1,6 +1,7 @@
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type CSSProperties,
@@ -28,7 +29,7 @@ interface SwipeNavigationOptions {
   gridRef: RefObject<HTMLElement | null>;
   /** A pinned column on the left, such as the time gutter, that isn't part of the page. */
   gutterRef?: RefObject<HTMLElement | null>;
-  onSwipe?: (direction: SwipeDirection) => void;
+  onSwipe?: (direction: SwipeDirection) => void | boolean;
   /** Identifies the shown period. A change completes a turned page. */
   periodKey: string;
 }
@@ -40,7 +41,8 @@ interface SwipeNavigationOptions {
  * `COMMIT_FRACTION` of the page, or flinging it, slides the neighbor into
  * place and calls `onSwipe`; the page stays there until `periodKey` changes,
  * then snaps back to show the new period where the neighbor was. Anything
- * else slides back.
+ * else slides back, as does a turned page when `onSwipe` returns false or
+ * the period doesn't change within `PENDING_TIMEOUT_MS`.
  *
  * Vertical drags, long presses, and multi-touch are left to the browser and
  * the grid's other gestures. A grid wider than its container scrolls
@@ -144,9 +146,14 @@ export function useSwipeNavigation({
     const settleBack = (from: number, velocity = 0) =>
       animate(from, 0, velocity, finish);
 
-    const release = (commit: boolean) => {
+    const release = (commit: boolean, time: number) => {
       if (!track) return;
-      const { offset, width, samples } = track;
+      const { offset, width } = track;
+      // A finger that rested before lifting sends no moves, so only the
+      // moves just before the release count toward its speed
+      const samples = track.samples.filter(
+        (sample) => sample.time >= time - VELOCITY_WINDOW_MS
+      );
       track = null;
       const first = samples[0];
       const last = samples[samples.length - 1];
@@ -176,7 +183,11 @@ export function useSwipeNavigation({
           () => settleBack(target),
           PENDING_TIMEOUT_MS
         );
-        onSwipeRef.current?.(direction);
+        if (onSwipeRef.current?.(direction) === false) {
+          clearTimeout(timeoutRef.current);
+          pendingRef.current = null;
+          settleBack(target);
+        }
       });
     };
 
@@ -220,7 +231,8 @@ export function useSwipeNavigation({
         const dx = touch.clientX - track.startX;
         const dy = touch.clientY - track.startY;
         if (!track.sideways) {
-          if (Math.max(Math.abs(dx), Math.abs(dy)) < TOUCH_SLOP_PX) return;
+          // The same slop as a long press, which a move past it cancels
+          if (Math.hypot(dx, dy) <= TOUCH_SLOP_PX) return;
           // A scroll down or up, or a drag a long press started
           if (
             Math.abs(dx) <= Math.abs(dy) ||
@@ -266,7 +278,7 @@ export function useSwipeNavigation({
       }
       // Keeps the lifted finger from clicking what's under it
       if (e.cancelable) e.preventDefault();
-      release(e.type === 'touchend');
+      release(e.type === 'touchend', e.timeStamp);
     };
 
     root.addEventListener('touchstart', handleStart, { passive: true });
@@ -300,6 +312,9 @@ export function useSwipeNavigation({
     swipedRef.current = !!pending && pending.key !== periodKey;
     if (!pending || pending.key === periodKey) return;
     clearTimeout(timeoutRef.current);
+    // A slide back the timeout started would otherwise finish later, during
+    // the next swipe
+    cancelAnimationFrame(frameRef.current);
     pendingRef.current = null;
     busyRef.current = false;
     scrollToRef.current = pending.direction;
@@ -315,20 +330,42 @@ export function useSwipeNavigation({
     scrollToRef.current = null;
   }, [swiping, rootRef]);
 
+  // Stable between renders, so memoized cells that take them don't re-render
+  const styles = useMemo(
+    () => ({
+      // Keeps the moving page from scrolling the container, and a swipe at
+      // its edge from bouncing it or navigating the browser back
+      rootStyle: enabled
+        ? ({
+            overscrollBehaviorX: 'none',
+            ...(swiping && { overflowX: 'hidden' }),
+          } as CSSProperties)
+        : undefined,
+      gridStyle: swiping
+        ? ({ translate: `var(${OFFSET_VAR}, 0px) 0` } as CSSProperties)
+        : undefined,
+      pinnedStyle: swiping
+        ? ({
+            translate: `calc(var(${OFFSET_VAR}, 0px) * -1) 0`,
+          } as CSSProperties)
+        : undefined,
+    }),
+    [enabled, swiping]
+  );
+
   return {
     /** True while the page is off its resting place: draw the neighbors. */
     swiping,
-    /** True when a swipe brought in the shown period. Read in effects declared after this hook. */
+    /**
+     * True when a swipe brought in the shown period. Read it in a layout
+     * effect declared after this hook, and clear it once read.
+     */
     swipedRef,
-    /** For the scroll container: keeps the moving page from scrolling it. */
-    rootStyle: swiping ? ({ overflowX: 'hidden' } as CSSProperties) : undefined,
+    /** For the scroll container. */
+    rootStyle: styles.rootStyle,
     /** For the element that follows the finger. */
-    gridStyle: swiping
-      ? ({ translate: `var(${OFFSET_VAR}, 0px) 0` } as CSSProperties)
-      : undefined,
+    gridStyle: styles.gridStyle,
     /** For pinned elements inside it, such as the time gutter, to stay put. */
-    pinnedStyle: swiping
-      ? ({ translate: `calc(var(${OFFSET_VAR}, 0px) * -1) 0` } as CSSProperties)
-      : undefined,
+    pinnedStyle: styles.pinnedStyle,
   };
 }

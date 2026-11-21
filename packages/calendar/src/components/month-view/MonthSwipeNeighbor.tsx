@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Temporal } from 'temporal-polyfill';
-import { cn } from '@/lib/utils';
+import { cn, makeInert } from '@/lib/utils';
 import { formatDayOfWeek } from '@/lib/time';
 import { DAYS_PER_WEEK, getMonthWeeks } from '@/lib/month';
 import type { MonthViewClassNames, SwipeDirection } from '@/types/calendar';
@@ -11,6 +11,7 @@ interface MonthSwipeNeighborProps {
   month: Temporal.PlainYearMonth;
   weekStartsOn: number;
   fixedWeekCount: boolean;
+  minWeekHeight: number;
   todayStr: string;
   cls: (key: keyof MonthViewClassNames) => string;
   renderHeader?: (props: {
@@ -28,6 +29,7 @@ export function MonthSwipeNeighbor({
   month,
   weekStartsOn,
   fixedWeekCount,
+  minWeekHeight,
   todayStr,
   cls,
   renderHeader,
@@ -37,13 +39,19 @@ export function MonthSwipeNeighbor({
   return (
     <div
       aria-hidden="true"
+      ref={makeInert}
       style={{
+        // Sized like the month it shows: at least the view's height, with
+        // rows no shorter than `minWeekHeight`
         position: 'absolute',
-        inset: 0,
+        top: 0,
+        left: 0,
+        width: '100%',
+        minHeight: '100%',
         translate: side === 'next' ? '100% 0' : '-100% 0',
         display: 'grid',
         gridTemplateColumns: `repeat(${DAYS_PER_WEEK}, minmax(0, 1fr))`,
-        gridTemplateRows: `auto repeat(${weeks.length}, minmax(0, 1fr))`,
+        gridTemplateRows: `auto repeat(${weeks.length}, minmax(${minWeekHeight}px, 1fr))`,
         pointerEvents: 'none',
       }}
     >

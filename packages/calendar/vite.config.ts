@@ -50,7 +50,12 @@ export default defineConfig({
         // Don't roll up types - keep them as separate files to match preserveModules
         rollupTypes: false,
         // Tests aren't part of the published surface.
-        exclude: ['**/*.test.ts', '**/*.test.tsx', 'vitest.setup.ts'],
+        exclude: [
+          '**/*.test.ts',
+          '**/*.test.tsx',
+          'src/test/**',
+          'vitest.setup.ts',
+        ],
       }),
     // Copy CSS files to dist without Tailwind processing
     copyCssPlugin(),

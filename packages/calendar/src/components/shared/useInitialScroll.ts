@@ -79,6 +79,8 @@ export function useInitialScroll({
     // Only (re)scroll when navigating to a new date/range.
     if (lastScrolledKey.current === scrollKey) return;
     if (swipedRef?.current) {
+      // Only this change came from the swipe
+      swipedRef.current = false;
       lastScrolledKey.current = scrollKey;
       return;
     }

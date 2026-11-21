@@ -224,8 +224,9 @@ export interface ResourceGridViewProps {
    * finger, with the time gutter staying put, revealing the same resources'
    * empty columns. Change `date` in response; the grid waits for it, then
    * shows the new day with the scroll unchanged.
+   * Return `false` to slide back instead, such as past the last date.
    */
-  onSwipe?: (direction: SwipeDirection) => void;
+  onSwipe?: (direction: SwipeDirection) => void | boolean;
   snapDuration?: number;
   placeholderDuration?: number;
   onSlotClick?: (info: {
@@ -353,8 +354,9 @@ export interface DayGridViewProps {
    * finger, with the time gutter staying put, revealing the period as long as
    * `activeRange` beside it. Change `activeRange` in response; the grid waits
    * for it, then shows the new days with the scroll unchanged.
+   * Return `false` to slide back instead, such as past the last date.
    */
-  onSwipe?: (direction: SwipeDirection) => void;
+  onSwipe?: (direction: SwipeDirection) => void | boolean;
   snapDuration?: number;
   placeholderDuration?: number;
   onSlotClick?: (info: {
@@ -526,8 +528,9 @@ export interface MonthViewProps {
    * swipe to the left. Setting it turns on swiping: the month follows the
    * finger, revealing the month beside it. Change `month` in response; the
    * view waits for it, then shows the new month.
+   * Return `false` to slide back instead, such as past the last date.
    */
-  onSwipe?: (direction: SwipeDirection) => void;
+  onSwipe?: (direction: SwipeDirection) => void | boolean;
   /** Called when the day number is clicked (e.g. to navigate to a day view). */
   onDayNumberClick?: (date: Temporal.PlainDate) => void;
   /** Controlled day-range selection. */

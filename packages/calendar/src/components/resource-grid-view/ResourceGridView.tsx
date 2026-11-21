@@ -94,25 +94,6 @@ export function ResourceGridView({
     containerHeight,
   } = useEffectiveHourHeight(hourHeight, endHour - startHour);
 
-  const swipe = useSwipeNavigation({
-    rootRef,
-    gridRef,
-    gutterRef: allDayRef,
-    onSwipe,
-    periodKey: date.toString(),
-  });
-
-  useInitialScroll({
-    rootRef,
-    initialScrollHour,
-    startHour,
-    endHour,
-    effectiveHourHeight,
-    containerHeight,
-    scrollKey: date.toString(),
-    swipedRef: swipe.swipedRef,
-  });
-
   const cls = useCallback(
     (key: keyof ResourceGridViewClassNames) =>
       cn(resourceGridViewDefaults[key], classNames?.[key]),
@@ -217,17 +198,6 @@ export function ResourceGridView({
     [unavailableOn, date]
   );
 
-  const neighborUnavailable = useMemo(
-    () =>
-      swipe.swiping
-        ? {
-            previous: unavailableOn(date.subtract({ days: 1 })),
-            next: unavailableOn(date.add({ days: 1 })),
-          }
-        : null,
-    [swipe.swiping, unavailableOn, date]
-  );
-
   const { message: announcerMessage, announce } = useAnnouncer();
 
   const gridAriaLabel = useMemo(
@@ -301,6 +271,38 @@ export function ResourceGridView({
     snapDuration: snapDuration ?? 15,
     resolveTarget: resolveDragTarget,
   });
+
+  // After the event drag, so its touch listeners run first and the swipe
+  // sees when a long press started dragging an event
+  const swipe = useSwipeNavigation({
+    rootRef,
+    gridRef,
+    gutterRef: allDayRef,
+    onSwipe,
+    periodKey: date.toString(),
+  });
+
+  useInitialScroll({
+    rootRef,
+    initialScrollHour,
+    startHour,
+    endHour,
+    effectiveHourHeight,
+    containerHeight,
+    scrollKey: date.toString(),
+    swipedRef: swipe.swipedRef,
+  });
+
+  const neighborUnavailable = useMemo(
+    () =>
+      swipe.swiping
+        ? {
+            previous: unavailableOn(date.subtract({ days: 1 })),
+            next: unavailableOn(date.add({ days: 1 })),
+          }
+        : null,
+    [swipe.swiping, unavailableOn, date]
+  );
 
   const dragSourceId = dragPreview?.event.id ?? pendingDrop?.event.id ?? null;
 
