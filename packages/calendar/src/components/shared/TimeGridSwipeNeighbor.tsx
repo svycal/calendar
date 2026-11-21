@@ -12,6 +12,8 @@ interface TimeGridSwipeNeighborProps {
   headerHeight: number;
   timeSlots: TimeSlotEntry[];
   cls: (key: keyof GridViewClassNames) => string;
+  /** Drawn over the grid lines, such as unavailable time, in columns 1 to `columnCount`. */
+  children?: ReactNode;
 }
 
 /**
@@ -26,6 +28,7 @@ export function TimeGridSwipeNeighbor({
   headerHeight,
   timeSlots,
   cls,
+  children,
 }: TimeGridSwipeNeighborProps) {
   const columns = Array.from({ length: columnCount }, (_, i) => i);
 
@@ -79,6 +82,7 @@ export function TimeGridSwipeNeighbor({
           />
         ))
       )}
+      {children}
     </div>
   );
 }

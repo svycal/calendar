@@ -790,7 +790,7 @@ interface EventDrop {
 
 ### Swipe navigation
 
-With `onSwipe` set, every view follows a one-finger sideways drag on a touch screen, like Google Calendar's mobile app. The page moves with the finger, revealing an empty copy of the period beside it: its headers and grid lines, without events. Releasing past a third of the width, or flinging it, slides that period into place and calls `onSwipe`; anything shorter slides back.
+With `onSwipe` set, every view follows a one-finger sideways drag on a touch screen, like Google Calendar's mobile app. The page moves with the finger, revealing an empty copy of the period beside it: its headers and grid lines, without events. In `DayGridView`, each of its days repeats the unavailable time of the same weekday in the shown period, as working hours usually repeat weekly. Releasing past a third of the width, or flinging it, slides that period into place and calls `onSwipe`; anything shorter slides back.
 
 The view doesn't change its own date. It holds the turned page until `date`, `activeRange`, or `month` changes, then shows the new period where the empty one was, keeping the time grid's scroll position. If nothing changes within five seconds, it slides back. Load the neighboring periods' events ahead of time to show them right away.
 

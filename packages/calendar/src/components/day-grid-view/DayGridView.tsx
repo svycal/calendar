@@ -780,7 +780,27 @@ export function DayGridView({
               headerHeight={headerHeight}
               timeSlots={timeSlots}
               cls={cls}
-            />
+            >
+              {/* Unavailable time repeats weekly: each day takes the shading
+                  of the same weekday here, if this period has one */}
+              {neighborDates[side].map((date, i) => {
+                const source = dates.find(
+                  (d) => d.dayOfWeek === date.dayOfWeek
+                );
+                const blocks =
+                  source && unavailableByDate.get(source.toString());
+                return (
+                  blocks && (
+                    <UnavailabilityOverlay
+                      key={`unavail-${date.toString()}`}
+                      blocks={blocks}
+                      column={i + 1}
+                      cls={cls}
+                    />
+                  )
+                );
+              })}
+            </TimeGridSwipeNeighbor>
           ))}
 
         {/* Now indicator — only if today is in the active range */}
