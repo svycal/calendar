@@ -267,7 +267,6 @@ const weekStart = today.subtract({ days: today.dayOfWeek - 1 }); // Monday
 // const weekStart = today
 //   .subtract({ days: today.dayOfWeek - 1 })
 //   .add({ days: 7 }); // Monday
-const weekEnd = weekStart.add({ days: 6 }); // Sunday
 
 function makeDayTime(
   date: Temporal.PlainDate,
@@ -454,6 +453,9 @@ function App() {
     useState<DayGridSelectedRange | null>(null);
   const [events, setEvents] = useState(initialEvents);
   const [weekEvents, setWeekEvents] = useState(initialWeekEvents);
+  // Swiping on a touch screen steps these
+  const [resourceDate, setResourceDate] = useState(today);
+  const [shownWeekStart, setShownWeekStart] = useState(weekStart);
   const resourceDrop = useDropConfirm(
     setEvents,
     (id) => resources.find((r) => r.id === id)?.name
@@ -624,7 +626,12 @@ function App() {
             </h2>
             <div className="h-200">
               <ResourceGridView
-                date={today}
+                date={resourceDate}
+                onSwipe={(direction) =>
+                  setResourceDate((d) =>
+                    d.add({ days: direction === 'next' ? 1 : -1 })
+                  )
+                }
                 timeZone={tz}
                 columnMinWidth={300}
                 resources={resources}
@@ -737,7 +744,15 @@ function App() {
             </h2>
             <div className="h-200">
               <DayGridView
-                activeRange={{ startDate: weekStart, endDate: weekEnd }}
+                activeRange={{
+                  startDate: shownWeekStart,
+                  endDate: shownWeekStart.add({ days: 6 }),
+                }}
+                onSwipe={(direction) =>
+                  setShownWeekStart((d) =>
+                    d.add({ days: direction === 'next' ? 7 : -7 })
+                  )
+                }
                 timeZone={tz}
                 events={weekEvents}
                 availability={dayGridAvailability}

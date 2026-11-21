@@ -22,6 +22,11 @@ interface UseInitialScrollArgs {
   containerHeight: number;
   /** Stable identity of the active date/range; a change re-applies the scroll. */
   scrollKey: string;
+  /**
+   * True when a swipe changed the date/range, which keeps the scroll where
+   * the swiped-in neighbor showed it.
+   */
+  swipedRef?: RefObject<boolean>;
 }
 
 /**
@@ -54,6 +59,7 @@ export function useInitialScroll({
   effectiveHourHeight,
   containerHeight,
   scrollKey,
+  swipedRef,
 }: UseInitialScrollArgs): void {
   // The last date/range we actually scrolled for. Guards against re-scrolling
   // when the effect fires for unrelated reasons (e.g. a resize re-measure).
@@ -72,6 +78,12 @@ export function useInitialScroll({
     if (containerHeight <= 0) return;
     // Only (re)scroll when navigating to a new date/range.
     if (lastScrolledKey.current === scrollKey) return;
+    if (swipedRef?.current) {
+      // Only this change came from the swipe
+      swipedRef.current = false;
+      lastScrolledKey.current = scrollKey;
+      return;
+    }
 
     const clamped = Math.min(Math.max(initialScrollHour, startHour), endHour);
     root.scrollTop =
@@ -85,5 +97,6 @@ export function useInitialScroll({
     effectiveHourHeight,
     containerHeight,
     scrollKey,
+    swipedRef,
   ]);
 }

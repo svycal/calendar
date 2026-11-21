@@ -42,6 +42,8 @@ import { NowIndicator } from '../shared/NowIndicator';
 import { AllDaySection } from './AllDaySection';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
 import { useInitialScroll } from '../shared/useInitialScroll';
+import { useSwipeNavigation } from '../shared/useSwipeNavigation';
+import { TimeGridSwipeNeighbor } from '../shared/TimeGridSwipeNeighbor';
 import { useAnnouncer } from '../shared/useAnnouncer';
 import { useEventDrag } from '../shared/useEventDrag';
 import { useLingeringValue } from '../shared/useLingeringValue';
@@ -59,6 +61,7 @@ export function DayGridView({
   initialScrollHour,
   scrollKey,
   onEventClick,
+  onSwipe,
   snapDuration,
   placeholderDuration,
   selectedRange,
@@ -104,6 +107,15 @@ export function DayGridView({
     );
   }, [activeRange.startDate, activeRange.endDate, hiddenDates]);
 
+  // The periods beside this one, drawn while a swipe reveals them
+  const neighborDates = useMemo(() => {
+    const days = activeRange.startDate.until(activeRange.endDate).days + 1;
+    return {
+      previous: dates.map((d) => d.subtract({ days })),
+      next: dates.map((d) => d.add({ days })),
+    };
+  }, [activeRange.startDate, activeRange.endDate, dates]);
+
   const todayStr = useMemo(() => {
     return Temporal.Now.plainDateISO(timeZone).toString();
   }, [timeZone]);
@@ -117,16 +129,6 @@ export function DayGridView({
     headerHeight,
     containerHeight,
   } = useEffectiveHourHeight(hourHeight, endHour - startHour);
-
-  useInitialScroll({
-    rootRef,
-    initialScrollHour,
-    startHour,
-    endHour,
-    effectiveHourHeight,
-    containerHeight,
-    scrollKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}/${scrollKey ?? ''}`,
-  });
 
   const cls = useCallback(
     (key: keyof DayGridViewClassNames) =>
@@ -228,35 +230,42 @@ export function DayGridView({
     [defaultUnavailable, availability]
   );
 
-  const unavailableByDate = useMemo(() => {
-    if (effectiveAvailability === undefined && !unavailability)
-      return new Map<string, UnavailableBlock[]>();
-
-    const map = new Map<string, UnavailableBlock[]>();
-    for (const date of dates) {
-      const blocks = computeUnavailableBlocks(
-        effectiveAvailability,
-        unavailability,
-        timeZone,
-        date,
-        startHour,
-        endHour,
-        effectiveHourHeight
-      );
-      if (blocks.length > 0) {
-        map.set(date.toString(), blocks);
+  // Unavailable blocks by date. A swipe draws the neighboring periods'
+  // too, from the same ranges, so they can include those periods.
+  const unavailableFor = useCallback(
+    (days: Temporal.PlainDate[]) => {
+      const map = new Map<string, UnavailableBlock[]>();
+      if (effectiveAvailability === undefined && !unavailability) return map;
+      for (const date of days) {
+        const blocks = computeUnavailableBlocks(
+          effectiveAvailability,
+          unavailability,
+          timeZone,
+          date,
+          startHour,
+          endHour,
+          effectiveHourHeight
+        );
+        if (blocks.length > 0) {
+          map.set(date.toString(), blocks);
+        }
       }
-    }
-    return map;
-  }, [
-    effectiveAvailability,
-    unavailability,
-    timeZone,
-    dates,
-    startHour,
-    endHour,
-    effectiveHourHeight,
-  ]);
+      return map;
+    },
+    [
+      effectiveAvailability,
+      unavailability,
+      timeZone,
+      startHour,
+      endHour,
+      effectiveHourHeight,
+    ]
+  );
+
+  const unavailableByDate = useMemo(
+    () => unavailableFor(dates),
+    [unavailableFor, dates]
+  );
 
   const { message: announcerMessage, announce } = useAnnouncer();
 
@@ -314,6 +323,35 @@ export function DayGridView({
     snapDuration: snapDuration ?? 15,
     resolveTarget: resolveDragTarget,
   });
+
+  // After the event drag, so its touch listeners run first and the swipe
+  // sees when a long press started dragging an event
+  const swipe = useSwipeNavigation({
+    rootRef,
+    gridRef,
+    gutterRef: allDayRef,
+    onSwipe,
+    periodKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}`,
+  });
+
+  useInitialScroll({
+    rootRef,
+    initialScrollHour,
+    startHour,
+    endHour,
+    effectiveHourHeight,
+    containerHeight,
+    scrollKey: `${activeRange.startDate.toString()}/${activeRange.endDate.toString()}/${scrollKey ?? ''}`,
+    swipedRef: swipe.swipedRef,
+  });
+
+  const neighborUnavailable = useMemo(
+    () =>
+      swipe.swiping
+        ? unavailableFor([...neighborDates.previous, ...neighborDates.next])
+        : null,
+    [swipe.swiping, unavailableFor, neighborDates]
+  );
 
   const dragSourceId =
     eventDragPreview?.event.id ?? pendingDrop?.event.id ?? null;
@@ -486,7 +524,11 @@ export function DayGridView({
   const todayDate = dates.find((d) => d.toString() === todayStr);
 
   return (
-    <div ref={rootRef} className={cn(cls('root'), className)}>
+    <div
+      ref={rootRef}
+      className={cn(cls('root'), className)}
+      style={swipe.rootStyle}
+    >
       <div
         ref={gridRef}
         className={cls('grid')}
@@ -497,13 +539,14 @@ export function DayGridView({
           display: 'grid',
           gridTemplateColumns: `max-content repeat(${dates.length}, minmax(${columnMinWidth}px, 1fr))`,
           gridTemplateRows: `auto auto repeat(${timeSlots.length}, ${rowHeight}px)`,
+          ...swipe.gridStyle,
         }}
       >
         {/* Corner cell */}
         <div
           ref={headerRef}
           className={cls('cornerCell')}
-          style={{ gridRow: 1, gridColumn: 1 }}
+          style={{ gridRow: 1, gridColumn: 1, ...swipe.pinnedStyle }}
         >
           {renderCorner?.({ timeZone })}
         </div>
@@ -528,6 +571,7 @@ export function DayGridView({
             gridRow: 2,
             gridColumn: 1,
             top: headerHeight,
+            ...swipe.pinnedStyle,
           }}
         />
 
@@ -567,6 +611,7 @@ export function DayGridView({
             isHourStart={slot.isHourStart}
             isFirst={slot.index === 0}
             cls={cls}
+            style={swipe.pinnedStyle}
           />
         ))}
 
@@ -726,6 +771,48 @@ export function DayGridView({
             />
           ));
         })}
+
+        {swipe.swiping &&
+          (['previous', 'next'] as const).map((side) => (
+            <TimeGridSwipeNeighbor
+              key={side}
+              side={side}
+              columnCount={dates.length}
+              headers={neighborDates[side].map((date, i) => (
+                <DayHeader
+                  key={date.toString()}
+                  date={date}
+                  isToday={date.toString() === todayStr}
+                  column={i + 1}
+                  cls={cls}
+                  renderHeader={renderHeader}
+                />
+              ))}
+              allDayClassName={(i) =>
+                cn(
+                  cls('allDayLane'),
+                  i < dates.length - 1 && 'border-r border-cal-border'
+                )
+              }
+              headerHeight={headerHeight}
+              timeSlots={timeSlots}
+              cls={cls}
+            >
+              {neighborDates[side].map((date, i) => {
+                const blocks = neighborUnavailable?.get(date.toString());
+                return (
+                  blocks && (
+                    <UnavailabilityOverlay
+                      key={`unavail-${date.toString()}`}
+                      blocks={blocks}
+                      column={i + 1}
+                      cls={cls}
+                    />
+                  )
+                );
+              })}
+            </TimeGridSwipeNeighbor>
+          ))}
 
         {/* Now indicator — only if today is in the active range */}
         {todayDate && (

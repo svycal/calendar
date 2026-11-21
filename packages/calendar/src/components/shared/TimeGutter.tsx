@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, type CSSProperties } from 'react';
 import type { GridViewClassNames } from '@/types/calendar';
 
 interface TimeGutterProps {
@@ -7,6 +7,7 @@ interface TimeGutterProps {
   isHourStart: boolean;
   isFirst: boolean;
   cls: (key: keyof GridViewClassNames) => string;
+  style?: CSSProperties;
 }
 
 export const TimeGutter = memo(function TimeGutter({
@@ -15,6 +16,7 @@ export const TimeGutter = memo(function TimeGutter({
   isHourStart,
   isFirst,
   cls,
+  style,
 }: TimeGutterProps) {
   return (
     <div
@@ -23,6 +25,7 @@ export const TimeGutter = memo(function TimeGutter({
         gridRow: row,
         gridColumn: 1,
         ...(isFirst ? { marginTop: 0 } : {}),
+        ...style,
       }}
     >
       {isHourStart && <span className={cls('gutterLabel')}>{label}</span>}

@@ -31,6 +31,8 @@ import { NowIndicator } from '../shared/NowIndicator';
 import { AllDayRow } from '../shared/AllDayRow';
 import { useEffectiveHourHeight } from '../shared/useEffectiveHourHeight';
 import { useInitialScroll } from '../shared/useInitialScroll';
+import { useSwipeNavigation } from '../shared/useSwipeNavigation';
+import { TimeGridSwipeNeighbor } from '../shared/TimeGridSwipeNeighbor';
 import { useAnnouncer } from '../shared/useAnnouncer';
 import { useEventDrag } from '../shared/useEventDrag';
 import { useLingeringValue } from '../shared/useLingeringValue';
@@ -47,6 +49,7 @@ export function ResourceGridView({
   timeAxis,
   initialScrollHour,
   onEventClick,
+  onSwipe,
   snapDuration,
   placeholderDuration,
   selectedRange,
@@ -90,16 +93,6 @@ export function ResourceGridView({
     headerHeight,
     containerHeight,
   } = useEffectiveHourHeight(hourHeight, endHour - startHour);
-
-  useInitialScroll({
-    rootRef,
-    initialScrollHour,
-    startHour,
-    endHour,
-    effectiveHourHeight,
-    containerHeight,
-    scrollKey: date.toString(),
-  });
 
   const cls = useCallback(
     (key: keyof ResourceGridViewClassNames) =>
@@ -151,50 +144,59 @@ export function ResourceGridView({
     [timedEvents, timeZone, date, startHour, endHour, effectiveHourHeight]
   );
 
-  const unavailableByResource = useMemo(() => {
-    if (!defaultUnavailable && !availability && !unavailability)
-      return new Map<string, UnavailableBlock[]>();
+  // Unavailable blocks by resource on `day`. A swipe draws the neighboring
+  // days' too, from the same ranges, so they can include those days.
+  const unavailableOn = useCallback(
+    (day: Temporal.PlainDate) => {
+      if (!defaultUnavailable && !availability && !unavailability)
+        return new Map<string, UnavailableBlock[]>();
 
-    // Collect all resource IDs that need evaluation
-    const resourceIds = new Set([
-      ...Object.keys(availability ?? {}),
-      ...Object.keys(unavailability ?? {}),
-      ...(defaultUnavailable ? resources.map((r) => r.id) : []),
-    ]);
+      // Collect all resource IDs that need evaluation
+      const resourceIds = new Set([
+        ...Object.keys(availability ?? {}),
+        ...Object.keys(unavailability ?? {}),
+        ...(defaultUnavailable ? resources.map((r) => r.id) : []),
+      ]);
 
-    const map = new Map<string, UnavailableBlock[]>();
-    for (const resourceId of resourceIds) {
-      const availableRanges = availability?.[resourceId];
-      const effectiveAvailable =
-        defaultUnavailable && availableRanges === undefined
-          ? []
-          : availableRanges;
+      const map = new Map<string, UnavailableBlock[]>();
+      for (const resourceId of resourceIds) {
+        const availableRanges = availability?.[resourceId];
+        const effectiveAvailable =
+          defaultUnavailable && availableRanges === undefined
+            ? []
+            : availableRanges;
 
-      const blocks = computeUnavailableBlocks(
-        effectiveAvailable,
-        unavailability?.[resourceId],
-        timeZone,
-        date,
-        startHour,
-        endHour,
-        effectiveHourHeight
-      );
-      if (blocks.length > 0) {
-        map.set(resourceId, blocks);
+        const blocks = computeUnavailableBlocks(
+          effectiveAvailable,
+          unavailability?.[resourceId],
+          timeZone,
+          day,
+          startHour,
+          endHour,
+          effectiveHourHeight
+        );
+        if (blocks.length > 0) {
+          map.set(resourceId, blocks);
+        }
       }
-    }
-    return map;
-  }, [
-    defaultUnavailable,
-    resources,
-    availability,
-    unavailability,
-    timeZone,
-    date,
-    startHour,
-    endHour,
-    effectiveHourHeight,
-  ]);
+      return map;
+    },
+    [
+      defaultUnavailable,
+      resources,
+      availability,
+      unavailability,
+      timeZone,
+      startHour,
+      endHour,
+      effectiveHourHeight,
+    ]
+  );
+
+  const unavailableByResource = useMemo(
+    () => unavailableOn(date),
+    [unavailableOn, date]
+  );
 
   const { message: announcerMessage, announce } = useAnnouncer();
 
@@ -270,6 +272,38 @@ export function ResourceGridView({
     resolveTarget: resolveDragTarget,
   });
 
+  // After the event drag, so its touch listeners run first and the swipe
+  // sees when a long press started dragging an event
+  const swipe = useSwipeNavigation({
+    rootRef,
+    gridRef,
+    gutterRef: allDayRef,
+    onSwipe,
+    periodKey: date.toString(),
+  });
+
+  useInitialScroll({
+    rootRef,
+    initialScrollHour,
+    startHour,
+    endHour,
+    effectiveHourHeight,
+    containerHeight,
+    scrollKey: date.toString(),
+    swipedRef: swipe.swipedRef,
+  });
+
+  const neighborUnavailable = useMemo(
+    () =>
+      swipe.swiping
+        ? {
+            previous: unavailableOn(date.subtract({ days: 1 })),
+            next: unavailableOn(date.add({ days: 1 })),
+          }
+        : null,
+    [swipe.swiping, unavailableOn, date]
+  );
+
   const dragSourceId = dragPreview?.event.id ?? pendingDrop?.event.id ?? null;
 
   const handleSlotInteractionSelect = useCallback(
@@ -331,7 +365,11 @@ export function ResourceGridView({
   const rowHeight = (effectiveHourHeight * intervalMinutes) / 60;
 
   return (
-    <div ref={rootRef} className={cn(cls('root'), className)}>
+    <div
+      ref={rootRef}
+      className={cn(cls('root'), className)}
+      style={swipe.rootStyle}
+    >
       <div
         ref={gridRef}
         className={cls('grid')}
@@ -342,13 +380,14 @@ export function ResourceGridView({
           display: 'grid',
           gridTemplateColumns: `max-content repeat(${resources.length}, minmax(${columnMinWidth}px, 1fr))`,
           gridTemplateRows: `auto auto repeat(${timeSlots.length}, ${rowHeight}px)`,
+          ...swipe.gridStyle,
         }}
       >
         {/* Corner cell */}
         <div
           ref={headerRef}
           className={cls('cornerCell')}
-          style={{ gridRow: 1, gridColumn: 1 }}
+          style={{ gridRow: 1, gridColumn: 1, ...swipe.pinnedStyle }}
         >
           {renderCorner?.({ timeZone, date })}
         </div>
@@ -372,6 +411,7 @@ export function ResourceGridView({
             gridRow: 2,
             gridColumn: 1,
             top: headerHeight,
+            ...swipe.pinnedStyle,
           }}
         />
 
@@ -415,6 +455,7 @@ export function ResourceGridView({
             isHourStart={slot.isHourStart}
             isFirst={slot.index === 0}
             cls={cls}
+            style={swipe.pinnedStyle}
           />
         ))}
 
@@ -555,6 +596,42 @@ export function ResourceGridView({
             />
           );
         })}
+
+        {swipe.swiping &&
+          (['previous', 'next'] as const).map((side) => (
+            <TimeGridSwipeNeighbor
+              key={side}
+              side={side}
+              columnCount={resources.length}
+              headers={resources.map((resource, i) => (
+                <GridHeader
+                  key={resource.id}
+                  resource={resource}
+                  column={i + 1}
+                  cls={cls}
+                  renderHeader={renderHeader}
+                />
+              ))}
+              allDayClassName={() => cls('allDayCell')}
+              headerHeight={headerHeight}
+              timeSlots={timeSlots}
+              cls={cls}
+            >
+              {resources.map((resource, i) => {
+                const blocks = neighborUnavailable?.[side].get(resource.id);
+                return (
+                  blocks && (
+                    <UnavailabilityOverlay
+                      key={`unavail-${resource.id}`}
+                      blocks={blocks}
+                      column={i + 1}
+                      cls={cls}
+                    />
+                  )
+                );
+              })}
+            </TimeGridSwipeNeighbor>
+          ))}
 
         {/* Now indicator */}
         <NowIndicator

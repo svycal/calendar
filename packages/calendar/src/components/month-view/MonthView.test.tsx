@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Temporal } from 'temporal-polyfill';
 import type { MonthViewProps, TimedCalendarEvent } from '@/types/calendar';
 import { MonthView } from './MonthView';
+import { touchDrag } from '@/test/touch';
 
 const TZ = 'America/Chicago';
 
@@ -212,5 +213,32 @@ describe('MonthView outlined events', () => {
       expect(onSelect).toHaveBeenCalledTimes(1);
       expect(onSelect).toHaveBeenLastCalledWith(null);
     });
+  });
+});
+
+describe('MonthView swipe navigation', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('turns to the month beside it, drawn with its own weeks while swiping', () => {
+    // Reduced motion turns the page without animating
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const onSwipe = vi.fn();
+    const container = render({ onSwipe });
+    const root = container.firstElementChild as HTMLElement;
+    Object.defineProperty(root, 'clientWidth', { value: 400 });
+    const grid = root.firstElementChild as HTMLElement;
+
+    touchDrag(grid, [
+      [100, 300, 0],
+      [120, 300, 50],
+      [300, 300, 300],
+    ]);
+    expect(onSwipe).toHaveBeenCalledExactlyOnceWith('previous');
+    // September 2026 starts on a Tuesday: its grid starts on Sunday Aug 30
+    const previous = grid.querySelector<HTMLElement>(
+      '[inert][style*="translate: -100%"]'
+    );
+    expect(previous?.textContent).toContain('Sep 1');
+    expect(previous?.textContent).toMatch(/^SunMonTueWedThuFriSat30/);
   });
 });
