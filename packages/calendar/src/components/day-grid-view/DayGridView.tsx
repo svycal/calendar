@@ -249,35 +249,50 @@ export function DayGridView({
     [defaultUnavailable, availability]
   );
 
-  const unavailableByDate = useMemo(() => {
-    if (effectiveAvailability === undefined && !unavailability)
-      return new Map<string, UnavailableBlock[]>();
-
-    const map = new Map<string, UnavailableBlock[]>();
-    for (const date of dates) {
-      const blocks = computeUnavailableBlocks(
-        effectiveAvailability,
-        unavailability,
-        timeZone,
-        date,
-        startHour,
-        endHour,
-        effectiveHourHeight
-      );
-      if (blocks.length > 0) {
-        map.set(date.toString(), blocks);
+  // Unavailable blocks by date. A swipe draws the neighboring periods'
+  // too, from the same ranges, so they can include those periods.
+  const unavailableFor = useCallback(
+    (days: Temporal.PlainDate[]) => {
+      const map = new Map<string, UnavailableBlock[]>();
+      if (effectiveAvailability === undefined && !unavailability) return map;
+      for (const date of days) {
+        const blocks = computeUnavailableBlocks(
+          effectiveAvailability,
+          unavailability,
+          timeZone,
+          date,
+          startHour,
+          endHour,
+          effectiveHourHeight
+        );
+        if (blocks.length > 0) {
+          map.set(date.toString(), blocks);
+        }
       }
-    }
-    return map;
-  }, [
-    effectiveAvailability,
-    unavailability,
-    timeZone,
-    dates,
-    startHour,
-    endHour,
-    effectiveHourHeight,
-  ]);
+      return map;
+    },
+    [
+      effectiveAvailability,
+      unavailability,
+      timeZone,
+      startHour,
+      endHour,
+      effectiveHourHeight,
+    ]
+  );
+
+  const unavailableByDate = useMemo(
+    () => unavailableFor(dates),
+    [unavailableFor, dates]
+  );
+
+  const neighborUnavailable = useMemo(
+    () =>
+      swipe.swiping
+        ? unavailableFor([...neighborDates.previous, ...neighborDates.next])
+        : null,
+    [swipe.swiping, unavailableFor, neighborDates]
+  );
 
   const { message: announcerMessage, announce } = useAnnouncer();
 
@@ -781,14 +796,8 @@ export function DayGridView({
               timeSlots={timeSlots}
               cls={cls}
             >
-              {/* Unavailable time repeats weekly: each day takes the shading
-                  of the same weekday here, if this period has one */}
               {neighborDates[side].map((date, i) => {
-                const source = dates.find(
-                  (d) => d.dayOfWeek === date.dayOfWeek
-                );
-                const blocks =
-                  source && unavailableByDate.get(source.toString());
+                const blocks = neighborUnavailable?.get(date.toString());
                 return (
                   blocks && (
                     <UnavailabilityOverlay

@@ -163,50 +163,70 @@ export function ResourceGridView({
     [timedEvents, timeZone, date, startHour, endHour, effectiveHourHeight]
   );
 
-  const unavailableByResource = useMemo(() => {
-    if (!defaultUnavailable && !availability && !unavailability)
-      return new Map<string, UnavailableBlock[]>();
+  // Unavailable blocks by resource on `day`. A swipe draws the neighboring
+  // days' too, from the same ranges, so they can include those days.
+  const unavailableOn = useCallback(
+    (day: Temporal.PlainDate) => {
+      if (!defaultUnavailable && !availability && !unavailability)
+        return new Map<string, UnavailableBlock[]>();
 
-    // Collect all resource IDs that need evaluation
-    const resourceIds = new Set([
-      ...Object.keys(availability ?? {}),
-      ...Object.keys(unavailability ?? {}),
-      ...(defaultUnavailable ? resources.map((r) => r.id) : []),
-    ]);
+      // Collect all resource IDs that need evaluation
+      const resourceIds = new Set([
+        ...Object.keys(availability ?? {}),
+        ...Object.keys(unavailability ?? {}),
+        ...(defaultUnavailable ? resources.map((r) => r.id) : []),
+      ]);
 
-    const map = new Map<string, UnavailableBlock[]>();
-    for (const resourceId of resourceIds) {
-      const availableRanges = availability?.[resourceId];
-      const effectiveAvailable =
-        defaultUnavailable && availableRanges === undefined
-          ? []
-          : availableRanges;
+      const map = new Map<string, UnavailableBlock[]>();
+      for (const resourceId of resourceIds) {
+        const availableRanges = availability?.[resourceId];
+        const effectiveAvailable =
+          defaultUnavailable && availableRanges === undefined
+            ? []
+            : availableRanges;
 
-      const blocks = computeUnavailableBlocks(
-        effectiveAvailable,
-        unavailability?.[resourceId],
-        timeZone,
-        date,
-        startHour,
-        endHour,
-        effectiveHourHeight
-      );
-      if (blocks.length > 0) {
-        map.set(resourceId, blocks);
+        const blocks = computeUnavailableBlocks(
+          effectiveAvailable,
+          unavailability?.[resourceId],
+          timeZone,
+          day,
+          startHour,
+          endHour,
+          effectiveHourHeight
+        );
+        if (blocks.length > 0) {
+          map.set(resourceId, blocks);
+        }
       }
-    }
-    return map;
-  }, [
-    defaultUnavailable,
-    resources,
-    availability,
-    unavailability,
-    timeZone,
-    date,
-    startHour,
-    endHour,
-    effectiveHourHeight,
-  ]);
+      return map;
+    },
+    [
+      defaultUnavailable,
+      resources,
+      availability,
+      unavailability,
+      timeZone,
+      startHour,
+      endHour,
+      effectiveHourHeight,
+    ]
+  );
+
+  const unavailableByResource = useMemo(
+    () => unavailableOn(date),
+    [unavailableOn, date]
+  );
+
+  const neighborUnavailable = useMemo(
+    () =>
+      swipe.swiping
+        ? {
+            previous: unavailableOn(date.subtract({ days: 1 })),
+            next: unavailableOn(date.add({ days: 1 })),
+          }
+        : null,
+    [swipe.swiping, unavailableOn, date]
+  );
 
   const { message: announcerMessage, announce } = useAnnouncer();
 
@@ -594,7 +614,21 @@ export function ResourceGridView({
               headerHeight={headerHeight}
               timeSlots={timeSlots}
               cls={cls}
-            />
+            >
+              {resources.map((resource, i) => {
+                const blocks = neighborUnavailable?.[side].get(resource.id);
+                return (
+                  blocks && (
+                    <UnavailabilityOverlay
+                      key={`unavail-${resource.id}`}
+                      blocks={blocks}
+                      column={i + 1}
+                      cls={cls}
+                    />
+                  )
+                );
+              })}
+            </TimeGridSwipeNeighbor>
           ))}
 
         {/* Now indicator */}
