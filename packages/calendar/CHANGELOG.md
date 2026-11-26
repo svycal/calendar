@@ -1,5 +1,11 @@
 # @savvycal/calendar
 
+## 0.17.0
+
+### Minor Changes
+
+- [`99c3c2c`](https://github.com/svycal/calendar/commit/99c3c2c0fe38ffdef8cb432bdd674bf7aecbb292) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Give events a solid 2px focus ring on `:focus-visible` instead of the browser's default outline, in every view, including all-day events, overflow popover events, and custom-rendered events. Its color is the new `--color-cal-focus` theme token, which defaults to `blue-500`.
+
 ## 0.16.0
 
 ### Minor Changes
