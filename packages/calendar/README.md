@@ -534,6 +534,7 @@ The preset defines a set of `--color-cal-*` CSS custom properties under `@theme`
 | `--color-cal-event-ring-selected` | `zinc-900 @ 30%`                                  | Ring color for selected events.        |
 | `--color-cal-event-shadow`        | `black @ 10%`                                     | Shadow color for selected events.      |
 | `--color-cal-now`                 | `orange-500`                                      | Now indicator line color.              |
+| `--color-cal-focus`               | `blue-500`                                        | Keyboard focus ring on events.         |
 | `--color-cal-slot-highlight`      | `blue-400 @ 15%`                                  | Hover slot highlight.                  |
 | `--color-cal-selection`           | `blue-400 @ 25%`                                  | Drag selection highlight.              |
 | `--color-cal-event-outline`       | the event color, lightness capped at 0.53 (OKLCH) | Text and outline of an outlined event. |

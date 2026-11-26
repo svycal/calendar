@@ -14,7 +14,7 @@ export const monthViewDefaults: Required<MonthViewClassNames> = {
   dayNumberOutside: 'text-cal-text-muted',
   dayNumberButton: 'cursor-pointer hover:bg-cal-event-bg',
   event:
-    'relative flex items-center gap-1 h-full rounded-md pl-2.5 pr-1.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring min-w-0',
+    'relative flex items-center gap-1 h-full rounded-md pl-2.5 pr-1.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring min-w-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cal-focus',
   eventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   eventOutline:
@@ -23,7 +23,7 @@ export const monthViewDefaults: Required<MonthViewClassNames> = {
   eventTitle: 'text-cal-text-body text-xs/4 font-medium truncate',
   eventTime: 'text-cal-text-muted text-xs/4 shrink-0',
   timedEvent:
-    'flex items-center gap-1.5 h-full rounded-md px-1.5 overflow-hidden cursor-pointer select-none text-left min-w-0 hover:bg-cal-event-bg',
+    'flex items-center gap-1.5 h-full rounded-md px-1.5 overflow-hidden cursor-pointer select-none text-left min-w-0 hover:bg-cal-event-bg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cal-focus',
   timedEventSelected:
     'bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring-selected shadow-lg shadow-cal-event-shadow',
   timedEventOutline: 'text-cal-event-outline dark:text-cal-event-outline-dark',

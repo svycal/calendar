@@ -17,7 +17,7 @@ export const dayGridViewDefaults: Required<DayGridViewClassNames> = {
   bodyCellMinor: 'border-t border-r border-cal-border',
   eventColumn: 'relative mr-3',
   event:
-    'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring',
+    'absolute inset-x-0.5 rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cal-focus',
   eventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   eventOutline:
@@ -41,7 +41,7 @@ export const dayGridViewDefaults: Required<DayGridViewClassNames> = {
     'bg-cal-now text-white rounded-full w-7 h-7 flex items-center justify-center',
   allDayLane: 'bg-cal-surface border-b border-cal-border',
   allDayEvent:
-    'rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring min-w-0',
+    'rounded-md pl-2.5 pr-1.5 py-0.5 overflow-hidden cursor-pointer select-none text-left bg-cal-event-bg ring-1 ring-inset ring-cal-event-ring min-w-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cal-focus',
   allDayEventSelected:
     'shadow-lg shadow-cal-event-shadow ring-cal-event-ring-selected',
   allDayEventOutline:
@@ -56,7 +56,7 @@ export const dayGridViewDefaults: Required<DayGridViewClassNames> = {
   overflowPopover:
     'w-64 rounded-lg bg-cal-surface p-1 shadow-lg shadow-cal-event-shadow ring-1 ring-cal-event-ring max-h-[min(20rem,calc(100dvh-1rem))] overflow-auto',
   overflowPopoverEvent:
-    'block w-full rounded-md px-2 py-1.5 text-left cursor-pointer hover:bg-cal-event-bg',
+    'block w-full rounded-md px-2 py-1.5 text-left cursor-pointer hover:bg-cal-event-bg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cal-focus',
   overflowPopoverTitle: 'text-cal-text-body text-xs/4 font-medium truncate',
   overflowPopoverTime: 'text-cal-text-muted text-xs/4',
 };

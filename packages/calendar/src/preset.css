@@ -40,6 +40,7 @@
   );
   --color-cal-event-shadow: color-mix(in oklab, black 10%, transparent);
   --color-cal-now: var(--color-orange-500);
+  --color-cal-focus: var(--color-blue-500);
   --color-cal-slot-highlight: color-mix(
     in oklab,
     var(--color-blue-400) 15%,

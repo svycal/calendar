@@ -125,7 +125,11 @@ export const EventChip = memo(function EventChip({
         <div
           ref={selectedEventRef}
           {...interactionProps}
-          className={isDragSource ? cls('eventDragSource') : undefined}
+          className={cn(
+            isInteractive &&
+              'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-cal-focus',
+            isDragSource && cls('eventDragSource')
+          )}
           style={{
             position: 'absolute',
             cursor: isInteractive ? 'pointer' : undefined,
