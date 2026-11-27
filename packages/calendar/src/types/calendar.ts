@@ -182,8 +182,6 @@ export interface PositionedEvent {
   totalSubColumns: number;
   /** How many sub-columns this event spans. Defaults to 1 when omitted. */
   colSpan?: number;
-  /** Full-width overlay drawn above packed neighbors (promoted overflow events). */
-  overlay?: boolean;
 }
 
 export interface OverflowClickInfo {

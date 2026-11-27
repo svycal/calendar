@@ -461,31 +461,11 @@ export function applyEventOverflow(
   const hidden = positioned.filter((event) => event.subColumn >= visibleLimit);
   const reexpanded = reexpandVisible(visible, visibleLimit);
 
-  // A "+1 more" chip is worse than showing the event. Promote singleton
-  // overflow groups back onto the grid as full-width overlays.
-  const promoted: PositionedEvent[] = [];
-  const overflows: OverflowGroup[] = [];
-  const hiddenById = new Map(hidden.map((event) => [event.event.id, event]));
-
-  for (const group of groupHiddenEvents(hidden)) {
-    if (group.events.length === 1) {
-      const original = hiddenById.get(group.events[0].id);
-      if (original) {
-        promoted.push({
-          ...original,
-          subColumn: 0,
-          totalSubColumns: 1,
-          colSpan: 1,
-          overlay: true,
-        });
-      }
-    } else {
-      overflows.push(group);
-    }
-  }
-
+  // Promoting a hidden event to a full-width overlay would cover a visible
+  // event, because every visible column is busy at its time. Hidden events
+  // always go in a "+N" chip.
   return {
-    visible: [...reexpanded, ...promoted],
-    overflows,
+    visible: reexpanded,
+    overflows: groupHiddenEvents(hidden),
   };
 }

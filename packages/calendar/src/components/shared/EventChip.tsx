@@ -78,10 +78,6 @@ export const EventChip = memo(function EventChip({
       : `${widthPct}%`;
   }
 
-  if (positioned.overlay) {
-    zIndex = 8;
-  }
-
   if (isSelected) {
     zIndex = 20;
   }

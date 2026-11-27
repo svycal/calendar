@@ -229,19 +229,6 @@ describe('applyEventOverflow', () => {
     expect(result.overflows).toHaveLength(0);
   });
 
-  it('promotes a single hidden event instead of a +1 chip', () => {
-    const events = [
-      positioned('a', 0, 180, 0, 2, 1),
-      positioned('b', 0, 60, 1, 2, 1),
-    ];
-    const result = applyEventOverflow(events, 1);
-    expect(result.overflows).toHaveLength(0);
-    expect(result.visible.map((e) => e.event.id)).toEqual(['a', 'b']);
-    expect(result.visible[0].totalSubColumns).toBe(1);
-    expect(result.visible[1].totalSubColumns).toBe(1);
-    expect(result.visible[1].overlay).toBe(true);
-  });
-
   it('clusters overlapping hidden events into one overflow chip', () => {
     const events = [
       positioned('a', 0, 400, 0, 3),
@@ -254,15 +241,19 @@ describe('applyEventOverflow', () => {
     expect(result.overflows[0].events.map((e) => e.id)).toEqual(['b', 'c']);
   });
 
-  it('keeps disconnected singleton overflows visible instead of +1 chips', () => {
+  it('puts each lone hidden event in its own +1 chip', () => {
     const events = [
       positioned('a', 0, 400, 0, 2),
       positioned('b', 40, 40, 1, 2),
       positioned('c', 200, 40, 1, 2),
     ];
     const result = applyEventOverflow(events, 1);
-    expect(result.overflows).toHaveLength(0);
-    expect(result.visible.map((e) => e.event.id)).toEqual(['a', 'b', 'c']);
+    expect(result.visible.map((e) => e.event.id)).toEqual(['a']);
+    expect(result.visible[0].totalSubColumns).toBe(1);
+    expect(result.overflows.map((g) => g.events.map((e) => e.id))).toEqual([
+      ['b'],
+      ['c'],
+    ]);
   });
 });
 
