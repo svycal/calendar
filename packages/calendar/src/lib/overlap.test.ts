@@ -124,6 +124,22 @@ describe('computeOverlapLayout', () => {
     expect(map.block.subColumn).toBe(1);
   });
 
+  it('fills gaps between higher-priority events with lower-priority ones', () => {
+    const morning = { ...timed('morning', 8, 0, 8, 30), priority: 1 };
+    const noon = { ...timed('noon', 12, 0, 12, 30), priority: 1 };
+    const opening = timed('opening', 8, 0, 13, 0);
+    const block = timed('block', 9, 0, 10, 0);
+    const layout = computeOverlapLayout(
+      [morning, noon, opening, block],
+      TZ,
+      date
+    );
+    const map = byId(layout);
+    expect(map.block.subColumn).toBe(0);
+    expect(map.opening.subColumn).toBe(1);
+    expect(map.opening.totalSubColumns).toBe(2);
+  });
+
   it('does not merge disconnected groups when priorities differ', () => {
     const late = { ...timed('late', 14, 0, 15, 0), priority: 1 };
     const early = timed('early', 8, 0, 9, 0);

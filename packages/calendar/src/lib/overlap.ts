@@ -128,7 +128,9 @@ export function computeOverlapLayout(
   const results: LayoutEntry[] = [];
 
   for (const group of groups) {
-    const columns: { endMin: number }[] = [];
+    // Each column keeps every range placed in it. Higher-priority events pack
+    // first, so a later event can fill a gap between earlier-placed ones.
+    const columns: { startMin: number; endMin: number }[][] = [];
     const packOrder = [...group].sort((a, b) => {
       const priorityDelta = eventPriority(b.event) - eventPriority(a.event);
       if (priorityDelta !== 0) return priorityDelta;
@@ -143,8 +145,8 @@ export function computeOverlapLayout(
       // Find lowest available column
       let placed = false;
       for (let col = 0; col < columns.length; col++) {
-        if (columns[col].endMin <= item.startMin) {
-          columns[col].endMin = item.endMin;
+        if (!columns[col].some((other) => eventsOverlap(other, item))) {
+          columns[col].push(item);
           results.push({
             ...item,
             subColumn: col,
@@ -162,7 +164,7 @@ export function computeOverlapLayout(
           totalSubColumns: 0,
           colSpan: 1,
         });
-        columns.push({ endMin: item.endMin });
+        columns.push([item]);
       }
     }
 
