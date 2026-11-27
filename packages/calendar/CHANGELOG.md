@@ -1,5 +1,15 @@
 # @savvycal/calendar
 
+## 0.18.0
+
+### Minor Changes
+
+- [`d2edcd2`](https://github.com/svycal/calendar/commit/d2edcd2bdabf30b06ee2da358c90884f74845e58) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Timed events no longer cover other events when a stack passes `eventMaxStack` or `eventMinWidth`. An event that doesn't fit goes in a "+N" chip even when it's alone, instead of being drawn as a full-width overlay on top of the visible events, and `PositionedEvent` no longer has an `overlay` field. Lower-priority events also fill gaps between higher-priority events in the same column instead of starting a new column, so fewer events overflow.
+
+### Patch Changes
+
+- [`7cee142`](https://github.com/svycal/calendar/commit/7cee14239061f4ed2702c56bf0f71e28c7a3e8f8) Thanks [@derrickreimer](https://github.com/derrickreimer)! - Accessible labels leave out a `clientName` that's a React element instead of reading it as "[object Object]". Include the client's name in `ariaLabel` when `clientName` is a React element.
+
 ## 0.17.0
 
 ### Minor Changes
