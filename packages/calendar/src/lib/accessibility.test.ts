@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import { Temporal } from 'temporal-polyfill';
 import type { CalendarEvent } from '@/types/calendar';
@@ -20,6 +21,22 @@ const standup: CalendarEvent = {
 describe('describeEvent', () => {
   it('leaves out the date by default', () => {
     expect(describeEvent(standup, TZ)).toBe('Standup, 9:30 am to 9:45 am');
+  });
+
+  it('includes a string client name and leaves out a ReactNode one', () => {
+    expect(describeEvent({ ...standup, clientName: 'Ada Lovelace' }, TZ)).toBe(
+      'Standup, 9:30 am to 9:45 am, Ada Lovelace'
+    );
+    expect(
+      describeEvent(
+        {
+          ...standup,
+          ariaLabel: 'Standup — Ada',
+          clientName: createElement('span', null, 'Ada'),
+        },
+        TZ
+      )
+    ).toBe('Standup — Ada, 9:30 am to 9:45 am');
   });
 
   it('includes the date of a single-day event', () => {

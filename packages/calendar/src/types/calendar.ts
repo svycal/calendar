@@ -16,7 +16,7 @@ interface BaseCalendarEvent {
   clientName?: ReactNode;
   status?: 'confirmed' | 'canceled' | 'tentative';
   /** Plain-text label used for aria-label attributes and screen reader announcements.
-   *  When title or clientName are ReactNode elements, set this to avoid "[object Object]" in accessible labels. */
+   *  Set this when title is a ReactNode. Accessible labels leave out a ReactNode clientName, so include the client's name here. */
   ariaLabel?: string;
   /**
    * Higher values are packed into earlier columns, so they stay visible

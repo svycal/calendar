@@ -463,7 +463,7 @@ interface AllDayCalendarEvent {
 }
 ```
 
-The optional `ariaLabel` field provides a plain-text label used for `aria-label` attributes and screen reader announcements. When `title` or `clientName` are React elements (not plain strings), set `ariaLabel` to avoid `"[object Object]"` in accessible labels.
+The optional `ariaLabel` field provides a plain-text label used for `aria-label` attributes and screen reader announcements. Set it when `title` is a React element. Accessible labels leave out a `clientName` that's a React element, so include the client's name in `ariaLabel` too.
 
 Set `interactive: false` for a display-only event: it ignores clicks and the pointer, so clicks, hovers, and drags reach the time slot beneath it.
 

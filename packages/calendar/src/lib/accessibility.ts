@@ -8,12 +8,14 @@ export function getEventLabel(event: CalendarEvent): string {
   return event.ariaLabel ?? String(event.title);
 }
 
-/** Returns a plain-text client name string, or undefined if not set. */
+/**
+ * Returns the client name when it's a non-empty string. A ReactNode client
+ * name has no plain-text form, so it returns undefined.
+ */
 export function getClientNameLabel(event: CalendarEvent): string | undefined {
-  if (!event.clientName) return undefined;
-  return typeof event.clientName === 'string'
+  return typeof event.clientName === 'string' && event.clientName
     ? event.clientName
-    : String(event.clientName);
+    : undefined;
 }
 
 function formatDay(date: Temporal.PlainDate): string {
